@@ -36,9 +36,9 @@ export class BrightAction implements IImageAction {
 
     console.log(` baseBirght=${baseBirght}  d=${d}  range=${range}  bright=${bright}`)
     ctx.image.modulate({
-      brightness: bright ,    //亮度
-      // saturation: 0.5, // 饱和度
-      // hue: 90  //色调
+      brightness: bright ,
+      // saturation: 0.5, 
+      // hue: 90 
     })
   }
 }

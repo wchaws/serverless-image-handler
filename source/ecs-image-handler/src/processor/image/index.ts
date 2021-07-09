@@ -1,8 +1,11 @@
 import * as sharp from 'sharp';
 import { IAction, InvalidArgument, IProcessContext, IProcessor } from '../../processor';
+import { BlurAction } from './blur';
 import { BrightAction } from './bright';
+import { FormatAction } from './format';
 import { QualityAction } from './quality';
 import { ResizeAction } from './resize';
+import { RotateAction } from './rotate';
 
 export interface IImageAction extends IAction {}
 
@@ -61,4 +64,7 @@ ImageProcessor.getInstance().register(
   new ResizeAction(),
   new QualityAction(),
   new BrightAction(),
+  new FormatAction(),
+  new BlurAction(),
+  new RotateAction(),
 );
