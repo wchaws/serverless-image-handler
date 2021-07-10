@@ -12,15 +12,12 @@ export class FormatAction implements IImageAction {
     var opt: FormatOpts = {format: ''};
 
     if( params.length != 2){
-      throw new InvalidArgument(`Format param error, e.g: /format,jpg     (jpg,png,webp)`);
+      throw new InvalidArgument(`Format param error, e.g: format,jpg   (jpg,png,webp)`);
     }
     opt.format = params[1];
 
-
-    if(opt.format !== 'jpg' &&  
-        opt.format != 'png' && 
-        opt.format != 'webp' ){
-          throw new InvalidArgument(`Format must be one of 'jpg,png,webp'. `);
+    if(opt.format !== 'jpg' &&  opt.format !== 'png' && opt.format !== 'webp' ){
+          throw new InvalidArgument(`Format must be one of 'jpg,png,webp'`);
     }
 
     return opt;
