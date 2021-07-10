@@ -11,6 +11,7 @@ import { SharpenAction } from './sharpen';
 import { InterlaceAction } from './interlace';
 import { AutoOrientAction } from './auto-orient';
 import { GreyAction } from './grey';
+import { CropAction } from './crop';
 
 export interface IImageAction extends IAction {}
 
@@ -77,4 +78,5 @@ ImageProcessor.getInstance().register(
   new InterlaceAction(),
   new AutoOrientAction(),
   new GreyAction(),
+  new CropAction(),
 );
