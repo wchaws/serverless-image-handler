@@ -6,6 +6,10 @@ import { FormatAction } from './format';
 import { QualityAction } from './quality';
 import { ResizeAction } from './resize';
 import { RotateAction } from './rotate';
+import { ContrastAction } from './contrast';
+import { SharpenAction } from './sharpen';
+import { InterlaceAction } from './interlace';
+import { AutoOrientAction } from './auto-orient';
 
 export interface IImageAction extends IAction {}
 
@@ -67,4 +71,8 @@ ImageProcessor.getInstance().register(
   new FormatAction(),
   new BlurAction(),
   new RotateAction(),
+  new ContrastAction(),
+  new SharpenAction(),
+  new InterlaceAction(),
+  new AutoOrientAction(),
 );
