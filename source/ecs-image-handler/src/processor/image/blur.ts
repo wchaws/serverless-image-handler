@@ -14,7 +14,7 @@ export class BlurAction implements IImageAction {
     var opt: BlurOpts = {r:0, s:0};
 
     if( params.length <2){
-      throw new InvalidArgument(`blur param error, e.g: /blur,r_3,s_2 `);
+      throw new InvalidArgument(`blur param error, e.g: blur,r_3,s_2`);
     }
 
     for (const param of params) {
