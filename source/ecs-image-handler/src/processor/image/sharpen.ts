@@ -13,7 +13,7 @@ export class SharpenAction implements IImageAction {
     var opt: SharpenOpts = {sharpen: 0};
 
     if( params.length != 2){
-      throw new InvalidArgument(`Sharpen param error, e.g: /sharpen,1 `);
+      throw new InvalidArgument(`Sharpen param error, e.g: sharpen,100`);
     }
     const s = parseInt(params[1]);
     if (inRange(s, 50, 399)) {

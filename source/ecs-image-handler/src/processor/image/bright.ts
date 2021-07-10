@@ -13,7 +13,7 @@ export class BrightAction implements IImageAction {
     var opt: BrightOpts = {bright: 100};
 
     if( params.length != 2){
-      throw new InvalidArgument(`Bright param error, e.g: /bright,50 `);
+      throw new InvalidArgument(`Bright param error, e.g: bright,50`);
     }
     const b = parseInt(params[1]);
     if (inRange(b, -100, 100)) {

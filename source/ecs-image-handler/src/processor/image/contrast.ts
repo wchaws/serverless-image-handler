@@ -13,7 +13,7 @@ export class ContrastAction implements IImageAction {
     var opt: ContrastOpts = {contrast: -100};
 
     if( params.length != 2){
-      throw new InvalidArgument(`Contrast param error, e.g: /contrast,-50 `);
+      throw new InvalidArgument(`Contrast param error, e.g: contrast,-50`);
     }
     const b = parseInt(params[1]);
     if (inRange(b, -100, 100)) {
@@ -29,7 +29,7 @@ export class ContrastAction implements IImageAction {
     const opt = this.validate(params);
 
     //NOTE: Ali contrast config range from -100 to 100, SharpJs contrast  range from 0(baseBright) to 100.
-    const contrast =  ( opt.contrast + 100) /2 ;
+    const contrast =  Math.floor(( opt.contrast + 100) /2)
     console.log(`  contrast=${contrast}   `)
     ctx.image.clahe({width:100, height: 100, maxSlope: contrast})
   }
