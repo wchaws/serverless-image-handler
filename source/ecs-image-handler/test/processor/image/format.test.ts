@@ -37,8 +37,7 @@ test('format action', async () => {
   const action = new FormatAction();
   await action.process(ctx, 'format,png'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
-
-  expect(info.format).toBe(sharp.format.jpeg.id);
+  expect(info.format).toBe(sharp.format.png.id);
 });
 
 
@@ -50,7 +49,7 @@ test('format action', async () => {
   await action.process(ctx, 'format,jpg'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
-  expect(info.format).toBe(sharp.format.jpeg.id);
+  expect(info.format).toBe(sharp.format.jpg.id);
 });
 
 
@@ -60,8 +59,7 @@ test('format action', async () => {
   const action = new FormatAction();
   await action.process(ctx, 'format,webp'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
-
-  expect(info.format).toBe(sharp.format.jpeg.id);
+  expect(info.format).toBe(sharp.format.webp.id);
 });
 
 test('format action', async () => {
@@ -69,7 +67,4 @@ test('format action', async () => {
   const ctx: IImageContext = { image, store: fixtureStore };
   const action = new FormatAction();
   await action.process(ctx, 'format,abcd'.split(','));
-  const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
-
-  expect(info.format).toBe(sharp.format.jpeg.id);
 });

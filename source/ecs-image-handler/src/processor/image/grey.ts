@@ -13,7 +13,7 @@ export class GreyAction implements IImageAction {
     var opt: GreyOpts = {grey: 0};
 
     if( params.length != 2){
-      throw new InvalidArgument(`Grey param error, e.g: /grey,1 `);
+      throw new InvalidArgument(`Grey param error, e.g: grey,1`);
     }
     const s = parseInt(params[1]);
     if (inRange(s, 0, 1)) {
