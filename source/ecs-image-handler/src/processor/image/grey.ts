@@ -10,10 +10,10 @@ export class GreyAction implements IImageAction {
   public readonly name: string = 'grey';
 
   public validate(params: string[]): ReadOnly<GreyOpts> {
-    var opt: GreyOpts = {grey: 0};
+    var opt: GreyOpts = { grey: 0 };
 
-    if( params.length != 2){
-      throw new InvalidArgument(`Grey param error, e.g: grey,1`);
+    if ( params.length != 2) {
+      throw new InvalidArgument('Grey param error, e.g: grey,1');
     }
     const s = parseInt(params[1]);
     if (inRange(s, 0, 1)) {
@@ -27,9 +27,9 @@ export class GreyAction implements IImageAction {
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
     const opt = this.validate(params);
-    if(opt.grey == 1){
-      ctx.image.greyscale()
+    if (opt.grey == 1) {
+      ctx.image.greyscale();
     }
-    
+
   }
 }

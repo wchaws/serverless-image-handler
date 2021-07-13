@@ -40,7 +40,6 @@ test('quality action', async () => {
 });
 
 
-
 test('quality action', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
   const ctx: IImageContext = { image, store: fixtureStore };

@@ -20,15 +20,15 @@ test('quality action validate', () => {
   expect(() => {
     action.validate('bright,23,32'.split(','));
   }).toThrowError(/Bright param error, e.g: bright,50/);
-  
+
   expect(() => {
     action.validate('bright,-101'.split(','));
   }).toThrowError(/Bright must be between -100 and 100/);
-    
+
   expect(() => {
     action.validate('bright,101'.split(','));
   }).toThrowError(/Bright must be between -100 and 100/);
-  
+
 });
 
 

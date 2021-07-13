@@ -10,10 +10,10 @@ export class BrightAction implements IImageAction {
   public readonly name: string = 'bright';
 
   public validate(params: string[]): ReadOnly<BrightOpts> {
-    var opt: BrightOpts = {bright: 100};
+    var opt: BrightOpts = { bright: 100 };
 
-    if( params.length != 2){
-      throw new InvalidArgument(`Bright param error, e.g: bright,50`);
+    if ( params.length != 2) {
+      throw new InvalidArgument('Bright param error, e.g: bright,50');
     }
     const b = parseInt(params[1]);
     if (inRange(b, -100, 100)) {
@@ -29,16 +29,16 @@ export class BrightAction implements IImageAction {
     const opt = this.validate(params);
 
     //NOTE: Ali bright config range from -100 to 100, SharpJs bright config range from 0.5(baseBright) to 1.
-    var baseBirght = 0.3
+    var baseBirght = 0.3;
     const d = 1/ baseBirght;
-    const range =  (( d+1) * 100)/(d-1) ;
+    const range = (( d+1) * 100)/(d-1) ;
     var bright = (opt.bright + range) / (range + 100);
 
-    console.log(` baseBirght=${baseBirght}  d=${d}  range=${range}  bright=${bright}`)
+    console.log(` baseBirght=${baseBirght}  d=${d}  range=${range}  bright=${bright}`);
     ctx.image.modulate({
-      brightness: bright ,
-      // saturation: 0.5, 
-      // hue: 90 
-    })
+      brightness: bright,
+      // saturation: 0.5,
+      // hue: 90
+    });
   }
 }

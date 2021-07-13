@@ -22,12 +22,12 @@ test('quality action validate', () => {
   expect(() => {
     action.validate('format,abc'.split(','));
   }).toThrowError(/Format must be one of 'jpg,png,webp'/);
- 
+
 
   expect(() => {
     action.validate('format,12'.split(','));
   }).toThrowError(/Format must be one of 'jpg,png,webp'/);
- 
+
 });
 
 
@@ -39,7 +39,6 @@ test('format action', async () => {
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
   expect(info.format).toBe(sharp.format.png.id);
 });
-
 
 
 test('format action', async () => {

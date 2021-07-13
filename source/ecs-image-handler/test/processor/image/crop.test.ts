@@ -23,7 +23,7 @@ test('quality action validate', () => {
     h: 40,
     g: 'se',
   });
- 
+
 
   expect(() => {
     action.validate('crop'.split(','));
@@ -33,16 +33,15 @@ test('quality action validate', () => {
     action.validate('crop,xx'.split(','));
   }).toThrowError(/Unkown param: /);
 
-  
 
   expect(() => {
     action.validate('crop,w_0'.split(','));
   }).toThrowError(/Crop param 'w' must be greater than  0/);
-  
+
   expect(() => {
     action.validate('crop,w_-2'.split(','));
   }).toThrowError(/Crop param 'w' must be greater than  0/);
-  
+
 
   expect(() => {
     action.validate('crop,h_0'.split(','));
@@ -57,7 +56,7 @@ test('quality action validate', () => {
     action.validate('crop,x_-1'.split(','));
   }).toThrowError(/Crop param 'x' must be greater than or equal to 0/);
 
-  
+
   expect(() => {
     action.validate('crop,y_-1'.split(','));
   }).toThrowError(/Crop param 'y' must be greater than or equal to 0/);
@@ -68,13 +67,13 @@ test('quality action validate', () => {
   }).toThrowError(/Crop param 'g' must be  'nw, north, ne, west, center, east, sw, south, se'/);
 
   //   expect(() => {
-//     action.validate('bright,-101'.split(','));
-//   }).toThrowError(/Bright must be between -100 and 100/);
-    
-//   expect(() => {
-//     action.validate('bright,101'.split(','));
-//   }).toThrowError(/Bright must be between -100 and 100/);
-  
+  //     action.validate('bright,-101'.split(','));
+  //   }).toThrowError(/Bright must be between -100 and 100/);
+
+  //   expect(() => {
+  //     action.validate('bright,101'.split(','));
+  //   }).toThrowError(/Bright must be between -100 and 100/);
+
 });
 
 

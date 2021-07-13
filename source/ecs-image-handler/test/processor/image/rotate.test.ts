@@ -1,7 +1,7 @@
 import * as sharp from 'sharp';
 import { IImageContext } from '../../../src/processor/image';
-import { fixtureStore } from './utils';
 import { RotateAction } from '../../../src/processor/image/rotate';
+import { fixtureStore } from './utils';
 
 test('quality action validate', () => {
   const action = new RotateAction();
@@ -18,7 +18,7 @@ test('quality action validate', () => {
   expect(() => {
     action.validate('rotate,33,abc'.split(','));
   }).toThrowError(/Rotate param error, e.g: rotate,90/);
-  
+
   expect(() => {
     action.validate('rotate,abc'.split(','));
   }).toThrowError(/Rotate must be between 0 and 360/);
@@ -30,7 +30,6 @@ test('quality action validate', () => {
   }).toThrowError(/Rotate must be between 0 and 360/);
 
 });
-
 
 
 test('quality action', async () => {

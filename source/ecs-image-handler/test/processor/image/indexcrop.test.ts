@@ -1,7 +1,7 @@
 import * as sharp from 'sharp';
 import { IImageContext } from '../../../src/processor/image';
-import { fixtureStore } from './utils';
 import { IndexCropAction } from '../../../src/processor/image/indexcrop';
+import { fixtureStore } from './utils';
 
 
 test('indexcrop action validate', () => {
@@ -67,7 +67,6 @@ test('indexcrop action 01', async () => {
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
   expect(info.width).toBe(100);
 });
-
 
 
 test('indexcrop action', async () => {

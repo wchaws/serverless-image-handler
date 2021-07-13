@@ -18,7 +18,6 @@ test('quality action validate', () => {
     action.validate('sharpen,xx,22'.split(','));
   }).toThrowError(/Sharpen param error, e.g: sharpen,100/);
 
- 
 
   expect(() => {
     action.validate('sharpen,22'.split(','));
@@ -28,18 +27,18 @@ test('quality action validate', () => {
   expect(() => {
     action.validate('contrast,49'.split(','));
   }).toThrowError(/Sharpen be between 50 and 399/);
-  
+
   expect(() => {
     action.validate('contrast,400'.split(','));
   }).toThrowError(/Sharpen be between 50 and 399/);
-    
+
   expect(() => {
     action.validate('contrast,100'.split(','));
-  })
-  
+  });
+
   expect(() => {
     action.validate('contrast,60'.split(','));
-  })
+  });
 });
 
 
@@ -52,7 +51,6 @@ test('quality action', async () => {
 
   expect(info.format).toBe(sharp.format.jpeg.id);
 });
-
 
 
 test('quality action', async () => {

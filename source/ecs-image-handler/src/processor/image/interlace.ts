@@ -10,10 +10,10 @@ export class InterlaceAction implements IImageAction {
   public readonly name: string = 'interlace';
 
   public validate(params: string[]): ReadOnly<InterlaceOpts> {
-    var opt: InterlaceOpts = {interlace: 0};
+    var opt: InterlaceOpts = { interlace: 0 };
 
-    if( params.length != 2){
-      throw new InvalidArgument(`Interlace param error, e.g: interlace,1`);
+    if ( params.length != 2) {
+      throw new InvalidArgument('Interlace param error, e.g: interlace,1');
     }
     const s = parseInt(params[1]);
     if (inRange(s, 0, 1)) {
@@ -27,9 +27,9 @@ export class InterlaceAction implements IImageAction {
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
     const opt = this.validate(params);
-    if(opt.interlace == 1){
-      ctx.image.jpeg({"progressive": true})
+    if (opt.interlace == 1) {
+      ctx.image.jpeg({ progressive: true });
     }
-    
+
   }
 }

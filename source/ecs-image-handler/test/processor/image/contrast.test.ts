@@ -21,17 +21,17 @@ test('quality action validate', () => {
   expect(() => {
     action.validate('contrast,abc'.split(','));
   }).toThrowError(/Contrast must be between -100 and 100/);
-  
+
 
   expect(() => {
     action.validate('contrast,100'.split(','));
   }).toThrowError(/Contrast must be between -100 and 100/);
-  
+
   expect(() => {
     action.validate('contrast,-101'.split(','));
   }).toThrowError(/Contrast must be between -100 and 100/);
-    
-  
+
+
 });
 
 

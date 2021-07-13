@@ -32,7 +32,6 @@ test('Interlace action validate', () => {
 
 });
 
- 
 
 test('quality action', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
@@ -42,7 +41,6 @@ test('quality action', async () => {
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
   expect(info.format).toBe(sharp.format.jpeg.id);
 });
-
 
 
 test('quality action', async () => {

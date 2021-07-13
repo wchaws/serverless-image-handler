@@ -1,18 +1,18 @@
 import * as sharp from 'sharp';
 import { IAction, InvalidArgument, IProcessContext, IProcessor } from '../../processor';
+import { AutoOrientAction } from './auto-orient';
 import { BlurAction } from './blur';
 import { BrightAction } from './bright';
+import { ContrastAction } from './contrast';
+import { CropAction } from './crop';
 import { FormatAction } from './format';
+import { GreyAction } from './grey';
+import { IndexCropAction } from './indexcrop';
+import { InterlaceAction } from './interlace';
 import { QualityAction } from './quality';
 import { ResizeAction } from './resize';
 import { RotateAction } from './rotate';
-import { ContrastAction } from './contrast';
 import { SharpenAction } from './sharpen';
-import { InterlaceAction } from './interlace';
-import { AutoOrientAction } from './auto-orient';
-import { GreyAction } from './grey';
-import { CropAction } from './crop';
-import { IndexCropAction } from './indexcrop';
 
 export interface IImageAction extends IAction {}
 
