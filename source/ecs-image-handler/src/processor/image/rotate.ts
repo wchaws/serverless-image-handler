@@ -28,7 +28,7 @@ export class RotateAction implements IImageAction {
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
     const opt = this.validate(params);
 
-    console.log(`roate degree =${opt.degree} `);
+    // console.log(`roate degree =${opt.degree} `);
     ctx.image.rotate(opt.degree);
   }
 }

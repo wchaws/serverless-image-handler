@@ -43,7 +43,6 @@ export class IndexCropAction implements IImageAction {
       throw new InvalidArgument('Param error:  Cannot enter \'x\' and \'y\' at the same time');
     }
 
-    console.log('-------- ', opt);
     return opt;
   }
 
@@ -99,7 +98,7 @@ export class IndexCropAction implements IImageAction {
       });
 
 
-    console.log(`x=${x}  y=${y} w=${w}  h=${h} i=${opt.i}`);
+    // console.log(`x=${x}  y=${y} w=${w}  h=${h} i=${opt.i}`);
     if (needCrop) {
       ctx.image.extract({ left: x, top: y, width: w, height: h });
     }

@@ -40,7 +40,7 @@ export class SharpenAction implements IImageAction {
     } else {
       s = (opt.sharpen - 50) * (1-0.01) /(100 - 50) + 0.01;
     }
-    console.log(`raw sharpen =${opt.sharpen} SharpJs sharpen=${s}`);
+    // console.log(`raw sharpen =${opt.sharpen} SharpJs sharpen=${s}`);
     ctx.image.sharpen(s);
 
 

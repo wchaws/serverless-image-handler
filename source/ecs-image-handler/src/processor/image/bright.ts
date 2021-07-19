@@ -34,11 +34,9 @@ export class BrightAction implements IImageAction {
     const range = (( d+1) * 100)/(d-1) ;
     var bright = (opt.bright + range) / (range + 100);
 
-    console.log(` baseBirght=${baseBirght}  d=${d}  range=${range}  bright=${bright}`);
+    // console.log(` baseBirght=${baseBirght}  d=${d}  range=${range}  bright=${bright}`);
     ctx.image.modulate({
       brightness: bright,
-      // saturation: 0.5,
-      // hue: 90
     });
   }
 }

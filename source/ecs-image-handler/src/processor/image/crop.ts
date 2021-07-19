@@ -129,7 +129,7 @@ export class CropAction implements IImageAction {
           height = metadata.height - y;
         }
 
-        console.log(`x=${x}  y=${y} w=${width}  h=${height} g=${opt.g}`);
+        // console.log(`x=${x}  y=${y} w=${width}  h=${height} g=${opt.g}`);
       });
 
 

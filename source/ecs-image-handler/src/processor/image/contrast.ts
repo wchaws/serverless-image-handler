@@ -30,7 +30,6 @@ export class ContrastAction implements IImageAction {
 
     //NOTE: Ali contrast config range from -100 to 100, SharpJs contrast  range from 0(baseBright) to 100.
     const contrast = Math.floor(( opt.contrast + 100) /2);
-    console.log(`  contrast=${contrast}   `);
     ctx.image.clahe({ width: 100, height: 100, maxSlope: contrast });
   }
 }
