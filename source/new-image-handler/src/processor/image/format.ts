@@ -16,8 +16,8 @@ export class FormatAction implements IImageAction {
     }
     opt.format = params[1];
 
-    if (opt.format !== 'jpg' && opt.format !== 'png' && opt.format !== 'webp') {
-      throw new InvalidArgument('Format must be one of jpg,png,webp');
+    if (opt.format !== 'jpg' && opt.format !== 'png' && opt.format !== 'webp' && opt.format !== 'gif') {
+      throw new InvalidArgument('Format must be one of jpg,png,webp,gif');
     }
 
     return opt;
@@ -34,6 +34,8 @@ export class FormatAction implements IImageAction {
       ctx.image.toFormat('png');
     } else if (opt.format === 'webp') {
       ctx.image.toFormat('webp');
+    } else if (opt.format === 'gif') {
+      ctx.image.gif();
     }
 
   }
