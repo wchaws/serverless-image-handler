@@ -103,7 +103,7 @@ curl <DistUrl0>/example.jpg?x-oss-process=image/resize,w_200,h_100/quality,q_50
 1. 一个或多个 S3 桶。存储桶用于存储要处理的图像. 存储桶必须与即将启动的 AWS CloudFormation 堆栈位于**同一区域**。
 2. 准备 ICP 备案过的域名。 请准备一个或者两个经过 ICP 备案的域名。并且确保您的账户打开了 80/8080/443 端口。
 3. (可选) 上传 SSL 证书到 AWS Identity and Access Management（IAM)。我们强烈建议您在生产环境中启用 SSL，如需启用 SSL，请提前使用
-[aws cli](https://aws.amazon.com/cli/) 的 [`aws iam upload-server-certificate`](https://docs.aws.amazon.com/cli/latest/reference/iam/upload-server-certificate.html) 命令将 SSL 证书上传到 IAM 中。
+[aws cli](https://aws.amazon.com/cli/) 的 [`aws iam upload-server-certificate`](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_server-certs.html) 命令将 SSL 证书上传到 IAM 中。
 1. 配置 DNS 解析。CloudFormation 堆栈部署完成后，您需要配置 CNAME 解析将域名指向 CloudFront，并且等待解析生效后方可使用该解决方案。您
 可以通过查看 CloudFormation 的输出来获取 CloudFront 的地址。
 
