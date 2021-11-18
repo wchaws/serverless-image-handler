@@ -16,11 +16,10 @@ FROM node:12-alpine
 WORKDIR /app
 
 COPY package.json yarn.lock /app/
+COPY ./fonts/* /usr/share/fonts/
 
 RUN apk update && \
     apk add fontconfig
-
-COPY ./fonts/* /usr/share/fonts/
 
 ENV NODE_ENV=production
 

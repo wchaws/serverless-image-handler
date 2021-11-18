@@ -34,12 +34,12 @@ export class WatermarkAction implements IImageAction {
       }
       const [k, v] = param.split('_');
       if (k === 'text') {
-        if ('' !== v) {
+        if (v) {
           const buff = Buffer.from(v, 'base64');
           opt.text = buff.toString('utf-8');
         }
       } else if (k === 'image') {
-        if ('' !== v) {
+        if (v) {
           const buff = Buffer.from(v, 'base64');
           opt.image = buff.toString('utf-8');
         }
@@ -85,11 +85,11 @@ export class WatermarkAction implements IImageAction {
         throw new InvalidArgument(`Unkown param: "${k}"`);
       }
     }
-    if ('' === opt.text && '' === opt.image) {
+    if (!opt.text && !opt.image) {
       throw new InvalidArgument('Watermark param \'text\' and \'image\' should not be empty at the same time');
     }
 
-    if ('' !== opt.text && '' !== opt.image) {
+    if (opt.text && opt.image) {
       throw new InvalidArgument('Does not support text and image watermark at the same time in this version');
     }
 
@@ -99,7 +99,7 @@ export class WatermarkAction implements IImageAction {
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
     const opt = this.validate(params);
-    if (opt.text !== '') {
+    if (opt.text) {
       await this.textWaterMark(ctx, opt);
     } else {
       await this.imgWaterMark(ctx, opt);
@@ -126,7 +126,7 @@ export class WatermarkAction implements IImageAction {
       const rotateOverlabImgBuffer = await optOverlapImg.toBuffer();
       ctx.image.composite([{ input: rotateOverlabImgBuffer, tile: opt.fill, gravity: opt.g }]);
     } else {
-      const bt = await this.autoResizeSvg(svgBytes,ctx,opt, textOpt);
+      const bt = await this.autoResizeSvg(svgBytes, ctx, opt, textOpt);
       ctx.image.composite([{ input: bt, tile: opt.fill, gravity: opt.g }]);
     }
   }
@@ -156,17 +156,17 @@ export class WatermarkAction implements IImageAction {
       let height = markMetadata.height;
       let needResize = false;
 
-      if (markMetadata.width !== undefined && metadata.width !== undefined && markMetadata.width > metadata.width) {
+      if (markMetadata.width && metadata.width && markMetadata.width > metadata.width) {
         width = metadata.width - 1;
         needResize = true;
       }
 
-      if (markMetadata.height !== undefined && metadata.height !== undefined && markMetadata.height > metadata.height) {
+      if (markMetadata.height && metadata.height && markMetadata.height > metadata.height) {
         height = metadata.height - 1;
         needResize = true;
       }
       if (needResize) {
-        watermarkImg = watermarkImg.resize(width,height);
+        watermarkImg = watermarkImg.resize(width, height);
       }
     }
     const bt = await watermarkImg.toBuffer();
@@ -239,11 +239,11 @@ export class WatermarkAction implements IImageAction {
       const overlapImgMeta = await source.metadata();
       const metadata = await ctx.image.metadata();
 
-      if (overlapImgMeta.width !== undefined && metadata.width !== undefined && overlapImgMeta.width > metadata.width) {
+      if (overlapImgMeta.width && metadata.width && overlapImgMeta.width > metadata.width) {
         w = metadata.width - 10;
         needResize = true;
       }
-      if (overlapImgMeta.height !== undefined && metadata.height !== undefined && overlapImgMeta.height > metadata.height) {
+      if (overlapImgMeta.height && metadata.height && overlapImgMeta.height > metadata.height) {
         h = metadata.height - 10;
         needResize = true;
       }
@@ -266,11 +266,11 @@ export class WatermarkAction implements IImageAction {
       let w = textOpt.width;
       let h = textOpt.height;
       let needResize = false;
-      if (metadata.width !== undefined && metadata.width < textOpt.width) {
+      if (metadata.width && metadata.width < textOpt.width) {
         w = metadata.width;
         needResize = true;
       }
-      if (metadata.height !== undefined && metadata.height < textOpt.height) {
+      if (metadata.height && metadata.height < textOpt.height) {
         h = metadata.height;
         needResize = true;
       }
