@@ -4,6 +4,7 @@ import { IKVStore, MemKVStore } from '../../store';
 import { AutoOrientAction } from './auto-orient';
 import { BlurAction } from './blur';
 import { BrightAction } from './bright';
+import { CircleAction } from './circle';
 import { ContrastAction } from './contrast';
 import { CropAction } from './crop';
 import { FormatAction } from './format';
@@ -83,6 +84,7 @@ ImageProcessor.getInstance().register(
   new AutoOrientAction(),
   new GreyAction(),
   new CropAction(),
+  new CircleAction(),
   new IndexCropAction(),
   new RoundedCornersAction(),
   new WatermarkAction(),
