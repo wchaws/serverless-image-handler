@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.84",
+    "@types/benchmark": "^2.1.1",
     "@types/jest": "^26.0.24",
     "@types/koa": "^2.13.4",
     "@types/koa-logger": "^3.1.1",
@@ -23,6 +24,7 @@
     "@types/sharp": "^0.29.2",
     "@typescript-eslint/eslint-plugin": "^4.28.4",
     "@typescript-eslint/parser": "^4.28.4",
+    "benchmark": "^2.1.4",
     "eslint": "^7.31.0",
     "eslint-import-resolver-node": "^0.3.4",
     "eslint-import-resolver-typescript": "^2.4.0",
