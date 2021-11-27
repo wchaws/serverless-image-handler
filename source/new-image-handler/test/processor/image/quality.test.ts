@@ -30,7 +30,7 @@ test('quality action', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
   const ctx: IImageContext = { image, bufferStore: fixtureStore };
   const action = new QualityAction();
-  await action.process(ctx, 'quality,q_1'.split(','));
+  await action.process(ctx, 'quality,Q_1'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
   expect(info.format).toBe(sharp.format.jpeg.id);
