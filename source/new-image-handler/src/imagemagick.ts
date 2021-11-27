@@ -5,8 +5,7 @@ const MAX_BUFFER = 1024 * 1024;
 
 // https://sourcegraph.com/github.com/nodejs/node@f7668fa2aa2781dc57d5423a0cfcfa933539779e/-/blob/lib/child_process.js?L279:10
 function _imagemagick(cmd: string, buffer: Buffer, args: readonly string[]) {
-  const opts = ['-', ...args, '-'];
-  const child = child_process.spawn(cmd, opts);
+  const child = child_process.spawn(cmd, args);
 
   Readable.from(buffer).pipe(child.stdin);
 
@@ -30,7 +29,7 @@ function _imagemagick(cmd: string, buffer: Buffer, args: readonly string[]) {
         return;
       }
 
-      const _cmd = cmd + opts.join(' ');
+      const _cmd = cmd + args.join(' ');
       if (!ex) {
         // eslint-disable-next-line no-restricted-syntax
         ex = new Error('Command failed: ' + _cmd + '\n');
@@ -91,5 +90,9 @@ function _imagemagick(cmd: string, buffer: Buffer, args: readonly string[]) {
 }
 
 export function convert(buffer: Buffer, args: readonly string[]) {
-  return _imagemagick('convert', buffer, args);
+  return _imagemagick('convert', buffer, ['-', ...args, '-']);
+}
+
+export function identify(buffer: Buffer, args: readonly string[]) {
+  return _imagemagick('identify', buffer, [...args, '-']);
 }

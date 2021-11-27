@@ -4,6 +4,10 @@ WORKDIR /app
 
 COPY package.json yarn.lock /app/
 
+RUN apk update && \
+    apk add fontconfig \
+        imagemagick=7.0.9.7-r0
+
 RUN yarn
 
 COPY . .
@@ -19,7 +23,8 @@ COPY package.json yarn.lock /app/
 COPY ./fonts/* /usr/share/fonts/
 
 RUN apk update && \
-    apk add fontconfig
+    apk add fontconfig \
+        imagemagick=7.0.9.7-r0
 
 ENV NODE_ENV=production
 
@@ -29,6 +34,7 @@ RUN yarn --production && \
     yarn cache clean --all
 
 COPY --from=builder /app/lib /app/lib
+# COPY test/fixtures /app/lib/test/fixtures
 
 EXPOSE 8080
 
