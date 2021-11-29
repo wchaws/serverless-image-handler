@@ -1,6 +1,8 @@
 import * as child_process from 'child_process';
 import { Readable } from 'stream';
 
+// TODO: ImageMagick is lower than sharp for about 3x. Try removing ImageMagick later.
+
 const MAX_BUFFER = 1024 * 1024;
 
 // https://sourcegraph.com/github.com/nodejs/node@f7668fa2aa2781dc57d5423a0cfcfa933539779e/-/blob/lib/child_process.js?L279:10
