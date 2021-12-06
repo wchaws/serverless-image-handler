@@ -3,6 +3,7 @@ FROM public.ecr.aws/sam/build-nodejs12.x as ImageMagickBuilder
 WORKDIR /ws
 
 RUN yum update -y && \
+    yum install -y yum-plugin-ovl && \
     yum install -y cmake
 
 COPY ImageMagick.Makefile /ws
