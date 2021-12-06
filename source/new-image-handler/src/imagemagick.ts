@@ -1,7 +1,7 @@
 import * as child_process from 'child_process';
 import { Readable } from 'stream';
 
-// TODO: ImageMagick is lower than sharp for about 3x. Try removing ImageMagick later.
+// TODO: ImageMagick is slower than sharp for about 3x. Try removing ImageMagick later.
 
 const MAX_BUFFER = 1024 * 1024;
 

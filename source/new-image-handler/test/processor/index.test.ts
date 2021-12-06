@@ -84,6 +84,17 @@ test('image/resize,w_20/indexcrop,x_50,i_0/', async () => {
   expect(info.width).toBe(20);
 });
 
+test('example.gif?x-oss-process=image/format,jpg', async () => {
+  const image = sharp((await fixtureStore.get('example.gif')).buffer);
+  const ctx = { image, bufferStore: new NullStore() };
+  await ImageProcessor.getInstance().process(ctx, 'image/format,jpg'.split('/'));
+  const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
+
+  expect(info.width).toBe(500);
+  expect(info.height).toBe(300);
+  expect(info.channels).toBe(3);
+});
+
 test('style processor test', async () => {
   const image = sharp({
     create: {

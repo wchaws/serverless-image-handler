@@ -26,6 +26,20 @@ export class FormatAction implements IImageAction {
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
     const opt = this.validate(params);
+    const metadata = await ctx.image.metadata();
+
+    if ((opt.format !== 'webp') && metadata.pageHeight && (metadata.pageHeight > 0)) {
+      if (metadata.width) {
+        ctx.image.extract({
+          top: 0,
+          left: 0,
+          width: metadata.width,
+          height: metadata.pageHeight,
+        });
+      } else {
+        throw new InvalidArgument('Incorrect image format');
+      }
+    }
 
     // NOTE:  jpg,webp,png
     if (opt.format === 'jpg') {
