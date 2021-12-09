@@ -18,6 +18,11 @@ export interface IProcessContext {
    * It can either get from s3 or local filesystem.
    */
   readonly bufferStore: IBufferStore;
+
+  /**
+   * Feature flags.
+   */
+  readonly features?: { [key: string]: boolean };
 }
 
 /**
@@ -64,7 +69,7 @@ export interface IProcessor {
 /**
  * An interface of action options.
  */
-export interface IActionOpts {}
+export interface IActionOpts { }
 
 /**
  * An interface of action.
@@ -108,4 +113,4 @@ export interface IAction {
 /**
  * Invalid argument error (HTTP 400).
  */
-export class InvalidArgument extends HttpErrors[400] {}
+export class InvalidArgument extends HttpErrors[400] { }

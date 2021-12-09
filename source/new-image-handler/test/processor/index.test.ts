@@ -95,6 +95,24 @@ test('example.gif?x-oss-process=image/format,jpg', async () => {
   expect(info.channels).toBe(3);
 });
 
+test('autowebp: example.jpg', async () => {
+  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
+  const ctx = { image, bufferStore: new NullStore(), features: { autoWebp: true } };
+  await ImageProcessor.getInstance().process(ctx, []);
+  const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
+
+  expect(info.format).toBe('webp');
+});
+
+test('autowebp: example.jpg?x-oss-process=image/format,png', async () => {
+  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
+  const ctx = { image, bufferStore: new NullStore(), features: { autoWebp: true } };
+  await ImageProcessor.getInstance().process(ctx, 'image/format,png'.split('/'));
+  const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
+
+  expect(info.format).toBe('png');
+});
+
 test('style processor test', async () => {
   const image = sharp({
     create: {

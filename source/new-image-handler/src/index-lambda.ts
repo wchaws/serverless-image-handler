@@ -2,6 +2,7 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import * as HttpErrors from 'http-errors';
 import * as sharp from 'sharp';
+import config from './config';
 import debug from './debug';
 import { bufferStore, getProcessor, parseRequest } from './default';
 import * as is from './is';
@@ -16,12 +17,21 @@ export const handler = WrapError(async (event: APIGatewayProxyEventV2): Promise<
     return resp(200, debug());
   }
 
+  const accept = event.headers.Accept ?? event.headers.accept ?? '';
+  const autoWebp = config.autoWebp && accept.includes('image/webp');
+
+  console.log('autoWebp:', autoWebp);
+
   const bs = getBufferStore(event);
   const { uri, actions } = parseRequest(event.rawPath, event.queryStringParameters ?? {});
 
   if (actions.length > 1) {
     const { buffer } = await bs.get(uri);
-    const imagectx = { image: sharp(buffer, { animated: true }), bufferStore: bs };
+    const imagectx = {
+      image: sharp(buffer, { animated: true }),
+      bufferStore: bs,
+      features: { autoWebp },
+    };
     const processor = getProcessor(actions[0]);
     await processor.process(imagectx, actions);
     const { data, info } = await imagectx.image.toBuffer({ resolveWithObject: true });

@@ -54,7 +54,9 @@ export class ImageProcessor implements IProcessor {
         throw new InvalidArgument(`Unkown action: "${name}"`);
       }
       await act.process(ctx, params);
+
     }
+    if (ctx.features && ctx.features.autoWebp) { ctx.image.webp(); }
   }
 
   public action(name: string): IAction {
