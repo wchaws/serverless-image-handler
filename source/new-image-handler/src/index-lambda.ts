@@ -13,8 +13,9 @@ export const handler = WrapError(async (event: APIGatewayProxyEventV2): Promise<
 
   if (event.rawPath === '/' || event.rawPath === '/ping') {
     return resp(200, 'ok');
-  } else if (event.rawPath === '/debug') {
-    return resp(200, debug());
+  } else if (event.rawPath === '/_debug') {
+    console.log(debug());
+    return resp(200, 'please check debug log at server');
   }
 
   const accept = event.headers.Accept ?? event.headers.accept ?? '';
