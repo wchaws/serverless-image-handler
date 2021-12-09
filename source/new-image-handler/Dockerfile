@@ -24,7 +24,7 @@ COPY ./fonts/* /usr/share/fonts/
 
 RUN apk update && \
     apk add fontconfig \
-        imagemagick>=7.0.9.7
+        imagemagick=~7.0.9.7
 
 ENV NODE_ENV=production
 
