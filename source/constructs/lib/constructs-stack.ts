@@ -270,8 +270,16 @@ export class LambdaImageHandlerStack extends SolutionStack {
     mkParamGrp(1);
     mkParamGrp(2);
 
+    const autoWebpParam = this.newParam('AutoWebpParam', {
+      type: 'String',
+      description: 'Enable AutoWebp feature or not?',
+      default: 'No',
+      allowedValues: ['Yes', 'No'],
+    });
+
     new LambdaImageHandler(this, id, {
       isChinaRegion,
+      autoWebp: autoWebpParam.valueAsString,
       bucketNameParams,
       altDomainParams: isChinaRegion ? altDomainParams : undefined,
       iamCertParams: isChinaRegion ? iamCertParams : undefined,

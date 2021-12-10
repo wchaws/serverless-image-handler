@@ -8,6 +8,8 @@ RUN yum install -y yum-plugin-ovl && \
 
 COPY ImageMagick.Makefile /ws
 
+RUN make -f ImageMagick.Makefile libs TARGET_DIR=/opt
+
 RUN make -f ImageMagick.Makefile all TARGET_DIR=/opt
 
 

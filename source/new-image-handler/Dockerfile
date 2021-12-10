@@ -6,7 +6,7 @@ COPY package.json yarn.lock /app/
 
 RUN apk update && \
     apk add fontconfig \
-        imagemagick>=7.0.9.7
+        imagemagick=~7.0
 
 RUN yarn
 
@@ -24,7 +24,7 @@ COPY ./fonts/* /usr/share/fonts/
 
 RUN apk update && \
     apk add fontconfig \
-        imagemagick>=7.0.9.7
+        imagemagick=~7.0
 
 ENV NODE_ENV=production
 

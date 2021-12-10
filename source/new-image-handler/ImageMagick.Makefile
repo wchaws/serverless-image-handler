@@ -149,7 +149,7 @@ $(TARGET_DIR)/bin/identify: $(IMAGE_MAGICK_SOURCE) $(LIBS)
 		--disable-openmp
 	make clean
 	make all
-	make install
+	make install-strip
 
 libs: $(LIBS)
 

@@ -12,6 +12,7 @@ import { Aspects, Aws, Construct } from '@aws-cdk/core';
 
 
 export interface LambdaImageHandlerProps {
+  autoWebp: string;
   isChinaRegion?: boolean;
   bucketNameParams: cdk.CfnParameter[];
   altDomainParams?: cdk.CfnParameter[];
@@ -23,10 +24,14 @@ export class LambdaImageHandler extends Construct {
     expression: cdk.Fn.conditionNot(cdk.Fn.conditionEquals(Aws.PARTITION, 'aws-cn')),
   });
   private originRequestPolicy = new cloudfront.OriginRequestPolicy(this, 'ForwardAllQueryString', {
+    originRequestPolicyName: `${cdk.Aws.STACK_NAME}-${cdk.Aws.REGION}-FwdAllQueryString`,
     queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
+    headerBehavior: cloudfront.OriginRequestHeaderBehavior.allowList('Origin', 'Accept'),
   });
   private cachePolicy = new cloudfront.CachePolicy(this, 'CacheAllQueryString', {
+    cachePolicyName: `${cdk.Aws.STACK_NAME}-${cdk.Aws.REGION}-CacheAllQueryString`,
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
+    headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Origin', 'Accept'),
   });
 
   constructor(scope: Construct, id: string, props: LambdaImageHandlerProps) {
@@ -83,6 +88,7 @@ export class LambdaImageHandler extends Construct {
         NODE_OPTIONS: '--enable-source-maps',
         SRC_BUCKET: props.bucketNameParams[0].valueAsString,
         STYLE_TABLE_NAME: table.tableName,
+        AUTO_WEBP: props.autoWebp,
       },
       handler: 'src/index-lambda.handler',
       layers: [layer],

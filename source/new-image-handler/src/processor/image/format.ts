@@ -25,6 +25,10 @@ export class FormatAction implements IImageAction {
 
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
+    if (ctx.features && ctx.features.autoWebp) {
+      ctx.features.autoWebp = false;
+    }
+
     const opt = this.validate(params);
     const metadata = await ctx.image.metadata();
 
