@@ -24,12 +24,12 @@ export class LambdaImageHandler extends Construct {
     expression: cdk.Fn.conditionNot(cdk.Fn.conditionEquals(Aws.PARTITION, 'aws-cn')),
   });
   private originRequestPolicy = new cloudfront.OriginRequestPolicy(this, 'ForwardAllQueryString', {
-    originRequestPolicyName: `${cdk.Aws.STACK_NAME}-${cdk.Aws.REGION}-FwdAllQueryString`,
+    originRequestPolicyName: `${cdk.Aws.STACK_NAME}-${cdk.Aws.REGION}-FwdAllQS`,
     queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
     headerBehavior: cloudfront.OriginRequestHeaderBehavior.allowList('Origin', 'Accept'),
   });
   private cachePolicy = new cloudfront.CachePolicy(this, 'CacheAllQueryString', {
-    cachePolicyName: `${cdk.Aws.STACK_NAME}-${cdk.Aws.REGION}-CacheAllQueryString`,
+    cachePolicyName: `${cdk.Aws.STACK_NAME}-${cdk.Aws.REGION}-CacheAllQS`,
     queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
     headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Origin', 'Accept'),
   });
