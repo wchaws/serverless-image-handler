@@ -97,33 +97,52 @@ export class ResizeAction implements IImageAction {
       opt.fit = sharp.fit.fill;
     }
     const metadata = await ctx.image.metadata();
+    if (!(metadata.width && metadata.height)) {
+      throw new InvalidArgument('Can\'t read image\'s width and height');
+    }
+
     if (o.p && (!o.w) && (!o.h)) {
-      if (metadata.width && metadata.height) {
-        const width = Math.round(metadata.width * o.p * 0.01);
-        const height = Math.round(metadata.height * o.p * 0.01);
-        opt.withoutEnlargement = false;
-        ctx.image.resize(width, height, opt);
-      }
+      opt.withoutEnlargement = false;
+      opt.width = Math.round(metadata.width * o.p * 0.01);
     } else {
-      if (metadata.width && metadata.height) {
-        if (o.l) {
-          if (metadata.width > metadata.height) {
-            opt.width = o.l;
-          } else {
-            opt.height = o.l;
-          }
+      if (o.l) {
+        if (metadata.width > metadata.height) {
+          opt.width = o.l;
+        } else {
+          opt.height = o.l;
         }
-        if (o.s) {
-          if (metadata.height < metadata.width) {
-            opt.height = o.s;
-          } else {
-            opt.width = o.s;
-          }
+      }
+      if (o.s) {
+        if (metadata.height < metadata.width) {
+          opt.height = o.s;
+        } else {
+          opt.width = o.s;
         }
-        ctx.image.resize(null, null, opt);
-      } else {
-        throw new InvalidArgument('Can\'t read image\'s width and height');
       }
     }
+
+    const pages = metadata.pages;
+    const pageHeight = metadata.pageHeight;
+    const isGif = (metadata.format === 'gif');
+    if (isGif && pageHeight && pages && (pages > 0) && (pageHeight > 0)) {
+      // Use virtual image to calculate the gif size
+      const vbox = sharp({
+        create: {
+          width: metadata.width,
+          height: pageHeight,
+          channels: 3,
+          background: 'gray',
+        },
+      });
+      const { height } = await sharp(await vbox.resize(null, null, opt).png().toBuffer()).metadata();
+      if (opt.height) {
+        opt.height = opt.height * pages;
+      }
+      // FIXME: There's still a bug in m_pad mode
+      ctx.image.resize(null, null, opt).gif({ pageHeight: height });
+    } else {
+      ctx.image.resize(null, null, opt);
+    }
+
   }
 }
