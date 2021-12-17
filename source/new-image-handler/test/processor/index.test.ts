@@ -95,6 +95,17 @@ test('example.gif?x-oss-process=image/format,jpg', async () => {
   expect(info.channels).toBe(3);
 });
 
+test('example.jpg?x-oss-process=image/resize,w_200/rotate,90', async () => {
+  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
+  const ctx = { image, bufferStore: new NullStore() };
+  await ImageProcessor.getInstance().process(ctx, 'image/resize,w_200/rotate,90'.split('/'));
+  const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
+
+  expect(info.width).toBe(134);
+  expect(info.height).toBe(200);
+  expect(info.channels).toBe(3);
+});
+
 test('autowebp: example.jpg', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
   const ctx = { image, bufferStore: new NullStore(), features: { autoWebp: true } };

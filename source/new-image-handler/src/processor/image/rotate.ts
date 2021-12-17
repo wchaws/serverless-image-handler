@@ -1,3 +1,4 @@
+import * as sharp from 'sharp';
 import { IImageAction, IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
 import * as is from '../../is';
@@ -27,7 +28,7 @@ export class RotateAction implements IImageAction {
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
     const opt = this.validate(params);
-    ctx.image.rotate(opt.degree, {
+    ctx.image = sharp(await ctx.image.toBuffer()).rotate(opt.degree, {
       background: '#ffffff',
     });
   }
