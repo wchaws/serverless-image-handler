@@ -14,6 +14,7 @@ export interface WatermarkOpts extends IActionOpts {
   color: string; // 文字颜色
   image: string; // img 水印URL
   auto: boolean; // 自动调整水印图片大小以适应背景
+  order: number; // 图文混排中，文字图片的先后顺序
 
 }
 
@@ -26,7 +27,7 @@ export class WatermarkAction implements IImageAction {
   public readonly name: string = 'watermark';
 
   public validate(params: string[]): ReadOnly<WatermarkOpts> {
-    let opt: WatermarkOpts = { text: '', t: 100, g: 'se', fill: false, rotate: 0, size: 40, color: '000000', image: '', auto: true };
+    let opt: WatermarkOpts = { text: '', t: 100, g: 'se', fill: false, rotate: 0, size: 40, color: '000000', image: '', auto: true, order: 0 };
 
     for (const param of params) {
       if ((this.name === param) || (!param)) {
@@ -45,6 +46,8 @@ export class WatermarkAction implements IImageAction {
         }
       } else if (k === 't') {
         opt.t = Number.parseInt(v, 10);
+      } else if (k === 'order') {
+        opt.order = Number.parseInt(v, 10);
       } else if (k === 'g') {
         opt.g = this.gravityConvert(v);
       } else if (k === 'size') {
@@ -89,17 +92,15 @@ export class WatermarkAction implements IImageAction {
       throw new InvalidArgument('Watermark param \'text\' and \'image\' should not be empty at the same time');
     }
 
-    if (opt.text && opt.image) {
-      throw new InvalidArgument('Does not support text and image watermark at the same time in this version');
-    }
-
     return opt;
   }
 
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
     const opt = this.validate(params);
-    if (opt.text) {
+    if (opt.text && opt.image) {
+      await this.mixedWaterMark(ctx, opt);
+    } else if (opt.text) {
       await this.textWaterMark(ctx, opt);
     } else {
       await this.imgWaterMark(ctx, opt);
@@ -171,6 +172,25 @@ export class WatermarkAction implements IImageAction {
     }
     const bt = await watermarkImg.toBuffer();
     ctx.image.composite([{ input: bt, tile: opt.fill, gravity: opt.g }]);
+  }
+
+  async mixedWaterMark(ctx: IImageContext, opt: WatermarkOpts): Promise<void> {
+    const bs = ctx.bufferStore;
+    const textOpt = this.calculateTextSize(opt.text, opt.size);
+    const svg = this.textSvgStr(opt, textOpt);
+    const svgBytes = Buffer.from(svg);
+
+    const watermarkImgBuffer = (await bs.get(opt.image)).buffer;
+    let watermarkImg = sharp(watermarkImgBuffer).png();
+    const bt = await watermarkImg.toBuffer();
+
+    if (opt.order === 0) {
+      ctx.image.composite([{ input: bt, tile: opt.fill, gravity: opt.g },
+        { input: svgBytes, tile: opt.fill, gravity: opt.g }]);
+    } else {
+      ctx.image.composite([{ input: svgBytes, tile: opt.fill, gravity: opt.g },
+        { input: bt, tile: opt.fill, gravity: opt.g }]);
+    }
   }
 
   gravityConvert(param: string): string {
