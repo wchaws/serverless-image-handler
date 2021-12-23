@@ -1,3 +1,4 @@
+import * as sharp from 'sharp';
 import { IImageAction, IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
 
@@ -30,19 +31,20 @@ export class FormatAction implements IImageAction {
     }
 
     const opt = this.validate(params);
-    const metadata = await ctx.image.metadata();
+    const metadata = await sharp(await ctx.image.toBuffer()).metadata(); // https://github.com/lovell/sharp/issues/2959
+    const pageHeight = metadata.pageHeight;
+    const isNotWebp = (opt.format !== 'webp');
 
-    if ((opt.format !== 'webp') && metadata.pageHeight && (metadata.pageHeight > 0)) {
-      if (metadata.width) {
-        ctx.image.extract({
-          top: 0,
-          left: 0,
-          width: metadata.width,
-          height: metadata.pageHeight,
-        });
-      } else {
-        throw new InvalidArgument('Incorrect image format');
+    if (isNotWebp && pageHeight && (pageHeight > 0)) {
+      if (!metadata.width) {
+        throw new InvalidArgument('Can\'t read image\'s width and height');
       }
+      ctx.image.extract({
+        top: 0,
+        left: 0,
+        width: metadata.width,
+        height: pageHeight,
+      });
     }
 
     // NOTE:  jpg,webp,png
