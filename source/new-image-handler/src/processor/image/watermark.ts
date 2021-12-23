@@ -32,6 +32,11 @@ interface WatermarkImgOpts extends IActionOpts {
   y?: number | undefined;
 }
 
+interface WatermarkMixedGravityOpts extends IActionOpts {
+  imgGravity: string;
+  textGravity: string;
+}
+
 export class WatermarkAction implements IImageAction {
   public readonly name: string = 'watermark';
 
@@ -57,26 +62,36 @@ export class WatermarkAction implements IImageAction {
         opt.t = Number.parseInt(v, 10);
       } else if (k === 'x') {
         opt.x = Number.parseInt(v, 10);
+        if (opt.x < 0 || opt.x > 4096) {
+          throw new InvalidArgument('Watermark param \'x\' must be between 0 and 4096');
+        }
       } else if (k === 'y') {
         opt.y = Number.parseInt(v, 10);
+        if (opt.y < 0 || opt.y > 4096) {
+          throw new InvalidArgument('Watermark param \'y\' must be between 0 and 4096');
+        }
       } else if (k === 'voffset') {
         opt.voffset = Number.parseInt(v, 10);
+        if (opt.voffset < -1000 || opt.voffset > 1000) {
+          throw new InvalidArgument('Watermark param \'voffset\' must be between -1000 and 1000');
+        }
       } else if (k === 'order') {
         opt.order = Number.parseInt(v, 10);
       } else if (k === 'interval') {
         opt.interval = Number.parseInt(v, 10);
+        if (opt.interval < 0 || opt.interval > 1000) {
+          throw new InvalidArgument('Watermark param \'interval\' must be between 0 and 1000');
+        }
       } else if (k === 'align') {
         opt.align = Number.parseInt(v, 10);
       } else if (k === 'g') {
         opt.g = this.gravityConvert(v);
       } else if (k === 'size') {
         const size = Number.parseInt(v, 10);
-        if (0 < size && 1000 > size) {
-          opt.size = size;
-        } else {
-          throw new InvalidArgument('Watermark param \'size\' must be between 0 and 1000');
+        opt.size = size;
+        if (opt.size < 0 || opt.size > 1000) {
+          throw new InvalidArgument('Watermark param \'size\' must be between 0 and 4096');
         }
-
       } else if (k === 'fill') {
         if (v && (v === '0' || v === '1')) {
           opt.fill = (v === '1');
@@ -206,47 +221,21 @@ export class WatermarkAction implements IImageAction {
     const imgMetadata = await watermarkImg.metadata();
     let imgW = imgMetadata.width ? imgMetadata.width : 0;
     let imgH = imgMetadata.height ? imgMetadata.height : 0;
-    let imgGravity = 'west';
-    let txtGravity = 'east';
-    if (opt.order === 1) {
-      if (opt.align === 1) {
-        imgGravity = 'east';
-        txtGravity = 'west';
-      } else if (opt.align === 2) {
-        imgGravity = 'southeast';
-        txtGravity = 'southwest';
-      } else {
-        imgGravity = 'northeast';
-        txtGravity = 'northwest';
-      }
-    } else {
-      if (opt.align === 1) {
-        imgGravity = 'west';
-        txtGravity = 'east';
-      } else if (opt.align === 2) {
-        imgGravity = 'southwest';
-        txtGravity = 'southeast';
-      } else {
-        imgGravity = 'northwest';
-        txtGravity = 'northeast';
-      }
-    }
-    console.log(imgGravity);
-    console.log(txtGravity);
-    console.log(imgW);
-    console.log(imgH);
-    console.log(imgMetadata.channels);
+    const gravityOpt = this.calculateMixedGravity(opt);
     const wbt = await watermarkImg.toBuffer();
+
     const overlapImg = sharp({
       create: {
         width: textOpt.width + imgW + opt.interval,
-        height: textOpt.height + imgH + opt.interval,
+        height: Math.max(textOpt.height, imgH),
         channels: 4,
         background: { r: 0, g: 0, b: 0, alpha: 0 },
       },
-    }).composite([{ input: svgBytes, gravity: txtGravity }, { input: wbt, gravity: imgGravity }]);
+    }).composite([{ input: svgBytes, gravity: gravityOpt.textGravity }, { input: wbt, gravity: gravityOpt.imgGravity }]);
     // ctx.image = overlapImg.png();
-
+    // console.log(Math.max(textOpt.height, imgH));
+    // const metadata = await ctx.image.metadata();
+    // console.log(metadata.height);
     const bt = await overlapImg.png().toBuffer();
     ctx.image.composite([{ input: bt, tile: opt.fill, gravity: opt.g }]);
   }
@@ -350,6 +339,39 @@ export class WatermarkAction implements IImageAction {
     };
 
   }
+
+  calculateMixedGravity(opt: WatermarkOpts):WatermarkMixedGravityOpts {
+    let imgGravity = 'west';
+    let txtGravity = 'east';
+    if (opt.order === 1) {
+      if (opt.align === 1) {
+        imgGravity = 'east';
+        txtGravity = 'west';
+      } else if (opt.align === 2) {
+        imgGravity = 'southeast';
+        txtGravity = 'southwest';
+      } else {
+        imgGravity = 'northeast';
+        txtGravity = 'northwest';
+      }
+    } else {
+      if (opt.align === 1) {
+        imgGravity = 'west';
+        txtGravity = 'east';
+      } else if (opt.align === 2) {
+        imgGravity = 'southwest';
+        txtGravity = 'southeast';
+      } else {
+        imgGravity = 'northwest';
+        txtGravity = 'northeast';
+      }
+    }
+    return {
+      imgGravity: imgGravity,
+      textGravity: txtGravity,
+    };
+  }
+
   async autoResizeImg(source: sharp.Sharp, ctx: IImageContext, opt: WatermarkOpts, textOpt: WatermarkTextOpts): Promise<sharp.Sharp> {
     if (opt.auto) {
 
