@@ -52,7 +52,7 @@ RUN apk update && \
     apk add fontconfig \
         imagemagick=~7.0
 
-ENV NODE_ENV=production
+ENV NODE_ENV=dev
 
 # https://pm2.keymetrics.io/docs/usage/docker-pm2-nodejs/
 RUN yarn --production && \
@@ -60,7 +60,7 @@ RUN yarn --production && \
     yarn cache clean --all
 
 COPY --from=builder /app/lib /app/lib
-# COPY test/fixtures /app/lib/test/fixtures
+COPY test/fixtures /app/lib/test/fixtures
 
 EXPOSE 8080
 
