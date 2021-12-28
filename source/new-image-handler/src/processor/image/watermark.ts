@@ -13,8 +13,8 @@ export interface WatermarkOpts extends IActionOpts {
   color: string; // 文字颜色
   image: string; // img 水印URL
   auto: boolean; // 自动调整水印图片大小以适应背景
-  x?: number | undefined; // 图文水印的x位置
-  y?: number | undefined; // 图文水印的y位置
+  x?: number; // 图文水印的x位置
+  y?: number; // 图文水印的y位置
   voffset: number; // 图文水印的居中时候的偏移位置
   order: number; // 图文混排中，文字图片的先后顺序
   interval: number; // 图文混排中，图片和文字间隔
@@ -28,8 +28,8 @@ interface WatermarkTextOpts extends IActionOpts {
 }
 
 interface WatermarkImgOpts extends IActionOpts {
-  x?: number | undefined;
-  y?: number | undefined;
+  x?: number;
+  y?: number;
 }
 
 interface WatermarkMixedGravityOpts extends IActionOpts {
@@ -206,7 +206,7 @@ export class WatermarkAction implements IImageAction {
     }
     const pos = this.calculateImgPos(opt, metadata, markMetadata);
     const bt = await watermarkImg.toBuffer();
-    let overlay: sharp.OverlayOptions = { input: bt, tile: opt.fill, gravity: opt.g, top: pos.y, left: pos.x };
+    const overlay: sharp.OverlayOptions = { input: bt, tile: opt.fill, gravity: opt.g, top: pos.y, left: pos.x };
     ctx.image.composite([overlay]);
   }
 
@@ -217,10 +217,10 @@ export class WatermarkAction implements IImageAction {
     const svgBytes = Buffer.from(svg);
 
     const watermarkImgBuffer = (await bs.get(opt.image)).buffer;
-    let watermarkImg = sharp(watermarkImgBuffer).png();
+    const watermarkImg = sharp(watermarkImgBuffer).png();
     const imgMetadata = await watermarkImg.metadata();
-    let imgW = imgMetadata.width ? imgMetadata.width : 0;
-    let imgH = imgMetadata.height ? imgMetadata.height : 0;
+    const imgW = imgMetadata.width ? imgMetadata.width : 0;
+    const imgH = imgMetadata.height ? imgMetadata.height : 0;
     const gravityOpt = this.calculateMixedGravity(opt);
     const wbt = await watermarkImg.toBuffer();
 
