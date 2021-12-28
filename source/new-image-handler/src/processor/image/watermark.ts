@@ -1,7 +1,6 @@
 import * as sharp from 'sharp';
 import { IImageAction, IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
-
 const margin = 5;
 
 export interface WatermarkOpts extends IActionOpts {
@@ -14,6 +13,12 @@ export interface WatermarkOpts extends IActionOpts {
   color: string; // 文字颜色
   image: string; // img 水印URL
   auto: boolean; // 自动调整水印图片大小以适应背景
+  x?: number; // 图文水印的x位置
+  y?: number; // 图文水印的y位置
+  voffset: number; // 图文水印的居中时候的偏移位置
+  order: number; // 图文混排中，文字图片的先后顺序
+  interval: number; // 图文混排中，图片和文字间隔
+  align: number; // 图文混排中，图片和文字对其方式
 
 }
 
@@ -22,11 +27,21 @@ interface WatermarkTextOpts extends IActionOpts {
   height: number;
 }
 
+interface WatermarkImgOpts extends IActionOpts {
+  x?: number;
+  y?: number;
+}
+
+interface WatermarkMixedGravityOpts extends IActionOpts {
+  imgGravity: string;
+  textGravity: string;
+}
+
 export class WatermarkAction implements IImageAction {
   public readonly name: string = 'watermark';
 
   public validate(params: string[]): ReadOnly<WatermarkOpts> {
-    let opt: WatermarkOpts = { text: '', t: 100, g: 'se', fill: false, rotate: 0, size: 40, color: '000000', image: '', auto: true };
+    let opt: WatermarkOpts = { text: '', t: 100, g: 'se', fill: false, rotate: 0, size: 40, color: '000000', image: '', auto: true, order: 0, x: undefined, y: undefined, voffset: 0, interval: 0, align: 0 };
 
     for (const param of params) {
       if ((this.name === param) || (!param)) {
@@ -45,16 +60,38 @@ export class WatermarkAction implements IImageAction {
         }
       } else if (k === 't') {
         opt.t = Number.parseInt(v, 10);
+      } else if (k === 'x') {
+        opt.x = Number.parseInt(v, 10);
+        if (opt.x < 0 || opt.x > 4096) {
+          throw new InvalidArgument('Watermark param \'x\' must be between 0 and 4096');
+        }
+      } else if (k === 'y') {
+        opt.y = Number.parseInt(v, 10);
+        if (opt.y < 0 || opt.y > 4096) {
+          throw new InvalidArgument('Watermark param \'y\' must be between 0 and 4096');
+        }
+      } else if (k === 'voffset') {
+        opt.voffset = Number.parseInt(v, 10);
+        if (opt.voffset < -1000 || opt.voffset > 1000) {
+          throw new InvalidArgument('Watermark param \'voffset\' must be between -1000 and 1000');
+        }
+      } else if (k === 'order') {
+        opt.order = Number.parseInt(v, 10);
+      } else if (k === 'interval') {
+        opt.interval = Number.parseInt(v, 10);
+        if (opt.interval < 0 || opt.interval > 1000) {
+          throw new InvalidArgument('Watermark param \'interval\' must be between 0 and 1000');
+        }
+      } else if (k === 'align') {
+        opt.align = Number.parseInt(v, 10);
       } else if (k === 'g') {
         opt.g = this.gravityConvert(v);
       } else if (k === 'size') {
         const size = Number.parseInt(v, 10);
-        if (0 < size && 1000 > size) {
-          opt.size = size;
-        } else {
-          throw new InvalidArgument('Watermark param \'size\' must be between 0 and 1000');
+        opt.size = size;
+        if (opt.size < 0 || opt.size > 1000) {
+          throw new InvalidArgument('Watermark param \'size\' must be between 0 and 4096');
         }
-
       } else if (k === 'fill') {
         if (v && (v === '0' || v === '1')) {
           opt.fill = (v === '1');
@@ -89,17 +126,15 @@ export class WatermarkAction implements IImageAction {
       throw new InvalidArgument('Watermark param \'text\' and \'image\' should not be empty at the same time');
     }
 
-    if (opt.text && opt.image) {
-      throw new InvalidArgument('Does not support text and image watermark at the same time in this version');
-    }
-
     return opt;
   }
 
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
     const opt = this.validate(params);
-    if (opt.text) {
+    if (opt.text && opt.image) {
+      await this.mixedWaterMark(ctx, opt);
+    } else if (opt.text) {
       await this.textWaterMark(ctx, opt);
     } else {
       await this.imgWaterMark(ctx, opt);
@@ -148,10 +183,10 @@ export class WatermarkAction implements IImageAction {
       watermarkImg = sharp(bt);
     }
     // auto scale warkmark size
+    const metadata = await ctx.image.metadata();
+    const markMetadata = await watermarkImg.metadata();
     if (opt.auto) {
       // check the warkmark image size, if bigger than backgroud image, need resize the overlay
-      const metadata = await ctx.image.metadata();
-      const markMetadata = await watermarkImg.metadata();
       let width = markMetadata.width;
       let height = markMetadata.height;
       let needResize = false;
@@ -169,7 +204,39 @@ export class WatermarkAction implements IImageAction {
         watermarkImg = watermarkImg.resize(width, height);
       }
     }
+    const pos = this.calculateImgPos(opt, metadata, markMetadata);
     const bt = await watermarkImg.toBuffer();
+    const overlay: sharp.OverlayOptions = { input: bt, tile: opt.fill, gravity: opt.g, top: pos.y, left: pos.x };
+    ctx.image.composite([overlay]);
+  }
+
+  async mixedWaterMark(ctx: IImageContext, opt: WatermarkOpts): Promise<void> {
+    const bs = ctx.bufferStore;
+    const textOpt = this.calculateTextSize(opt.text, opt.size);
+    const svg = this.textSvgStr(opt, textOpt);
+    const svgBytes = Buffer.from(svg);
+
+    const watermarkImgBuffer = (await bs.get(opt.image)).buffer;
+    const watermarkImg = sharp(watermarkImgBuffer).png();
+    const imgMetadata = await watermarkImg.metadata();
+    const imgW = imgMetadata.width ? imgMetadata.width : 0;
+    const imgH = imgMetadata.height ? imgMetadata.height : 0;
+    const gravityOpt = this.calculateMixedGravity(opt);
+    const wbt = await watermarkImg.toBuffer();
+
+    const overlapImg = sharp({
+      create: {
+        width: textOpt.width + imgW + opt.interval,
+        height: Math.max(textOpt.height, imgH),
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      },
+    }).composite([{ input: svgBytes, gravity: gravityOpt.textGravity }, { input: wbt, gravity: gravityOpt.imgGravity }]);
+    // ctx.image = overlapImg.png();
+    // console.log(Math.max(textOpt.height, imgH));
+    // const metadata = await ctx.image.metadata();
+    // console.log(metadata.height);
+    const bt = await overlapImg.png().toBuffer();
     ctx.image.composite([{ input: bt, tile: opt.fill, gravity: opt.g }]);
   }
 
@@ -203,7 +270,7 @@ export class WatermarkAction implements IImageAction {
     }
     return {
       width: Math.round(cWidth + margin),
-      height: Math.round(fontSize * 1.4),
+      height: Math.round(fontSize * 1.2),
     };
   }
   textSvgStr(opt: WatermarkOpts, textOpt: WatermarkTextOpts): string {
@@ -228,6 +295,81 @@ export class WatermarkAction implements IImageAction {
     }).composite([{ input: svgBytes }]);
 
     return overlapImg;
+  }
+
+  calculateImgPos(opt: WatermarkOpts, metadata: sharp.Metadata, markMetadata:sharp.Metadata): WatermarkImgOpts {
+    let imgX = undefined;
+    let imgY = undefined;
+    if (markMetadata.width && metadata.width && markMetadata.height && metadata.height) {
+      if (['east', 'west', 'center'].includes(opt.g)) {
+        imgY = Math.round((metadata.height - markMetadata.height) / 2) + opt.voffset;
+      } else {
+        if (opt.y) {
+          if (opt.g.startsWith('south')) {
+            imgY = metadata.height - markMetadata.height - opt.y;
+          } else {
+            imgY = opt.y;
+          }
+        }
+      }
+      if (['north', 'south'].includes(opt.g)) {
+        imgX = Math.round((metadata.width - markMetadata.width) / 2);
+        if (!imgY) {
+          if (opt.g === 'north') {
+            imgY = 0;
+          } else {
+            imgY = metadata.height - markMetadata.height;
+          }
+        }
+      } else {
+        if (opt.x) {
+          if (opt.g.endsWith('east')) {
+            imgX = metadata.width - markMetadata.width - opt.x;
+          } else if (opt.g === 'center') {
+            imgX = Math.round((metadata.width - markMetadata.width) / 2);
+          } else {
+            imgX = opt.x;
+          }
+        }
+      }
+    }
+    return {
+      x: imgX,
+      y: imgY,
+    };
+
+  }
+
+  calculateMixedGravity(opt: WatermarkOpts):WatermarkMixedGravityOpts {
+    let imgGravity = 'west';
+    let txtGravity = 'east';
+    if (opt.order === 1) {
+      if (opt.align === 1) {
+        imgGravity = 'east';
+        txtGravity = 'west';
+      } else if (opt.align === 2) {
+        imgGravity = 'southeast';
+        txtGravity = 'southwest';
+      } else {
+        imgGravity = 'northeast';
+        txtGravity = 'northwest';
+      }
+    } else {
+      if (opt.align === 1) {
+        imgGravity = 'west';
+        txtGravity = 'east';
+      } else if (opt.align === 2) {
+        imgGravity = 'southwest';
+        txtGravity = 'southeast';
+      } else {
+        imgGravity = 'northwest';
+        txtGravity = 'northeast';
+      }
+    }
+    return {
+      imgGravity: imgGravity,
+      textGravity: txtGravity,
+    };
   }
 
   async autoResizeImg(source: sharp.Sharp, ctx: IImageContext, opt: WatermarkOpts, textOpt: WatermarkTextOpts): Promise<sharp.Sharp> {
