@@ -172,14 +172,9 @@ export class WatermarkAction implements IImageAction {
     const watermarkImgBuffer = (await bs.get(opt.image)).buffer;
     let watermarkImg = sharp(watermarkImgBuffer).png();
 
-
-    if (opt.t < 100) {
-      watermarkImg = watermarkImg.removeAlpha().ensureAlpha(opt.t / 100);
-    }
-
     if (0 < opt.rotate) {
       watermarkImg = sharp(await watermarkImg.toBuffer());
-      const bt = await watermarkImg.rotate(opt.rotate, { background: '#ffffff00' }).toBuffer();
+      const bt = await watermarkImg.rotate(opt.rotate, { background: '#ffffff' }).toBuffer();
       watermarkImg = sharp(bt);
     }
     // auto scale warkmark size
@@ -207,13 +202,20 @@ export class WatermarkAction implements IImageAction {
     const pos = this.calculateImgPos(opt, metadata, markMetadata);
     const bt = await watermarkImg.toBuffer();
     const overlay: sharp.OverlayOptions = { input: bt, tile: opt.fill, gravity: opt.g, top: pos.y, left: pos.x };
-    ctx.image.composite([overlay]);
+    if (opt.t < 100 && markMetadata.hasAlpha) {
+      const overForPng = sharp(await ctx.image.toBuffer()).png();
+      const overBuffer = await overForPng.composite([overlay]).removeAlpha().ensureAlpha(opt.t / 100).toBuffer();
+      const overlay2: sharp.OverlayOptions = { input: overBuffer };
+      ctx.image.composite([overlay2]);
+    } else {
+      ctx.image.composite([overlay]);
+    }
   }
 
   async mixedWaterMark(ctx: IImageContext, opt: WatermarkOpts): Promise<void> {
     const bs = ctx.bufferStore;
     const textOpt = this.calculateTextSize(opt.text, opt.size);
-    const svg = this.textSvgStr(opt, textOpt);
+    const svg = this.textSvgStr(opt, textOpt, false);
     const svgBytes = Buffer.from(svg);
 
     const watermarkImgBuffer = (await bs.get(opt.image)).buffer;
@@ -224,20 +226,44 @@ export class WatermarkAction implements IImageAction {
     const gravityOpt = this.calculateMixedGravity(opt);
     const wbt = await watermarkImg.toBuffer();
 
-    const overlapImg = sharp({
+    const backMetadata = await ctx.image.metadata();
+
+    const expectedWidth = textOpt.width + imgW + opt.interval;
+    const expectedHeight = Math.max(textOpt.height, imgH);
+
+    let overlapImg = sharp({
       create: {
-        width: textOpt.width + imgW + opt.interval,
-        height: Math.max(textOpt.height, imgH),
+        width: expectedWidth,
+        height: expectedHeight,
         channels: 4,
         background: { r: 0, g: 0, b: 0, alpha: 0 },
       },
     }).composite([{ input: svgBytes, gravity: gravityOpt.textGravity }, { input: wbt, gravity: gravityOpt.imgGravity }]);
-    // ctx.image = overlapImg.png();
-    // console.log(Math.max(textOpt.height, imgH));
-    // const metadata = await ctx.image.metadata();
-    // console.log(metadata.height);
+    let alWidth = expectedWidth;
+    let alHeight = expectedHeight;
+    let needResize = false;
+    if (backMetadata.width && expectedWidth > backMetadata.width) {
+      alWidth = Math.min(expectedWidth, backMetadata.width) - 1;
+      needResize = true;
+    }
+    if (backMetadata.height && expectedHeight > backMetadata.height) {
+      alHeight = Math.min(expectedHeight, backMetadata.height) - 1;
+      needResize = true;
+    }
+    if (needResize) {
+      overlapImg.resize(alWidth, alHeight);
+    }
+
     const bt = await overlapImg.png().toBuffer();
-    ctx.image.composite([{ input: bt, tile: opt.fill, gravity: opt.g }]);
+    const overlay: sharp.OverlayOptions = { input: bt, tile: opt.fill, gravity: opt.g };
+    if (opt.t < 100 && imgMetadata.hasAlpha) {
+      const overForPng = sharp(await ctx.image.toBuffer()).png();
+      const overBuffer = await overForPng.composite([overlay]).removeAlpha().ensureAlpha(opt.t / 100).toBuffer();
+      const overlay2: sharp.OverlayOptions = { input: overBuffer };
+      ctx.image.composite([overlay2]);
+    } else {
+      ctx.image.composite([overlay]);
+    }
   }
 
   gravityConvert(param: string): string {
@@ -273,11 +299,11 @@ export class WatermarkAction implements IImageAction {
       height: Math.round(fontSize * 1.2),
     };
   }
-  textSvgStr(opt: WatermarkOpts, textOpt: WatermarkTextOpts): string {
+  textSvgStr(opt: WatermarkOpts, textOpt: WatermarkTextOpts, applyOpacity: boolean = true): string {
     const xOffset = Math.round(textOpt.width / 2);
     const yOffset = Math.round(textOpt.height * 0.8);
     const color = `#${opt.color}`;
-    const opacity = opt.t / 100;
+    const opacity = applyOpacity ? opt.t / 100 : 1;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${textOpt.width} ${textOpt.height}" text-anchor="middle">
     <text font-size='${opt.size}'  x="${xOffset}" y="${yOffset}" fill="${color}" opacity="${opacity}">${opt.text}</text>
     </svg>`;
