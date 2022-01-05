@@ -200,6 +200,10 @@ export class WatermarkAction implements IImageAction {
       }
     }
     const pos = this.calculateImgPos(opt, metadata, markMetadata);
+
+    if (opt.t < 100 && !markMetadata.hasAlpha) {
+      watermarkImg = watermarkImg.removeAlpha().ensureAlpha(opt.t / 100);
+    }
     const bt = await watermarkImg.toBuffer();
     const overlay: sharp.OverlayOptions = { input: bt, tile: opt.fill, gravity: opt.g, top: pos.y, left: pos.x };
     if (opt.t < 100 && markMetadata.hasAlpha) {
@@ -252,6 +256,10 @@ export class WatermarkAction implements IImageAction {
     }
     if (needResize) {
       overlapImg.resize(alWidth, alHeight);
+    }
+
+    if (opt.t < 100 && !imgMetadata.hasAlpha) {
+      overlapImg = overlapImg.removeAlpha().ensureAlpha(opt.t / 100);
     }
 
     const bt = await overlapImg.png().toBuffer();
