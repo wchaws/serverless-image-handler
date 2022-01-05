@@ -201,20 +201,10 @@ export class WatermarkAction implements IImageAction {
     }
     const pos = this.calculateImgPos(opt, metadata, markMetadata);
 
-    if (opt.t < 100 && !markMetadata.hasAlpha) {
-      watermarkImg = watermarkImg.removeAlpha().ensureAlpha(opt.t / 100);
-    }
-    const bt = await watermarkImg.toBuffer();
-    const overlay: sharp.OverlayOptions = { input: bt, tile: opt.fill, gravity: opt.g, top: pos.y, left: pos.x };
-    if (opt.t < 100 && markMetadata.hasAlpha) {
-      const overForPng = sharp(await ctx.image.toBuffer()).png();
-      const overBuffer = await overForPng.composite([overlay]).removeAlpha().ensureAlpha(opt.t / 100).toBuffer();
-      const overlay2: sharp.OverlayOptions = { input: overBuffer };
-      ctx.image.composite([overlay2]);
-    } else {
-      ctx.image.composite([overlay]);
-    }
+    const overlay = await this.extraImgOverlay(ctx, watermarkImg, markMetadata, opt, pos);
+    ctx.image.composite([overlay]);
   }
+
 
   async mixedWaterMark(ctx: IImageContext, opt: WatermarkOpts): Promise<void> {
     const bs = ctx.bufferStore;
@@ -258,20 +248,8 @@ export class WatermarkAction implements IImageAction {
       overlapImg.resize(alWidth, alHeight);
     }
 
-    if (opt.t < 100 && !imgMetadata.hasAlpha) {
-      overlapImg = overlapImg.removeAlpha().ensureAlpha(opt.t / 100);
-    }
-
-    const bt = await overlapImg.png().toBuffer();
-    const overlay: sharp.OverlayOptions = { input: bt, tile: opt.fill, gravity: opt.g };
-    if (opt.t < 100 && imgMetadata.hasAlpha) {
-      const overForPng = sharp(await ctx.image.toBuffer()).png();
-      const overBuffer = await overForPng.composite([overlay]).removeAlpha().ensureAlpha(opt.t / 100).toBuffer();
-      const overlay2: sharp.OverlayOptions = { input: overBuffer };
-      ctx.image.composite([overlay2]);
-    } else {
-      ctx.image.composite([overlay]);
-    }
+    const overlay = await this.extraImgOverlay(ctx, overlapImg, imgMetadata, opt, undefined);
+    ctx.image.composite([overlay]);
   }
 
   gravityConvert(param: string): string {
@@ -367,6 +345,11 @@ export class WatermarkAction implements IImageAction {
         }
       }
     }
+    if (imgX && !imgY) {
+      imgY = 0;
+    } else if (!imgX && imgY) {
+      imgX = 0;
+    }
     return {
       x: imgX,
       y: imgY,
@@ -460,5 +443,29 @@ export class WatermarkAction implements IImageAction {
       }
     }
     return bt;
+  }
+
+  async extraImgOverlay(ctx: IImageContext, markImg: sharp.Sharp, markMetadata: sharp.Metadata,
+    opt: WatermarkOpts, pos?: WatermarkImgOpts):Promise<sharp.OverlayOptions> {
+    if (opt.t < 100 && !markMetadata.hasAlpha) {
+      // jpeg or other no alpha image, we change the opacity by change the alpha channel
+      markImg = markImg.removeAlpha().ensureAlpha(opt.t / 100);
+    }
+    const bt = await markImg.png().toBuffer();
+    const overlay: sharp.OverlayOptions = { input: bt, tile: opt.fill, gravity: opt.g };
+
+    if (pos) {
+      overlay.top = pos.y;
+      overlay.left = pos.x;
+    }
+
+    if (opt.t < 100 && markMetadata.hasAlpha) {
+      // png or other image with alpha, we change the opacity by change the combined image
+      const overForPng = sharp(await ctx.image.toBuffer()).png();
+      const overBuffer = await overForPng.composite([overlay]).removeAlpha().ensureAlpha(opt.t / 100).toBuffer();
+      const overlay2: sharp.OverlayOptions = { input: overBuffer };
+      return overlay2;
+    }
+    return overlay;
   }
 }
