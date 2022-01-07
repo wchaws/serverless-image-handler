@@ -27,7 +27,13 @@ interface WatermarkTextOpts extends IActionOpts {
   height: number;
 }
 
-interface WatermarkImgOpts extends IActionOpts {
+interface WatermarkTextResizeOpts extends IActionOpts {
+  need: boolean;
+  width: number;
+  height: number;
+}
+
+interface WatermarkPosOpts extends IActionOpts {
   x?: number;
   y?: number;
 }
@@ -145,7 +151,7 @@ export class WatermarkAction implements IImageAction {
     const textOpt = this.calculateTextSize(opt.text, opt.size);
     const svg = this.textSvgStr(opt, textOpt);
     const svgBytes = Buffer.from(svg);
-
+    const metadata = await ctx.image.metadata();
     if (0 < opt.rotate) {
       // hard to rotate the svg directly, so attach it on image, then rotate the image
       const overlapImg = this.textSvgImg(svgBytes, textOpt);
@@ -156,13 +162,25 @@ export class WatermarkAction implements IImageAction {
         optOverlapImg = optOverlapImg.rotate(opt.rotate, { background: '#00000000' });
       }
 
-      optOverlapImg = await this.autoResizeImg(optOverlapImg, ctx, opt, textOpt);
+      const watermarkImg = await this.autoResizeImg(optOverlapImg, ctx, opt, textOpt);
+      const markMetadata = await watermarkImg.metadata();
 
-      const rotateOverlabImgBuffer = await optOverlapImg.toBuffer();
-      ctx.image.composite([{ input: rotateOverlabImgBuffer, tile: opt.fill, gravity: opt.g }]);
+      const pos = this.calculateImgPos(opt, metadata, markMetadata);
+      const rotateOverlabImgBuffer = await watermarkImg.toBuffer();
+      ctx.image.composite([{ input: rotateOverlabImgBuffer, tile: opt.fill, gravity: opt.g, top: pos.y, left: pos.x }]);
     } else {
-      const bt = await this.autoResizeSvg(svgBytes, ctx, opt, textOpt);
-      ctx.image.composite([{ input: bt, tile: opt.fill, gravity: opt.g }]);
+      const resizeOpt = this.autoCalculateResize(metadata, opt, textOpt);
+      let bt: Buffer = svgBytes;
+      if (resizeOpt.need) {
+        // hard to resize the svg directly, so attach it on image, then resize the image
+        let overlapImg = this.textSvgImg(svgBytes, textOpt);
+        const overlapImgBuffer = await overlapImg.png().toBuffer();
+        overlapImg = sharp(overlapImgBuffer).png();
+        overlapImg = overlapImg.resize(resizeOpt.width, resizeOpt.height);
+        bt = await overlapImg.toBuffer();
+      }
+      const pos = this.calculatePos(opt, metadata.width, metadata.height, resizeOpt.width, resizeOpt.height);
+      ctx.image.composite([{ input: bt, tile: opt.fill, gravity: opt.g, top: pos.y, left: pos.x }]);
     }
   }
 
@@ -172,14 +190,9 @@ export class WatermarkAction implements IImageAction {
     const watermarkImgBuffer = (await bs.get(opt.image)).buffer;
     let watermarkImg = sharp(watermarkImgBuffer).png();
 
-
-    if (opt.t < 100) {
-      watermarkImg = watermarkImg.removeAlpha().ensureAlpha(opt.t / 100);
-    }
-
     if (0 < opt.rotate) {
       watermarkImg = sharp(await watermarkImg.toBuffer());
-      const bt = await watermarkImg.rotate(opt.rotate, { background: '#ffffff00' }).toBuffer();
+      const bt = await watermarkImg.rotate(opt.rotate, { background: '#ffffff' }).toBuffer();
       watermarkImg = sharp(bt);
     }
     // auto scale warkmark size
@@ -205,15 +218,16 @@ export class WatermarkAction implements IImageAction {
       }
     }
     const pos = this.calculateImgPos(opt, metadata, markMetadata);
-    const bt = await watermarkImg.toBuffer();
-    const overlay: sharp.OverlayOptions = { input: bt, tile: opt.fill, gravity: opt.g, top: pos.y, left: pos.x };
+
+    const overlay = await this.extraImgOverlay(ctx, watermarkImg, markMetadata, opt, pos);
     ctx.image.composite([overlay]);
   }
+
 
   async mixedWaterMark(ctx: IImageContext, opt: WatermarkOpts): Promise<void> {
     const bs = ctx.bufferStore;
     const textOpt = this.calculateTextSize(opt.text, opt.size);
-    const svg = this.textSvgStr(opt, textOpt);
+    const svg = this.textSvgStr(opt, textOpt, false);
     const svgBytes = Buffer.from(svg);
 
     const watermarkImgBuffer = (await bs.get(opt.image)).buffer;
@@ -224,20 +238,37 @@ export class WatermarkAction implements IImageAction {
     const gravityOpt = this.calculateMixedGravity(opt);
     const wbt = await watermarkImg.toBuffer();
 
-    const overlapImg = sharp({
+    const metadata = await ctx.image.metadata();
+
+    const expectedWidth = textOpt.width + imgW + opt.interval;
+    const expectedHeight = Math.max(textOpt.height, imgH);
+
+    let overlapImg = sharp({
       create: {
-        width: textOpt.width + imgW + opt.interval,
-        height: Math.max(textOpt.height, imgH),
+        width: expectedWidth,
+        height: expectedHeight,
         channels: 4,
         background: { r: 0, g: 0, b: 0, alpha: 0 },
       },
     }).composite([{ input: svgBytes, gravity: gravityOpt.textGravity }, { input: wbt, gravity: gravityOpt.imgGravity }]);
-    // ctx.image = overlapImg.png();
-    // console.log(Math.max(textOpt.height, imgH));
-    // const metadata = await ctx.image.metadata();
-    // console.log(metadata.height);
-    const bt = await overlapImg.png().toBuffer();
-    ctx.image.composite([{ input: bt, tile: opt.fill, gravity: opt.g }]);
+    let alWidth = expectedWidth;
+    let alHeight = expectedHeight;
+    let needResize = false;
+    if (metadata.width && expectedWidth > metadata.width) {
+      alWidth = Math.min(expectedWidth, metadata.width) - 1;
+      needResize = true;
+    }
+    if (metadata.height && expectedHeight > metadata.height) {
+      alHeight = Math.min(expectedHeight, metadata.height) - 1;
+      needResize = true;
+    }
+    if (needResize) {
+      overlapImg.resize(alWidth, alHeight);
+    }
+    const markMeta = await overlapImg.metadata();
+    const pos = this.calculateImgPos(opt, metadata, markMeta);
+    const overlay = await this.extraImgOverlay(ctx, overlapImg, imgMetadata, opt, pos);
+    ctx.image.composite([overlay]);
   }
 
   gravityConvert(param: string): string {
@@ -273,11 +304,11 @@ export class WatermarkAction implements IImageAction {
       height: Math.round(fontSize * 1.2),
     };
   }
-  textSvgStr(opt: WatermarkOpts, textOpt: WatermarkTextOpts): string {
+  textSvgStr(opt: WatermarkOpts, textOpt: WatermarkTextOpts, applyOpacity: boolean = true): string {
     const xOffset = Math.round(textOpt.width / 2);
     const yOffset = Math.round(textOpt.height * 0.8);
     const color = `#${opt.color}`;
-    const opacity = opt.t / 100;
+    const opacity = applyOpacity ? opt.t / 100 : 1;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${textOpt.width} ${textOpt.height}" text-anchor="middle">
     <text font-size='${opt.size}'  x="${xOffset}" y="${yOffset}" fill="${color}" opacity="${opacity}">${opt.text}</text>
     </svg>`;
@@ -297,39 +328,41 @@ export class WatermarkAction implements IImageAction {
     return overlapImg;
   }
 
-  calculateImgPos(opt: WatermarkOpts, metadata: sharp.Metadata, markMetadata:sharp.Metadata): WatermarkImgOpts {
+  calculateImgPos(opt: WatermarkOpts, metadata: sharp.Metadata, markMetadata:sharp.Metadata): WatermarkPosOpts {
+    return this.calculatePos(opt, metadata.width, metadata.height, markMetadata.width, markMetadata.height);
+  }
+
+  calculatePos(opt:WatermarkOpts, sourceW?: number, sourceH?: number, markW?: number, markH? :number): WatermarkPosOpts {
     let imgX = undefined;
     let imgY = undefined;
-    if (markMetadata.width && metadata.width && markMetadata.height && metadata.height) {
+    if (markW && sourceW && markH && sourceH) {
       if (['east', 'west', 'center'].includes(opt.g)) {
-        imgY = Math.round((metadata.height - markMetadata.height) / 2) + opt.voffset;
+        imgY = Math.round((sourceH - markH) / 2) + opt.voffset;
       } else {
-        if (opt.y) {
-          if (opt.g.startsWith('south')) {
-            imgY = metadata.height - markMetadata.height - opt.y;
-          } else {
-            imgY = opt.y;
-          }
+        const checkY = opt.y ? opt.y : 0;
+        if (opt.g.startsWith('south')) {
+          imgY = sourceH - markH - checkY;
+        } else {
+          imgY = checkY;
         }
       }
       if (['north', 'south'].includes(opt.g)) {
-        imgX = Math.round((metadata.width - markMetadata.width) / 2);
+        imgX = Math.round((sourceW - markW) / 2);
         if (!imgY) {
           if (opt.g === 'north') {
             imgY = 0;
           } else {
-            imgY = metadata.height - markMetadata.height;
+            imgY = sourceH - markH;
           }
         }
       } else {
-        if (opt.x) {
-          if (opt.g.endsWith('east')) {
-            imgX = metadata.width - markMetadata.width - opt.x;
-          } else if (opt.g === 'center') {
-            imgX = Math.round((metadata.width - markMetadata.width) / 2);
-          } else {
-            imgX = opt.x;
-          }
+        const checkX = opt.x ? opt.x : 0;
+        if (opt.g.endsWith('east')) {
+          imgX = sourceW - markW - checkX;
+        } else if (opt.g === 'center') {
+          imgX = Math.round((sourceW - markW) / 2);
+        } else {
+          imgX = checkX;
         }
       }
     }
@@ -337,7 +370,6 @@ export class WatermarkAction implements IImageAction {
       x: imgX,
       y: imgY,
     };
-
   }
 
   calculateMixedGravity(opt: WatermarkOpts):WatermarkMixedGravityOpts {
@@ -400,11 +432,8 @@ export class WatermarkAction implements IImageAction {
 
   }
 
-  async autoResizeSvg(source: Buffer, ctx: IImageContext, opt: WatermarkOpts, textOpt: WatermarkTextOpts): Promise<Buffer> {
-    let bt = source;
-
+  autoCalculateResize(metadata: sharp.Metadata, opt: WatermarkOpts, textOpt: WatermarkTextOpts): WatermarkTextResizeOpts {
     if (opt.auto) {
-      const metadata = await ctx.image.metadata();
       let w = textOpt.width;
       let h = textOpt.height;
       let needResize = false;
@@ -416,15 +445,40 @@ export class WatermarkAction implements IImageAction {
         h = metadata.height;
         needResize = true;
       }
-      if (needResize) {
-        // hard to resize the svg directly, so attach it on image, then resize the image
-        let overlapImg = this.textSvgImg(bt, textOpt);
-        const overlapImgBuffer = await overlapImg.png().toBuffer();
-        overlapImg = sharp(overlapImgBuffer).png();
-        overlapImg = overlapImg.resize(w, h);
-        bt = await overlapImg.toBuffer();
-      }
+      return {
+        need: needResize,
+        width: w,
+        height: h,
+      };
     }
-    return bt;
+    return {
+      need: false,
+      width: textOpt.width,
+      height: textOpt.height,
+    };
+  }
+
+  async extraImgOverlay(ctx: IImageContext, markImg: sharp.Sharp, markMetadata: sharp.Metadata,
+    opt: WatermarkOpts, pos?: WatermarkPosOpts):Promise<sharp.OverlayOptions> {
+    if (opt.t < 100 && !markMetadata.hasAlpha) {
+      // jpeg or other no alpha image, we change the opacity by change the alpha channel
+      markImg = markImg.removeAlpha().ensureAlpha(opt.t / 100);
+    }
+    const bt = await markImg.png().toBuffer();
+    const overlay: sharp.OverlayOptions = { input: bt, tile: opt.fill, gravity: opt.g };
+
+    if (pos) {
+      overlay.top = pos.y;
+      overlay.left = pos.x;
+    }
+
+    if (opt.t < 100 && markMetadata.hasAlpha) {
+      // png or other image with alpha, we change the opacity by change the combined image
+      const overForPng = sharp(await ctx.image.toBuffer()).png();
+      const overBuffer = await overForPng.composite([overlay]).removeAlpha().ensureAlpha(opt.t / 100).toBuffer();
+      const overlay2: sharp.OverlayOptions = { input: overBuffer };
+      return overlay2;
+    }
+    return overlay;
   }
 }
