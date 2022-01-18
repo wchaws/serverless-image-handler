@@ -19,7 +19,12 @@ WORKDIR /app
 
 COPY package.json yarn.lock /app/
 
-RUN npx yarn install --prod && \
+RUN \
+    # TODO: Since offical sharp-libvips v8.11.3 doesn't contains magick by default which will cause gif images to fail to be saved.
+    # So, use private built sharp-libvips at here. Remove this when sharp v0.30.0 is released.
+    # https://github.com/lovell/sharp/issues/3013
+    SHARP_DIST_BASE_URL="https://github.com/wchaws/sharp-libvips/releases/download/v8.11.3-magick/" \
+    npx yarn install --prod && \
     mkdir -p /asset/nodejs && \
     cp -au node_modules /asset/nodejs/
 
