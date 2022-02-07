@@ -123,6 +123,6 @@ export class CropAction implements IImageAction {
       top: y,
       width: width,
       height: height,
-    }).toBuffer());
+    }).toBuffer(), { animated: true });
   }
 }

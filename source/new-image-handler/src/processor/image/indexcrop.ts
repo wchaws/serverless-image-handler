@@ -99,7 +99,12 @@ export class IndexCropAction implements IImageAction {
     }
 
     if (needCrop) {
-      ctx.image = sharp(await ctx.image.extract({ left: x, top: y, width: w, height: h }).toBuffer());
+      ctx.image = sharp(await ctx.image.extract({
+        left: x,
+        top: y,
+        width: w,
+        height: h,
+      }).toBuffer(), { animated: true });
     }
 
   }

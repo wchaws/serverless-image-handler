@@ -22,7 +22,7 @@
     "@types/koa": "^2.13.4",
     "@types/koa-logger": "^3.1.1",
     "@types/node": "^14.17.6",
-    "@types/sharp": "^0.29.2",
+    "@types/sharp": "^0.29.5",
     "@typescript-eslint/eslint-plugin": "^4.28.4",
     "@typescript-eslint/parser": "^4.28.4",
     "benchmark": "^2.1.4",
@@ -44,7 +44,7 @@
     "http-errors": "^1.8.0",
     "koa": "^2.13.1",
     "koa-logger": "^3.2.1",
-    "sharp": "^0.29.2"
+    "sharp": "^0.30.0"
   },
   "bundledDependencies": [],
   "engines": {

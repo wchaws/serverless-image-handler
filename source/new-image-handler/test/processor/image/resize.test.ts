@@ -56,6 +56,23 @@ test('resize,l_100,s_100,m_fixed,limit_0', async () => {
   expect(info.height).toBe(100);
 });
 
+test('animated gif: resize,w_100', async () => {
+  const image = sharp((await fixtureStore.get('example.gif')).buffer, { animated: true });
+  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+
+  const action = new ResizeAction();
+  await action.process(ctx, 'resize,w_100'.split(','));
+
+  const { data, info } = await ctx.image.toBuffer({ resolveWithObject: true });
+
+  expect(info.width).toBe(100);
+  expect(info.format).toBe('gif');
+
+  const metadata = await sharp(data, { animated: true }).metadata();
+
+  expect(metadata.pages).toBe(3);
+});
+
 test('resize action validate', () => {
   const action = new ResizeAction();
   const param1 = action.validate('resize,m_mfit,h_100,w_100,,'.split(','));
