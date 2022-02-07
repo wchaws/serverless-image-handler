@@ -41,15 +41,22 @@ export class RoundedCornersAction implements IImageAction {
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
     const opt = this.validate(params);
     const metadata = await sharp(await ctx.image.toBuffer()).metadata(); // https://github.com/lovell/sharp/issues/2959
-    if (metadata.width && metadata.height) {
-      const rbox = Buffer.from(`<svg viewBox="0 0 ${metadata.width} ${metadata.height}">
-        <rect width="${metadata.width}" height="${metadata.height}" rx="${opt.r}" />
-      </svg>`);
-      ctx.image.composite([
-        { input: rbox, blend: 'dest-in' },
-      ]);
-    } else {
+    if (!(metadata.width && metadata.height)) {
       throw new InvalidArgument('Can\'t read image\'s width and height');
     }
+
+    const w = metadata.width;
+    const h = metadata.height;
+    const pages = metadata.pages ?? 1;
+    const rects = Array.from({ length: pages }, (_, i) =>
+      `<rect y="${i * h}" width="${w}" height="${h}" rx="${opt.r}" />`,
+    );
+    const mask = Buffer.from(`<svg viewBox="0 0 ${w} ${pages * h}">
+      ${rects.join('\n')}
+    </svg>`);
+
+    ctx.image.composite([
+      { input: mask, blend: 'dest-in' },
+    ]);
   }
 }

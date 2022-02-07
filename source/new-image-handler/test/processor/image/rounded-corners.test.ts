@@ -1,4 +1,5 @@
 import * as sharp from 'sharp';
+import * as Jimp from 'jimp';
 import { IImageContext } from '../../../src/processor/image';
 import { RoundedCornersAction } from '../../../src/processor/image/rounded-corners';
 import { fixtureStore } from './utils';
@@ -10,10 +11,19 @@ test('rounded-corner validate', async () => {
   const action = new RoundedCornersAction();
   await action.process(ctx, 'rounded-corners,r_100'.split(','));
 
-  const { info } = await ctx.image.png().toBuffer({ resolveWithObject: true });
+  const { data, info } = await ctx.image.png().toBuffer({ resolveWithObject: true });
+
+  const w = info.width;
+  const h = info.height;
 
   expect(info.channels).toBe(4);
   expect(info.format).toBe(sharp.format.png.id);
+
+  const pic = await Jimp.read(data);
+  expect(pic.getPixelColor(0, 0)).toBe(0)
+  expect(pic.getPixelColor(0, w)).toBe(0)
+  expect(pic.getPixelColor(0, h)).toBe(0)
+  expect(pic.getPixelColor(w, h)).toBe(0)
 });
 
 test('quality action validate', () => {

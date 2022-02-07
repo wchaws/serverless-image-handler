@@ -31,20 +31,13 @@ export class FormatAction implements IImageAction {
     }
 
     const opt = this.validate(params);
-    const metadata = await sharp(await ctx.image.toBuffer()).metadata(); // https://github.com/lovell/sharp/issues/2959
-    const pageHeight = metadata.pageHeight;
+    const buffer = await ctx.image.toBuffer();
+    const metadata = await sharp(buffer).metadata(); // https://github.com/lovell/sharp/issues/2959
+    const pages = metadata.pages;
     const isNotWebp = (opt.format !== 'webp');
 
-    if (isNotWebp && pageHeight && (pageHeight > 0)) {
-      if (!metadata.width) {
-        throw new InvalidArgument('Can\'t read image\'s width and height');
-      }
-      ctx.image.extract({
-        top: 0,
-        left: 0,
-        width: metadata.width,
-        height: pageHeight,
-      });
+    if (isNotWebp && pages && (pages > 0)) {
+      ctx.image = sharp(buffer, { page: 0 });
     }
 
     // NOTE:  jpg,webp,png

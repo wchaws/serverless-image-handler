@@ -22,7 +22,7 @@
     "@types/koa": "^2.13.4",
     "@types/koa-logger": "^3.1.1",
     "@types/node": "^14.17.6",
-    "@types/sharp": "^0.29.2",
+    "@types/sharp": "^0.29.5",
     "@typescript-eslint/eslint-plugin": "^4.28.4",
     "@typescript-eslint/parser": "^4.28.4",
     "benchmark": "^2.1.4",
@@ -32,6 +32,7 @@
     "eslint-plugin-import": "^2.23.4",
     "jest": "^27.0.6",
     "jest-junit": "^12",
+    "jimp": "^0.16.1",
     "json-schema": "^0.3.0",
     "nodemon": "^2.0.12",
     "npm-check-updates": "^11",
@@ -44,7 +45,7 @@
     "http-errors": "^1.8.0",
     "koa": "^2.13.1",
     "koa-logger": "^3.2.1",
-    "sharp": "^0.29.2"
+    "sharp": "^0.30.0"
   },
   "bundledDependencies": [],
   "engines": {

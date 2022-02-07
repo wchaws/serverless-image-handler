@@ -121,28 +121,6 @@ export class ResizeAction implements IImageAction {
       }
     }
 
-    const pages = metadata.pages;
-    const pageHeight = metadata.pageHeight;
-    const isGif = (metadata.format === 'gif');
-    if (isGif && pageHeight && pages && (pages > 0) && (pageHeight > 0)) {
-      // Use virtual image to calculate the gif size
-      const vbox = sharp({
-        create: {
-          width: metadata.width,
-          height: pageHeight,
-          channels: 3,
-          background: 'gray',
-        },
-      });
-      const { height } = await sharp(await vbox.resize(null, null, opt).png().toBuffer()).metadata();
-      if (opt.height) {
-        opt.height = opt.height * pages;
-      }
-      // FIXME: There's still a bug in m_pad mode
-      ctx.image.resize(null, null, opt).gif({ pageHeight: height });
-    } else {
-      ctx.image.resize(null, null, opt);
-    }
-
+    ctx.image.resize(null, null, opt);
   }
 }
