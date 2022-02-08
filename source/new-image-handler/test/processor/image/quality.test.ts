@@ -1,4 +1,5 @@
 import * as sharp from 'sharp';
+import * as jpeg from '../../../src/processor/image/jpeg';
 import { IImageContext } from '../../../src/processor/image';
 import { QualityAction } from '../../../src/processor/image/quality';
 import { fixtureStore } from './utils';
@@ -26,7 +27,7 @@ test('quality action validate', () => {
 });
 
 
-test('quality action', async () => {
+test('absolute quality action', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
   const ctx: IImageContext = { image, bufferStore: fixtureStore };
   const action = new QualityAction();
@@ -34,4 +35,23 @@ test('quality action', async () => {
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
   expect(info.format).toBe(sharp.format.jpeg.id);
+});
+
+test('relative quality action', async () => {
+  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
+  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const action = new QualityAction();
+  await action.process(ctx, 'quality,q_50'.split(','));
+  const { data, info } = await ctx.image.toBuffer({ resolveWithObject: true });
+
+  expect(info.format).toBe(sharp.format.jpeg.id);
+
+  expect(jpeg.decode(data).quality).toBe(40)
+});
+
+test('estimate image quality', async () => {
+  const buffer = (await fixtureStore.get('example.jpg')).buffer;
+  const quality = jpeg.decode(buffer).quality
+
+  expect(quality).toBe(82);
 });
