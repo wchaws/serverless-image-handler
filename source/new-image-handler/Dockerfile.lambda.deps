@@ -25,6 +25,6 @@ RUN npx yarn install --prod && \
 
 # COPY --from=ImageMagickBuilder /opt/bin/magick /opt/bin/identify /opt/bin/convert /asset/bin/
 
-RUN strip /asset/bin/*
+# RUN strip /asset/bin/*
 
 RUN du -sh /asset/
