@@ -1,16 +1,16 @@
-FROM public.ecr.aws/sam/build-nodejs12.x as ImageMagickBuilder
+# FROM public.ecr.aws/sam/build-nodejs12.x as ImageMagickBuilder
 
-WORKDIR /ws
+# WORKDIR /ws
 
-RUN yum install -y yum-plugin-ovl && \
-    yum update -y && \
-    yum install -y cmake
+# RUN yum install -y yum-plugin-ovl && \
+#     yum update -y && \
+#     yum install -y cmake
 
-COPY ImageMagick.Makefile /ws
+# COPY ImageMagick.Makefile /ws
 
-RUN make -f ImageMagick.Makefile libs TARGET_DIR=/opt
+# RUN make -f ImageMagick.Makefile libs TARGET_DIR=/opt
 
-RUN make -f ImageMagick.Makefile all TARGET_DIR=/opt
+# RUN make -f ImageMagick.Makefile all TARGET_DIR=/opt
 
 
 FROM public.ecr.aws/sam/build-nodejs12.x
@@ -23,8 +23,8 @@ RUN npx yarn install --prod && \
     mkdir -p /asset/nodejs && \
     cp -au node_modules /asset/nodejs/
 
-COPY --from=ImageMagickBuilder /opt/bin/magick /opt/bin/identify /opt/bin/convert /asset/bin/
+# COPY --from=ImageMagickBuilder /opt/bin/magick /opt/bin/identify /opt/bin/convert /asset/bin/
 
-RUN strip /asset/bin/*
+# RUN strip /asset/bin/*
 
 RUN du -sh /asset/

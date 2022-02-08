@@ -1,8 +1,8 @@
 import * as sharp from 'sharp';
 import { IImageAction, IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
-import { identify } from '../../imagemagick';
 import * as is from '../../is';
+import * as jpeg from './jpeg';
 
 
 const JPG = 'jpg';
@@ -48,19 +48,18 @@ export class QualityAction implements IImageAction {
     const opt = this.validate(params);
     const metadata = await ctx.image.metadata();
 
-    let q = 72;
-    if (opt.q) {
-      const buffer = await ctx.image.toBuffer();
-      const estq = Number.parseInt((await identify(buffer, ['-format', '%Q'])).toString(), 10);
-      q = Math.round(estq * opt.q / 100);
-    } else if (opt.Q) {
-      q = opt.Q;
-    }
-
     if (JPEG === metadata.format || JPG === metadata.format) {
+      let q = 72;
+      if (opt.q) {
+        const buffer = await ctx.image.toBuffer();
+        const estq = jpeg.decode(buffer).quality;
+        q = Math.round(estq * opt.q / 100);
+      } else if (opt.Q) {
+        q = opt.Q;
+      }
       ctx.image.jpeg({ quality: q });
     } else if (WEBP === metadata.format) {
-      ctx.image.webp({ quality: q });
+      ctx.image.webp({ quality: (opt.q ?? opt.Q) });
     }
   }
 }
