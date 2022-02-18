@@ -3,19 +3,19 @@
 
 import * as cdk from '@aws-cdk/core';
 import { BootstraplessStackSynthesizer } from 'cdk-bootstrapless-synthesizer';
-import { ConstructsStack, /* ECSImageHandlerStack,*/ LambdaImageHandlerStack } from '../lib/constructs-stack';
+import { ConstructsStack, ECSImageHandlerStack, LambdaImageHandlerStack } from '../lib/constructs-stack';
 
 const app = new cdk.App();
 new ConstructsStack(app, 'ConstructsStack');
-// const ecsStack = new ECSImageHandlerStack(app, 'serverless-ecs-image-handler-stack', {
-//   stackName: process.env.STACK_NAME,
-//   env: {
-//     account: process.env.CDK_DEFAULT_ACCOUNT,
-//     region: process.env.CDK_DEPLOY_REGION,
-//   },
-// });
+const ecsStack = new ECSImageHandlerStack(app, 'serverless-ecs-image-handler-stack', {
+  stackName: process.env.STACK_NAME,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEPLOY_REGION,
+  },
+});
 
-// cdk.Tags.of(ecsStack).add('name', 'serverless-ecs-image-handler');
+cdk.Tags.of(ecsStack).add('name', 'serverless-ecs-image-handler');
 
 new LambdaImageHandlerStack(app, 'lambda-image-handler-cn', {
   isChinaRegion: true,
