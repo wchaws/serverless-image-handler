@@ -22,7 +22,7 @@ export interface IProcessContext {
   /**
    * Feature flags.
    */
-  readonly features?: { [key: string]: boolean };
+  readonly features: { [key: string]: boolean };
 }
 
 /**
@@ -114,3 +114,9 @@ export interface IAction {
  * Invalid argument error (HTTP 400).
  */
 export class InvalidArgument extends HttpErrors[400] { }
+
+
+export enum Features {
+  AutoWebp = 'auto-webp',
+  ReturnInfo = 'return-info',
+}

@@ -1,4 +1,5 @@
 import * as sharp from 'sharp';
+import { Features } from '../../src/processor';
 import { ImageProcessor, StyleProcessor } from '../../src/processor/image';
 import { ResizeAction } from '../../src/processor/image/resize';
 import { MemKVStore, NullStore } from '../../src/store';
@@ -34,7 +35,7 @@ test('image processor test', async () => {
       background: { r: 255, g: 0, b: 0 },
     },
   });
-  const ctx = { image, bufferStore: new NullStore() };
+  const ctx = { image, bufferStore: new NullStore(), features: {} };
   await ImageProcessor.getInstance().process(ctx, 'image/resize,w_100,h_100,m_fixed,limit_0/'.split('/'));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
@@ -44,7 +45,7 @@ test('image processor test', async () => {
 
 test('image/crop,w_100,h_100/rounded-corners,r_10/format,png', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx = { image, bufferStore: new NullStore() };
+  const ctx = { image, bufferStore: new NullStore(), features: {} };
   await ImageProcessor.getInstance().process(ctx, 'image/crop,w_100,h_100/rounded-corners,r_10/format,png'.split('/'));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
@@ -55,7 +56,7 @@ test('image/crop,w_100,h_100/rounded-corners,r_10/format,png', async () => {
 
 test('image/resize,w_100/rounded-corners,r_10/format,png', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx = { image, bufferStore: new NullStore() };
+  const ctx = { image, bufferStore: new NullStore(), features: {} };
   await ImageProcessor.getInstance().process(ctx, 'image/resize,w_100/rounded-corners,r_10/format,png'.split('/'));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
@@ -66,7 +67,7 @@ test('image/resize,w_100/rounded-corners,r_10/format,png', async () => {
 
 test('image/resize,w_50/crop,w_100,h_100/rounded-corners,r_100/format,png', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx = { image, bufferStore: new NullStore() };
+  const ctx = { image, bufferStore: new NullStore(), features: {} };
   await ImageProcessor.getInstance().process(ctx, 'image/resize,w_50/crop,w_100,h_100/rounded-corners,r_100/format,png'.split('/'));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
@@ -77,7 +78,7 @@ test('image/resize,w_50/crop,w_100,h_100/rounded-corners,r_100/format,png', asyn
 
 test('image/resize,w_20/indexcrop,x_50,i_0/', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx = { image, bufferStore: new NullStore() };
+  const ctx = { image, bufferStore: new NullStore(), features: {} };
   await ImageProcessor.getInstance().process(ctx, 'image/resize,w_20/indexcrop,x_50,i_0/'.split('/'));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
@@ -86,7 +87,7 @@ test('image/resize,w_20/indexcrop,x_50,i_0/', async () => {
 
 test('example.gif?x-oss-process=image/format,jpg', async () => {
   const image = sharp((await fixtureStore.get('example.gif')).buffer);
-  const ctx = { image, bufferStore: new NullStore() };
+  const ctx = { image, bufferStore: new NullStore(), features: {} };
   await ImageProcessor.getInstance().process(ctx, 'image/format,jpg'.split('/'));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
@@ -97,7 +98,7 @@ test('example.gif?x-oss-process=image/format,jpg', async () => {
 
 test('example.jpg?x-oss-process=image/resize,w_200/rotate,90', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx = { image, bufferStore: new NullStore() };
+  const ctx = { image, bufferStore: new NullStore(), features: {} };
   await ImageProcessor.getInstance().process(ctx, 'image/resize,w_200/rotate,90'.split('/'));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
@@ -108,7 +109,7 @@ test('example.jpg?x-oss-process=image/resize,w_200/rotate,90', async () => {
 
 test('autowebp: example.jpg', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx = { image, bufferStore: new NullStore(), features: { autoWebp: true } };
+  const ctx = { image, bufferStore: new NullStore(), features: { [Features.AutoWebp]: true } };
   await ImageProcessor.getInstance().process(ctx, []);
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
@@ -117,7 +118,7 @@ test('autowebp: example.jpg', async () => {
 
 test('autowebp: example.jpg?x-oss-process=image/format,png', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx = { image, bufferStore: new NullStore(), features: { autoWebp: true } };
+  const ctx = { image, bufferStore: new NullStore(), features: { [Features.AutoWebp]: true } };
   await ImageProcessor.getInstance().process(ctx, 'image/format,png'.split('/'));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
@@ -133,7 +134,7 @@ test('style processor test', async () => {
       background: { r: 255, g: 0, b: 0 },
     },
   });
-  const ctx = { image, bufferStore: new NullStore() };
+  const ctx = { image, bufferStore: new NullStore(), features: {} };
   const styleStore = new MemKVStore({
     style1: { id: 'style1', style: 'image/resize,w_100,h_100,m_fixed,limit_0/' },
   });
@@ -153,7 +154,7 @@ test('style processor test invalid style name', async () => {
       background: { r: 255, g: 0, b: 0 },
     },
   });
-  const ctx = { image, bufferStore: new NullStore() };
+  const ctx = { image, bufferStore: new NullStore(), features: {} };
   const styleStore = new MemKVStore({
     style1: { id: 'style1', style: 'image/resize,w_100,h_100,m_fixed,limit_0/' },
   });
@@ -170,7 +171,7 @@ test('style processor not found', async () => {
       background: { r: 255, g: 0, b: 0 },
     },
   });
-  const ctx = { image, bufferStore: new NullStore() };
+  const ctx = { image, bufferStore: new NullStore(), features: {} };
   const styleStore = new MemKVStore({
     style1: { id: 'style1', style: 'image/resize,w_100,h_100,m_fixed,limit_0/' },
   });

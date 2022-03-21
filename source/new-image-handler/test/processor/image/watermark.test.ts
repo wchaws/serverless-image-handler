@@ -18,7 +18,7 @@ const testMixedParam = `watermark,image_${base64ImgFile},text_${base64Text},g_nw
 
 test(testTextParam, async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
 
   const action = new WatermarkAction();
   await action.process(ctx, testTextParam.split(','));
@@ -29,7 +29,7 @@ test(testTextParam, async () => {
 
 test(testImgParam, async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
 
   const action = new WatermarkAction();
   await action.process(ctx, testImgParam.split(','));
@@ -40,7 +40,7 @@ test(testImgParam, async () => {
 
 test(testMixedParam, async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
 
   const action = new WatermarkAction();
   await action.process(ctx, testMixedParam.split(','));

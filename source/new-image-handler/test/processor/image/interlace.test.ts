@@ -35,7 +35,7 @@ test('Interlace action validate', () => {
 
 test('quality action', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new InterlaceAction();
   await action.process(ctx, 'interlace,1'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -45,7 +45,7 @@ test('quality action', async () => {
 
 test('quality action', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new InterlaceAction();
   await action.process(ctx, 'interlace,0'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });

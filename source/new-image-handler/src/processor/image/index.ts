@@ -1,5 +1,5 @@
 import * as sharp from 'sharp';
-import { IAction, InvalidArgument, IProcessContext, IProcessor } from '../../processor';
+import { Features, IAction, InvalidArgument, IProcessContext, IProcessor } from '../../processor';
 import { IKVStore, MemKVStore } from '../../store';
 import { AutoOrientAction } from './auto-orient';
 import { BlurAction } from './blur';
@@ -10,6 +10,7 @@ import { CropAction } from './crop';
 import { FormatAction } from './format';
 import { GreyAction } from './grey';
 import { IndexCropAction } from './indexcrop';
+import { InfoAction } from './info';
 import { InterlaceAction } from './interlace';
 import { QualityAction } from './quality';
 import { ResizeAction } from './resize';
@@ -19,9 +20,14 @@ import { SharpenAction } from './sharpen';
 import { WatermarkAction } from './watermark';
 
 export interface IImageAction extends IAction { }
+export interface IImageInfo {
+  [key: string]: { value: string }
+}
+
 
 export interface IImageContext extends IProcessContext {
   image: sharp.Sharp;
+  info?: IImageInfo;
 }
 export class ImageProcessor implements IProcessor {
   public static getInstance(): ImageProcessor {
@@ -55,8 +61,9 @@ export class ImageProcessor implements IProcessor {
       }
       await act.process(ctx, params);
 
+      if (ctx.features[Features.ReturnInfo]) { break }
     }
-    if (ctx.features && ctx.features.autoWebp) { ctx.image.webp(); }
+    if (ctx.features[Features.AutoWebp]) { ctx.image.webp(); }
   }
 
   public action(name: string): IAction {
@@ -90,6 +97,7 @@ ImageProcessor.getInstance().register(
   new IndexCropAction(),
   new RoundedCornersAction(),
   new WatermarkAction(),
+  new InfoAction(),
 );
 
 export class StyleProcessor implements IProcessor {

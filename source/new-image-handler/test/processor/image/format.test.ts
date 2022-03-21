@@ -33,7 +33,7 @@ test('format action validate', () => {
 
 test('format action', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new FormatAction();
   await action.process(ctx, 'format,png'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -42,7 +42,7 @@ test('format action', async () => {
 
 test('format action', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new FormatAction();
   await action.process(ctx, 'format,webp'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -51,7 +51,7 @@ test('format action', async () => {
 
 test('format action', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new FormatAction();
   await action.process(ctx, 'format,jpg'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });

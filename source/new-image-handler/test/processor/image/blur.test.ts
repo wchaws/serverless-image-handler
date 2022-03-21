@@ -31,7 +31,7 @@ test('quality action validate', () => {
 
 test('quality action', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new BlurAction();
   await action.process(ctx, 'blur,r_5,s_2'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });

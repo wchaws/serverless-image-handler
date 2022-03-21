@@ -6,6 +6,8 @@ import config from './config';
 import debug from './debug';
 import { bufferStore, getProcessor, parseRequest } from './default';
 import * as is from './is';
+import { Features } from './processor';
+import { IImageContext } from './processor/image';
 
 
 export const handler = WrapError(async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
@@ -28,15 +30,18 @@ export const handler = WrapError(async (event: APIGatewayProxyEventV2): Promise<
 
   if (actions.length > 1) {
     const { buffer } = await bs.get(uri);
-    const imagectx = {
+    const imagectx: IImageContext = {
       image: sharp(buffer, { animated: true }),
       bufferStore: bs,
-      features: { autoWebp },
+      features: { [Features.AutoWebp]: autoWebp },
     };
     const processor = getProcessor(actions[0]);
     await processor.process(imagectx, actions);
-    const { data, info } = await imagectx.image.toBuffer({ resolveWithObject: true });
 
+    if (imagectx.features[Features.ReturnInfo]) {
+      return resp(200, imagectx.info);
+    }
+    const { data, info } = await imagectx.image.toBuffer({ resolveWithObject: true });
     return resp(200, data, info.format);
   } else {
     const { buffer, type } = await bs.get(uri, bypass);

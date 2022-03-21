@@ -5,6 +5,8 @@ import * as sharp from 'sharp';
 import config from './config';
 import debug from './debug';
 import { bufferStore, getProcessor, parseRequest } from './default';
+import { Features } from './processor';
+import { IImageContext } from './processor/image';
 
 const DefaultBufferStore = bufferStore();
 const app = new Koa();
@@ -44,12 +46,21 @@ app.use(async ctx => {
     if (actions.length > 1) {
       const processor = getProcessor(actions[0]);
       const { buffer } = await bs.get(uri);
-      const imagectx = { image: sharp(buffer, { animated: true }), bufferStore: bs };
+      const imagectx: IImageContext = {
+        image: sharp(buffer, { animated: true }),
+        bufferStore: bs,
+        features: {},
+      };
       await processor.process(imagectx, actions);
-      const { data, info } = await imagectx.image.toBuffer({ resolveWithObject: true });
 
-      ctx.body = data;
-      ctx.type = info.format;
+      if (imagectx.features[Features.ReturnInfo]) {
+        ctx.body = imagectx.info;
+      } else {
+        const { data, info } = await imagectx.image.toBuffer({ resolveWithObject: true });
+
+        ctx.body = data;
+        ctx.type = info.format;
+      }
     } else {
       const { buffer, type } = await bs.get(uri, bypass);
 
