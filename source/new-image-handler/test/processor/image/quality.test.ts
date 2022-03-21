@@ -29,7 +29,7 @@ test('quality action validate', () => {
 
 test('absolute quality action', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new QualityAction();
   await action.process(ctx, 'quality,Q_1'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -39,7 +39,7 @@ test('absolute quality action', async () => {
 
 test('relative quality action', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new QualityAction();
   await action.process(ctx, 'quality,q_50'.split(','));
   const { data, info } = await ctx.image.toBuffer({ resolveWithObject: true });

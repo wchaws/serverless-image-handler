@@ -73,7 +73,7 @@ test('crop action validate', () => {
 test('crop action', async () => {
 
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new CropAction();
   void expect(action.process(ctx, 'crop,x_10000,y_10,g_nw'.split(','))).rejects.toThrowError(/Incorrect crop param, x value must be in/);
   void expect(action.process(ctx, 'crop,x_10,y_100000,g_nw'.split(','))).rejects.toThrowError(/Incorrect crop param, y value must be in/);
@@ -85,7 +85,7 @@ test('crop action', async () => {
   if (metadata.height === undefined || metadata.width === undefined) {
     return;
   }
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new CropAction();
   await action.process(ctx, 'crop,x_10,y_10'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -99,7 +99,7 @@ test('crop action', async () => {
   if (metadata.height === undefined || metadata.width === undefined) {
     return;
   }
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new CropAction();
   await action.process(ctx, 'crop,x_0,y_0,g_north'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -113,7 +113,7 @@ test('crop action', async () => {
   if (metadata.height === undefined || metadata.width === undefined) {
     return;
   }
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new CropAction();
   await action.process(ctx, 'crop,x_0,y_0,g_north'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -128,7 +128,7 @@ test('crop action', async () => {
   if (metadata.height === undefined || metadata.width === undefined) {
     return;
   }
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new CropAction();
   await action.process(ctx, 'crop,x_0,y_20,g_ne'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -143,7 +143,7 @@ test('crop action', async () => {
   if (metadata.height === undefined || metadata.width === undefined) {
     return;
   }
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new CropAction();
   await action.process(ctx, 'crop,x_0,y_0,g_west'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -158,7 +158,7 @@ test('crop action', async () => {
   if (metadata.height === undefined || metadata.width === undefined) {
     return;
   }
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new CropAction();
   await action.process(ctx, 'crop,x_0,y_0,g_se'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -173,7 +173,7 @@ test('crop action', async () => {
   if (metadata.height === undefined || metadata.width === undefined) {
     return;
   }
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new CropAction();
   await action.process(ctx, 'crop,x_0,y_0,w_10000,h_10000'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });

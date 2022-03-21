@@ -1,6 +1,6 @@
 import * as sharp from 'sharp';
 import { IImageAction, IImageContext } from '.';
-import { IActionOpts, ReadOnly, InvalidArgument } from '..';
+import { IActionOpts, ReadOnly, InvalidArgument, Features } from '..';
 
 export interface FormatOpts extends IActionOpts {
   format: string;
@@ -26,8 +26,8 @@ export class FormatAction implements IImageAction {
 
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
-    if (ctx.features && ctx.features.autoWebp) {
-      ctx.features.autoWebp = false;
+    if (ctx.features[Features.AutoWebp]) {
+      ctx.features[Features.AutoWebp] = false;
     }
 
     const opt = this.validate(params);

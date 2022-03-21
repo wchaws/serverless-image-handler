@@ -37,7 +37,7 @@ test('auto-orient action validate', () => {
 
 test('quality action', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new AutoOrientAction();
   await action.process(ctx, 'auto-orient,1'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });

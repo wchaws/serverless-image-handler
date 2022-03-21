@@ -37,7 +37,7 @@ test('quality action validate', () => {
 
 test('quality action', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new ContrastAction();
   await action.process(ctx, 'contrast,-50'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });

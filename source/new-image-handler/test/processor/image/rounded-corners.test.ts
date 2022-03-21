@@ -6,7 +6,7 @@ import { fixtureStore } from './utils';
 
 test('rounded-corner validate', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore };
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
 
   const action = new RoundedCornersAction();
   await action.process(ctx, 'rounded-corners,r_100'.split(','));
