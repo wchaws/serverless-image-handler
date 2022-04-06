@@ -3,7 +3,7 @@ import { ParsedUrlQuery } from 'querystring';
 import config from './config';
 import { InvalidArgument, IProcessor } from './processor';
 import { ImageProcessor, StyleProcessor } from './processor/image';
-import { IBufferStore, S3Store, LocalStore, MemKVStore, DynamoDBStore, IKVStore } from './store';
+import { IBufferStore, S3Store, LocalStore, MemKVStore, DynamoDBStore, IKVStore, HTTPStore } from './store';
 import * as style from './style.json';
 
 const PROCESSOR_MAP: { [key: string]: IProcessor } = {
@@ -20,11 +20,16 @@ export function getProcessor(name: string): IProcessor {
 }
 
 export function bufferStore(p?: string): IBufferStore {
-  if (config.isProd) {
+  if (config.isProd && !config.extOrigin) {
     if (!p) { p = config.srcBucket; }
     console.log(`use ${S3Store.name} s3://${p}`);
     return new S3Store(p);
-  } else {
+  } 
+  // 3rd origin
+  else if (config.isProd && config.extOrigin){
+    return HTTPStore(p);
+  }
+  else {
     if (!p) { p = path.join(__dirname, '../test/fixtures'); }
     console.log(`use ${LocalStore.name} file://${p}`);
     return new LocalStore(p);

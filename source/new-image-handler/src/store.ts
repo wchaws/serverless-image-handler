@@ -66,6 +66,25 @@ export class S3Store implements IBufferStore {
   }
 }
 
+
+/**
+ * A http(s) base store, used for 3rd party origin
+ */
+ export class HTTPStore implements IBufferStore {
+  public constructor(public readonly bucket: string) { }
+
+  public async get(p: string, _?: () => void): Promise<{ buffer: Buffer; type: string }> {
+    const imgUrl = path.join(config.extOrigin, p);
+    var request = require('request').defaults({ encoding: null });
+    request.get(imgUrl, function (err, res, body) {
+      return {
+        buffer: body,
+        type: res.ContentType ?? '',
+      };
+    });
+  }
+}
+
 /**
  * A fake store. Only for unit test.
  */
