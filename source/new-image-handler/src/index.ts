@@ -10,7 +10,6 @@ import { InvalidArgument, Features } from './processor';
 import { IImageContext } from './processor/image';
 import * as S3 from 'aws-sdk/clients/s3';
 
-config.isProd = true;
 const DefaultBufferStore = bufferStore();
 const app = new Koa();
 const router = new Router();
