@@ -46,7 +46,7 @@ export class QualityAction implements IImageAction {
   }
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
     const opt = this.validate(params);
-    const metadata = await sharp(await ctx.image.toBuffer()).metadata(); // If the formate is changed before.
+    const metadata = await sharp(await ctx.image.toBuffer()).metadata(); // If the format is changed before.
     if (JPEG === metadata.format || JPG === metadata.format) {
       let q = 72;
       if (opt.q) {
