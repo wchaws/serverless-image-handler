@@ -3,8 +3,8 @@
 exports[`Snapshot 1`] = `
 Object {
   "Outputs": Object {
-    "testCFDistributionUrl2EDDF602": Object {
-      "Description": "The CloudFront distribution url",
+    "DistributionUrl0": Object {
+      "Description": "The CloudFront distribution url0 for s3://bucket-0",
       "Value": Object {
         "Fn::Join": Array [
           "",
@@ -12,7 +12,7 @@ Object {
             "https://",
             Object {
               "Fn::GetAtt": Array [
-                "testDistribution6586AF58",
+                "testDistribution0BE46EF53",
                 "DomainName",
               ],
             },
@@ -44,62 +44,10 @@ Object {
         ],
       },
     },
-    "testSrcBucketS3Url4DDD7660": Object {
-      "Value": Object {
-        "Fn::Join": Array [
-          "",
-          Array [
-            "s3://",
-            Object {
-              "Ref": "testSrcBucketAD4FA500",
-            },
-          ],
-        ],
-      },
-    },
   },
   "Resources": Object {
     "EcsDefaultClusterMnL3mNNYNVpc18E0451A": Object {
       "Type": "AWS::ECS::Cluster",
-    },
-    "testBucketPolicy187DD4AD": Object {
-      "Properties": Object {
-        "Bucket": Object {
-          "Ref": "testSrcBucketAD4FA500",
-        },
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": "s3:GetObject",
-              "Effect": "Allow",
-              "Principal": Object {
-                "CanonicalUser": Object {
-                  "Fn::GetAtt": Array [
-                    "testOAI6BB36C5B",
-                    "S3CanonicalUserId",
-                  ],
-                },
-              },
-              "Resource": Object {
-                "Fn::Join": Array [
-                  "",
-                  Array [
-                    Object {
-                      "Fn::GetAtt": Array [
-                        "testSrcBucketAD4FA500",
-                        "Arn",
-                      ],
-                    },
-                    "/*",
-                  ],
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::S3::BucketPolicy",
     },
     "testCacheAllQueryString0AE63AEF": Object {
       "Properties": Object {
@@ -111,10 +59,14 @@ Object {
             "Fn::Join": Array [
               "",
               Array [
-                "testCacheAllQueryString3365C488-",
+                Object {
+                  "Ref": "AWS::StackName",
+                },
+                "-",
                 Object {
                   "Ref": "AWS::Region",
                 },
+                "-CacheAllQS",
               ],
             ],
           },
@@ -135,10 +87,10 @@ Object {
       },
       "Type": "AWS::CloudFront::CachePolicy",
     },
-    "testDistribution6586AF58": Object {
+    "testDistribution0BE46EF53": Object {
       "Properties": Object {
         "DistributionConfig": Object {
-          "Comment": "test distribution",
+          "Comment": "test distribution0",
           "CustomErrorResponses": Array [
             Object {
               "ErrorCachingMinTTL": 10,
@@ -169,39 +121,12 @@ Object {
             "OriginRequestPolicyId": Object {
               "Ref": "testForwardAllQueryString59F56102",
             },
-            "TargetOriginId": "testDistributionOriginGroup1C39A2A4E",
+            "TargetOriginId": "testDistribution0Origin1612AADC4",
             "ViewerProtocolPolicy": "redirect-to-https",
           },
           "Enabled": true,
           "HttpVersion": "http2",
           "IPV6Enabled": true,
-          "OriginGroups": Object {
-            "Items": Array [
-              Object {
-                "FailoverCriteria": Object {
-                  "StatusCodes": Object {
-                    "Items": Array [
-                      403,
-                    ],
-                    "Quantity": 1,
-                  },
-                },
-                "Id": "testDistributionOriginGroup1C39A2A4E",
-                "Members": Object {
-                  "Items": Array [
-                    Object {
-                      "OriginId": "testDistributionOrigin1320E6C28",
-                    },
-                    Object {
-                      "OriginId": "testDistributionOrigin2503E261E",
-                    },
-                  ],
-                  "Quantity": 2,
-                },
-              },
-            ],
-            "Quantity": 1,
-          },
           "Origins": Array [
             Object {
               "CustomOriginConfig": Object {
@@ -216,29 +141,13 @@ Object {
                   "DNSName",
                 ],
               },
-              "Id": "testDistributionOrigin1320E6C28",
-            },
-            Object {
-              "DomainName": Object {
-                "Fn::GetAtt": Array [
-                  "testSrcBucketAD4FA500",
-                  "RegionalDomainName",
-                ],
-              },
-              "Id": "testDistributionOrigin2503E261E",
-              "S3OriginConfig": Object {
-                "OriginAccessIdentity": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "origin-access-identity/cloudfront/",
-                      Object {
-                        "Ref": "testOAI6BB36C5B",
-                      },
-                    ],
-                  ],
+              "Id": "testDistribution0Origin1612AADC4",
+              "OriginCustomHeaders": Array [
+                Object {
+                  "HeaderName": "x-bucket",
+                  "HeaderValue": "bucket-0",
                 },
-              },
+              ],
             },
           ],
         },
@@ -254,21 +163,27 @@ Object {
           "HeadersConfig": Object {
             "HeaderBehavior": "none",
           },
-          "Name": "testForwardAllQueryString613D6245",
+          "Name": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                Object {
+                  "Ref": "AWS::StackName",
+                },
+                "-",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+                "-FwdAllQS",
+              ],
+            ],
+          },
           "QueryStringsConfig": Object {
             "QueryStringBehavior": "all",
           },
         },
       },
       "Type": "AWS::CloudFront::OriginRequestPolicy",
-    },
-    "testOAI6BB36C5B": Object {
-      "Properties": Object {
-        "CloudFrontOriginAccessIdentityConfig": Object {
-          "Comment": "Allows CloudFront to reach the bucket",
-        },
-      },
-      "Type": "AWS::CloudFront::CloudFrontOriginAccessIdentity",
     },
     "testService8DB925F6": Object {
       "DependsOn": Array [
@@ -612,10 +527,14 @@ Object {
                 },
               },
               Object {
-                "Name": "SRC_BUCKET",
+                "Name": "AWS_REGION",
                 "Value": Object {
-                  "Ref": "testSrcBucketAD4FA500",
+                  "Ref": "AWS::Region",
                 },
+              },
+              Object {
+                "Name": "SRC_BUCKET",
+                "Value": "bucket-0",
               },
               Object {
                 "Name": "STYLE_TABLE_NAME",
@@ -640,7 +559,7 @@ Object {
                   Object {
                     "Ref": "AWS::URLSuffix",
                   },
-                  "/aws-cdk/assets:77d152e53defa3c2ba234133d00d2daccb8a728692da1d41340e90e09aaef6e9",
+                  "/aws-cdk/assets:312de2f6fd6af253f3cbae2590af59b85c40d9524685ad5fac31574b02d08e28",
                 ],
               ],
             },
@@ -693,36 +612,6 @@ Object {
           "Statement": Array [
             Object {
               "Action": Array [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-              ],
-              "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
-                    "testSrcBucketAD4FA500",
-                    "Arn",
-                  ],
-                },
-                Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
-                          "testSrcBucketAD4FA500",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            Object {
-              "Action": Array [
                 "dynamodb:BatchGetItem",
                 "dynamodb:GetRecords",
                 "dynamodb:GetShardIterator",
@@ -741,6 +630,40 @@ Object {
                 },
                 Object {
                   "Ref": "AWS::NoValue",
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::bucket-0",
+                    ],
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::bucket-0/*",
+                    ],
+                  ],
                 },
               ],
             },
@@ -776,16 +699,6 @@ Object {
     "testServiceTaskDefwebLogGroup11B77DAE": Object {
       "DeletionPolicy": "Retain",
       "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Retain",
-    },
-    "testSrcBucketAD4FA500": Object {
-      "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "VersioningConfiguration": Object {
-          "Status": "Enabled",
-        },
-      },
-      "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
     "testStyleTable3315E595": Object {
