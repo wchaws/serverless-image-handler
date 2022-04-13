@@ -5,20 +5,29 @@ import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as ec2 from '@aws-cdk/aws-ec2';
 import * as ecs from '@aws-cdk/aws-ecs';
 import * as ecsPatterns from '@aws-cdk/aws-ecs-patterns';
-import * as iam from '@aws-cdk/aws-iam';
 import * as s3 from '@aws-cdk/aws-s3';
 import { Construct, CfnOutput, Duration, Stack, Aws } from '@aws-cdk/core';
 
 
 export class ECSImageHandler extends Construct {
+  private originRequestPolicy = new cloudfront.OriginRequestPolicy(this, 'ForwardAllQueryString', {
+    originRequestPolicyName: `${Aws.STACK_NAME}-${Aws.REGION}-FwdAllQS`,
+    queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
+  });
+  private cachePolicy = new cloudfront.CachePolicy(this, 'CacheAllQueryString', {
+    cachePolicyName: `${Aws.STACK_NAME}-${Aws.REGION}-CacheAllQS`,
+    queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
+  });
+
   constructor(scope: Construct, id: string) {
     super(scope, id);
 
-    const srcBucket = getOrCreateBucket(this, 'SrcBucket');
+    const buckets = getBuckets(this, 'ImageBucket');
     const table = new dynamodb.Table(this, 'StyleTable', {
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
+
     const albFargateService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, 'Service', {
       vpc: getOrCreateVpc(this),
       cpu: 2048,
@@ -31,7 +40,8 @@ export class ECSImageHandler extends Construct {
         containerPort: 8080,
         environment: {
           REGION: Aws.REGION,
-          SRC_BUCKET: srcBucket.bucketName,
+          AWS_REGION: Aws.REGION,
+          SRC_BUCKET: buckets[0].bucketName,
           STYLE_TABLE_NAME: table.tableName,
         },
       },
@@ -45,63 +55,34 @@ export class ECSImageHandler extends Construct {
     }).scaleOnCpuUtilization('CpuScaling', {
       targetUtilizationPercent: 50,
     });
-    srcBucket.grantRead(albFargateService.taskDefinition.taskRole);
+
     table.grantReadData(albFargateService.taskDefinition.taskRole);
+    for (const bkt of buckets) {
+      bkt.grantRead(albFargateService.taskDefinition.taskRole);
+    }
 
     // TODO: Add restriction access to ALB
     // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/restrict-access-to-load-balancer.html
     // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-listenerrule.html
 
-    this.distribution(new origins.OriginGroup({
-      primaryOrigin: new origins.LoadBalancerV2Origin(albFargateService.loadBalancer, {
+    buckets.forEach((bkt, index) => {
+      this.distribution(new origins.LoadBalancerV2Origin(albFargateService.loadBalancer, {
         protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
-      }),
-      fallbackOrigin: new origins.S3Origin(srcBucket, {
-        originAccessIdentity: this.withS3OAI(srcBucket),
-      }),
-      fallbackStatusCodes: [403],
-    }));
-
-    this.output('SrcBucketS3Url', `s3://${srcBucket.bucketName}`);
+        customHeaders: {
+          'x-bucket': bkt.bucketName
+        },
+      }), index, `for s3://${bkt.bucketName}`);
+    })
   }
 
-  private withS3OAI(bucket: s3.IBucket): cloudfront.IOriginAccessIdentity {
-    // https://stackoverflow.com/a/60917015/4108187
-    const s3oai = new cloudfront.OriginAccessIdentity(this, 'OAI');
-    const policyStatement = new iam.PolicyStatement({
-      actions: [
-        's3:GetObject',
-      ],
-      resources: [
-        bucket.arnForObjects('*'),
-      ],
-      principals: [
-        new iam.CanonicalUserPrincipal(s3oai.cloudFrontOriginAccessIdentityS3CanonicalUserId),
-      ],
-    });
-
-    if (bucket.policy) {
-      bucket.policy.document.addStatements(policyStatement);
-    } else {
-      new s3.BucketPolicy(this, 'BucketPolicy', { bucket: bucket }).document.addStatements(policyStatement);
-    }
-    return s3oai;
-  }
-
-  private distribution(origin: cloudfront.IOrigin) {
-    const originRequestPolicy = new cloudfront.OriginRequestPolicy(this, 'ForwardAllQueryString', {
-      queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
-    });
-    const cachePolicy = new cloudfront.CachePolicy(this, 'CacheAllQueryString', {
-      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
-    });
-    const dist = new cloudfront.Distribution(this, 'Distribution', {
-      comment: `${Stack.of(this).stackName} distribution`,
+  private distribution(origin: cloudfront.IOrigin, index: number, msg?: string) {
+    const dist = new cloudfront.Distribution(this, `Distribution${index}`, {
+      comment: `${Stack.of(this).stackName} distribution${index}`,
       defaultBehavior: {
         origin,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        originRequestPolicy,
-        cachePolicy,
+        originRequestPolicy: this.originRequestPolicy,
+        cachePolicy: this.cachePolicy,
       },
       errorResponses: [
         { httpStatus: 500, ttl: Duration.seconds(10) },
@@ -112,24 +93,15 @@ export class ECSImageHandler extends Construct {
       ],
     });
 
-    this.output('CFDistributionUrl', `https://${dist.distributionDomainName}`, 'The CloudFront distribution url');
+    this.cfnOutput(`DistributionUrl${index}`, `https://${dist.distributionDomainName}`, `The CloudFront distribution url${index} ${msg ?? ''}`);
   }
 
-  private output(id: string, value: string, description? :string) {
-    new CfnOutput(this, id, { value, description });
+  private cfnOutput(id: string, value: string, description?: string) {
+    const o = new CfnOutput(this, id, { value, description });
+    o.overrideLogicalId(id);
+    return o;
   }
 }
-
-// const env = {
-//   account: process.env.CDK_DEFAULT_ACCOUNT,
-//   region: 'us-west-2',
-// };
-
-// const app = new App();
-
-// new ECSImageHandlerStack(app, 'cdk-image-handler', { env });
-
-// app.synth();
 
 function getOrCreateVpc(scope: Construct): ec2.IVpc {
   if (scope.node.tryGetContext('use_default_vpc') === '1' || process.env.CDK_USE_DEFAULT_VPC === '1') {
@@ -140,10 +112,14 @@ function getOrCreateVpc(scope: Construct): ec2.IVpc {
   return new ec2.Vpc(scope, 'Vpc', { maxAzs: 3, natGateways: 1 });
 }
 
-function getOrCreateBucket(scope: Construct, id: string): s3.IBucket {
-  const bucketName = scope.node.tryGetContext('use_bucket');
-  if (bucketName) {
-    return s3.Bucket.fromBucketName(scope, id, bucketName);
+function getBuckets(scope: Construct, id: string): s3.IBucket[] {
+  const buckets: string[] = scope.node.tryGetContext('buckets');
+  if (!Array.isArray(buckets)) {
+    throw new Error('Can\'t find context key="buckets" or the context key="buckets" is not an array of string.');
   }
-  return new s3.Bucket(scope, id, { versioned: true });
+  if (buckets.length < 1) {
+    throw new Error('You must specify at least one bucket.')
+  }
+
+  return buckets.map((bkt: string, index: number) => s3.Bucket.fromBucketName(scope, `${id}${index}`, bkt));
 }
