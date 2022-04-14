@@ -33,7 +33,7 @@ test('Interlace action validate', () => {
 });
 
 
-test('quality action', async () => {
+test('interlace,1', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
   const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new InterlaceAction();
@@ -43,11 +43,24 @@ test('quality action', async () => {
 });
 
 
-test('quality action', async () => {
+test('interlace,0', async () => {
   const image = sharp((await fixtureStore.get('example.jpg')).buffer);
   const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
   const action = new InterlaceAction();
   await action.process(ctx, 'interlace,0'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
   expect(info.format).toBe(sharp.format.jpeg.id);
+});
+
+test('interlace,1 for gif', async () => {
+  const image = sharp((await fixtureStore.get('example.gif')).buffer, { animated: true });
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const action = new InterlaceAction();
+  await action.process(ctx, 'interlace,1'.split(','));
+  const { data, info } = await ctx.image.toBuffer({ resolveWithObject: true });
+
+  expect(info.format).toBe(sharp.format.gif.id);
+
+  const metadata = await sharp(data, { animated: true }).metadata();
+  expect(metadata.pages).toBe(3);
 });
