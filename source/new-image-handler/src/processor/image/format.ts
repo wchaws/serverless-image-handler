@@ -34,14 +34,14 @@ export class FormatAction implements IImageAction {
     const buffer = await ctx.image.toBuffer();
     const metadata = await sharp(buffer).metadata(); // https://github.com/lovell/sharp/issues/2959
     const pages = metadata.pages;
-    const isNotWebp = (opt.format !== 'webp');
+    const srcImgIsAnimated = !!(pages && (pages > 0));
+    const notToAnimatedFormat = !['webp', 'gif'].includes(opt.format);
 
-    if (isNotWebp && pages && (pages > 0)) {
+    if (srcImgIsAnimated && notToAnimatedFormat) {
       ctx.image = sharp(buffer, { page: 0 });
     }
 
-    // NOTE:  jpg,webp,png
-    if (opt.format === 'jpg') {
+    if (['jpeg', 'jpg'].includes(opt.format)) {
       ctx.image.toFormat('jpg');
     } else if (opt.format === 'png') {
       ctx.image.toFormat('png');
@@ -54,6 +54,8 @@ export class FormatAction implements IImageAction {
 
 const SUPPORTED_FORMAT = [
   'jpg',
+  'jpeg',
   'png',
   'webp',
+  'gif',
 ];

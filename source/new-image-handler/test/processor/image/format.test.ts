@@ -21,12 +21,12 @@ test('format action validate', () => {
 
   expect(() => {
     action.validate('format,abc'.split(','));
-  }).toThrowError(/Format must be one of jpg,png,webp/);
+  }).toThrowError(/Format must be one of/);
 
 
   expect(() => {
     action.validate('format,12'.split(','));
-  }).toThrowError(/Format must be one of jpg,png,webp/);
+  }).toThrowError(/Format must be one of/);
 
 });
 
@@ -56,4 +56,26 @@ test('format action', async () => {
   await action.process(ctx, 'format,jpg'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
   expect(info.format).toBe(sharp.format.jpeg.id);
+});
+
+test('format,jpeg', async () => {
+  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const action = new FormatAction();
+  await action.process(ctx, 'format,jpeg'.split(','));
+  const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
+  expect(info.format).toBe(sharp.format.jpeg.id);
+});
+
+test('format,gif', async () => {
+  const image = sharp((await fixtureStore.get('example.gif')).buffer, { animated: true });
+  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const action = new FormatAction();
+  await action.process(ctx, 'format,gif'.split(','));
+  const { info, data } = await ctx.image.toBuffer({ resolveWithObject: true });
+
+  expect(info.format).toBe(sharp.format.gif.id);
+
+  const metadata = await sharp(data, { animated: true }).metadata();
+  expect(metadata.pages).toBe(3);
 });
