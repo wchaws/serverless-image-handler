@@ -19,6 +19,7 @@ export interface WatermarkOpts extends IActionOpts {
   order: number; // 图文混排中，文字图片的先后顺序
   interval: number; // 图文混排中，图片和文字间隔
   align: number; // 图文混排中，图片和文字对其方式
+  type: string; // 字体
 
 }
 
@@ -47,7 +48,7 @@ export class WatermarkAction implements IImageAction {
   public readonly name: string = 'watermark';
 
   public validate(params: string[]): ReadOnly<WatermarkOpts> {
-    let opt: WatermarkOpts = { text: '', t: 100, g: 'se', fill: false, rotate: 0, size: 40, color: '000000', image: '', auto: true, order: 0, x: undefined, y: undefined, voffset: 0, interval: 0, align: 0 };
+    let opt: WatermarkOpts = { text: '', t: 100, g: 'se', fill: false, rotate: 0, size: 40, color: '000000', image: '', auto: true, order: 0, x: undefined, y: undefined, voffset: 0, interval: 0, align: 0, type: 'FZHei-B01'};
 
     for (const param of params) {
       if ((this.name === param) || (!param)) {
@@ -124,6 +125,11 @@ export class WatermarkAction implements IImageAction {
 
       } else if (k === 'color') {
         opt.color = v;
+      } else if (k === 'type') {
+        if (v) {
+          const buff = Buffer.from(v, 'base64');
+          opt.type = buff.toString('utf-8');
+        }
       } else {
         throw new InvalidArgument(`Unkown param: "${k}"`);
       }
@@ -310,7 +316,7 @@ export class WatermarkAction implements IImageAction {
     const color = `#${opt.color}`;
     const opacity = applyOpacity ? opt.t / 100 : 1;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${textOpt.width} ${textOpt.height}" text-anchor="middle">
-    <text font-size='${opt.size}'  x="${xOffset}" y="${yOffset}" fill="${color}" opacity="${opacity}">${opt.text}</text>
+    <text font-size='${opt.size}'  x="${xOffset}" y="${yOffset}" fill="${color}" opacity="${opacity}" font-family="${opt.type}">${opt.text}</text>
     </svg>`;
     return svg;
   }
