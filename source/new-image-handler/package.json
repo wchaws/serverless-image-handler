@@ -13,7 +13,7 @@
     "upgrade-dependencies": "export CI=0 && npm-check-updates --upgrade --target=minor --reject='projen' && yarn install --check-files && yarn upgrade",
     "watch": "tsc --project tsconfig.json -w",
     "benchmark": "ts-node test/bench/perf.ts",
-    "eslint": "eslint --ext .js.ts,.tsx --fix --no-error-on-unmatched-pattern src test build-tools .projenrc.js"
+    "eslint": "eslint --ext .js,.ts,.tsx --fix --no-error-on-unmatched-pattern src test build-tools .projenrc.js"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.84",
