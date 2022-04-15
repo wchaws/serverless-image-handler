@@ -48,7 +48,7 @@ export class WatermarkAction implements IImageAction {
   public readonly name: string = 'watermark';
 
   public validate(params: string[]): ReadOnly<WatermarkOpts> {
-    let opt: WatermarkOpts = { text: '', t: 100, g: 'se', fill: false, rotate: 0, size: 40, color: '000000', image: '', auto: true, order: 0, x: undefined, y: undefined, voffset: 0, interval: 0, align: 0, type: 'FZHei-B01'};
+    let opt:WatermarkOpts = { text: '', t: 100, g: 'se', fill: false, rotate: 0, size: 40, color: '000000', image: '', auto: true, order: 0, x: undefined, y: undefined, voffset: 0, interval: 0, align: 0, type: 'FZHei-B01' };
 
     for (const param of params) {
       if ((this.name === param) || (!param)) {

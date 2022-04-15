@@ -21,7 +21,7 @@ import { WatermarkAction } from './watermark';
 
 export interface IImageAction extends IAction { }
 export interface IImageInfo {
-  [key: string]: { value: string }
+  [key: string]: { value: string };
 }
 
 
@@ -61,7 +61,7 @@ export class ImageProcessor implements IProcessor {
       }
       await act.process(ctx, params);
 
-      if (ctx.features[Features.ReturnInfo]) { break }
+      if (ctx.features[Features.ReturnInfo]) { break; }
     }
     if (ctx.features[Features.AutoWebp]) { ctx.image.webp(); }
   }
