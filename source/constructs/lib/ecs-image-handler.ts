@@ -29,6 +29,8 @@ export class ECSImageHandler extends Construct {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
 
+    this.cfnOutput('StyleConfig', table.tableName, 'The DynamoDB table for processing style');
+
     const albFargateService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, 'Service', {
       vpc: getOrCreateVpc(this),
       cpu: 4 * GB,
