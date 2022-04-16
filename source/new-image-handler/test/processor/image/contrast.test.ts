@@ -1,7 +1,6 @@
 import * as sharp from 'sharp';
-import { IImageContext } from '../../../src/processor/image';
 import { ContrastAction } from '../../../src/processor/image/contrast';
-import { fixtureStore } from './utils';
+import { mkctx } from './utils';
 
 test('quality action validate', () => {
   const action = new ContrastAction();
@@ -36,8 +35,7 @@ test('quality action validate', () => {
 
 
 test('quality action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new ContrastAction();
   await action.process(ctx, 'contrast,-50'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });

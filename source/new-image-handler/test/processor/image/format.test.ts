@@ -1,7 +1,6 @@
 import * as sharp from 'sharp';
-import { IImageContext } from '../../../src/processor/image';
 import { FormatAction } from '../../../src/processor/image/format';
-import { fixtureStore } from './utils';
+import { mkctx } from './utils';
 
 test('format action validate', () => {
   const action = new FormatAction();
@@ -32,8 +31,7 @@ test('format action validate', () => {
 
 
 test('format action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new FormatAction();
   await action.process(ctx, 'format,png'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -41,8 +39,7 @@ test('format action', async () => {
 });
 
 test('format action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new FormatAction();
   await action.process(ctx, 'format,webp'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -50,8 +47,7 @@ test('format action', async () => {
 });
 
 test('format action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new FormatAction();
   await action.process(ctx, 'format,jpg'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -59,8 +55,7 @@ test('format action', async () => {
 });
 
 test('format,jpeg', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new FormatAction();
   await action.process(ctx, 'format,jpeg'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -68,8 +63,7 @@ test('format,jpeg', async () => {
 });
 
 test('format,gif', async () => {
-  const image = sharp((await fixtureStore.get('example.gif')).buffer, { animated: true });
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.gif', { animated: true });
   const action = new FormatAction();
   await action.process(ctx, 'format,gif'.split(','));
   const { info, data } = await ctx.image.toBuffer({ resolveWithObject: true });

@@ -1,7 +1,5 @@
-import * as sharp from 'sharp';
-import { IImageContext } from '../../../src/processor/image';
 import { IndexCropAction } from '../../../src/processor/image/indexcrop';
-import { fixtureStore } from './utils';
+import { mkctx } from './utils';
 
 
 test('indexcrop action validate', () => {
@@ -60,8 +58,7 @@ test('indexcrop action validate', () => {
 
 
 test('indexcrop action 01', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new IndexCropAction();
   await action.process(ctx, 'indexcrop,x_100,i_0'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -70,8 +67,7 @@ test('indexcrop action 01', async () => {
 
 
 test('indexcrop action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new IndexCropAction();
   await action.process(ctx, 'indexcrop,y_100,i_0'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -80,8 +76,7 @@ test('indexcrop action', async () => {
 
 
 test('indexcrop action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new IndexCropAction();
   await action.process(ctx, 'indexcrop,y_10000,i_0'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -89,8 +84,7 @@ test('indexcrop action', async () => {
 });
 
 test('indexcrop action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new IndexCropAction();
   await action.process(ctx, 'indexcrop,x_10000,i_0'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -98,8 +92,7 @@ test('indexcrop action', async () => {
 });
 
 test('indexcrop action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new IndexCropAction();
   await action.process(ctx, 'indexcrop,x_100,i_100'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -108,8 +101,7 @@ test('indexcrop action', async () => {
 
 
 test('indexcrop action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new IndexCropAction();
   await action.process(ctx, 'indexcrop,y_100,i_100'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -117,8 +109,7 @@ test('indexcrop action', async () => {
 });
 
 test('indexcrop action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new IndexCropAction();
   await action.process(ctx, 'indexcrop,x_250,i_1'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -126,8 +117,7 @@ test('indexcrop action', async () => {
 });
 
 test('indexcrop action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new IndexCropAction();
   await action.process(ctx, 'indexcrop,y_200,i_1'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });

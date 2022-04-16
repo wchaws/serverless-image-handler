@@ -1,7 +1,6 @@
 import * as sharp from 'sharp';
-import { IImageContext } from '../../../src/processor/image';
 import { SharpenAction } from '../../../src/processor/image/sharpen';
-import { fixtureStore } from './utils';
+import { mkctx } from './utils';
 
 test('quality action validate', () => {
   const action = new SharpenAction();
@@ -43,8 +42,7 @@ test('quality action validate', () => {
 
 
 test('quality action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new SharpenAction();
   await action.process(ctx, 'sharpen,100'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -54,8 +52,7 @@ test('quality action', async () => {
 
 
 test('quality action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new SharpenAction();
   await action.process(ctx, 'sharpen,60'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });

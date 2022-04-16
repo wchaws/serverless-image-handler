@@ -1,9 +1,8 @@
 import * as sharp from 'sharp';
-import { IImageContext } from '../../../src/processor/image';
 import { FormatAction } from '../../../src/processor/image/format';
 import * as jpeg from '../../../src/processor/image/jpeg';
 import { QualityAction } from '../../../src/processor/image/quality';
-import { fixtureStore } from './utils';
+import { fixtureStore, mkctx } from './utils';
 
 test('quality action validate', () => {
   const action = new QualityAction();
@@ -29,8 +28,7 @@ test('quality action validate', () => {
 
 
 test('absolute quality action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new QualityAction();
   await action.process(ctx, 'quality,Q_1'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -39,8 +37,7 @@ test('absolute quality action', async () => {
 });
 
 test('relative quality action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new QualityAction();
   await action.process(ctx, 'quality,q_50'.split(','));
   const { data, info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -51,8 +48,7 @@ test('relative quality action', async () => {
 });
 
 test('format to webp before quality action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const formatAction = new FormatAction();
   await formatAction.process(ctx, 'format,webp'.split(','));
   const qualityAction = new QualityAction();

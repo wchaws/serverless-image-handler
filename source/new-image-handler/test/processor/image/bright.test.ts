@@ -1,7 +1,6 @@
 import * as sharp from 'sharp';
-import { IImageContext } from '../../../src/processor/image';
 import { BrightAction } from '../../../src/processor/image/bright';
-import { fixtureStore } from './utils';
+import { mkctx } from './utils';
 
 test('bright action validate', () => {
   const action = new BrightAction();
@@ -33,8 +32,7 @@ test('bright action validate', () => {
 
 
 test('bright action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new BrightAction();
   await action.process(ctx, 'bright,50'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });

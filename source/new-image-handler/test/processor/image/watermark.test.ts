@@ -1,7 +1,6 @@
 import * as sharp from 'sharp';
-import { IImageContext } from '../../../src/processor/image';
 import { WatermarkAction } from '../../../src/processor/image/watermark';
-import { fixtureStore } from './utils';
+import { mkctx } from './utils';
 
 const testText = 'hello 世界 !';
 const testImgFile = 'aws_logo.png';
@@ -17,8 +16,7 @@ const testImgParam = `watermark,image_${base64ImgFile},rotate_25,g_nw,t_70`;
 const testMixedParam = `watermark,image_${base64ImgFile},text_${base64Text},g_nw,t_20,align_2,interval_5,size_14`;
 
 test(testTextParam, async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
 
   const action = new WatermarkAction();
   await action.process(ctx, testTextParam.split(','));
@@ -28,8 +26,7 @@ test(testTextParam, async () => {
 });
 
 test(testImgParam, async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
 
   const action = new WatermarkAction();
   await action.process(ctx, testImgParam.split(','));
@@ -39,8 +36,7 @@ test(testImgParam, async () => {
 });
 
 test(testMixedParam, async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
 
   const action = new WatermarkAction();
   await action.process(ctx, testMixedParam.split(','));

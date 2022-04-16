@@ -3,12 +3,10 @@ import * as Koa from 'koa'; // http://koajs.cn
 import * as bodyParser from 'koa-bodyparser';
 import * as logger from 'koa-logger';
 import * as Router from 'koa-router';
-import * as sharp from 'sharp';
 import config from './config';
 import debug from './debug';
 import { bufferStore, getProcessor, parseRequest } from './default';
-import { InvalidArgument, Features } from './processor';
-import { IImageContext } from './processor/image';
+import { InvalidArgument } from './processor';
 
 const DefaultBufferStore = bufferStore();
 const app = new Koa();
@@ -101,20 +99,8 @@ async function ossprocess(ctx: Koa.ParameterizedContext): Promise<{ data: any; t
   const bs = getBufferStore(ctx);
   if (actions.length > 1) {
     const processor = getProcessor(actions[0]);
-    const { buffer } = await bs.get(uri);
-    const imagectx: IImageContext = {
-      image: sharp(buffer, { animated: true }),
-      bufferStore: bs,
-      features: {},
-    };
-    await processor.process(imagectx, actions);
-
-    if (imagectx.features[Features.ReturnInfo]) {
-      return { data: imagectx.info, type: 'json' };
-    } else {
-      const { data, info } = await imagectx.image.toBuffer({ resolveWithObject: true });
-      return { data: data, type: info.format };
-    }
+    const proctx = await processor.newContext(uri, bs);
+    return processor.process(proctx, actions);
   } else {
     const { buffer, type } = await bs.get(uri);
     return { data: buffer, type: type };

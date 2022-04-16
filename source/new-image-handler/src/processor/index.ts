@@ -12,6 +12,10 @@ export type ReadOnly<T> = {
  * Context object for processor.
  */
 export interface IProcessContext {
+  /**
+   * The context uri.
+   */
+  readonly uri: string;
 
   /**
    * A abstract store to get file data.
@@ -23,6 +27,11 @@ export interface IProcessContext {
    * Feature flags.
    */
   readonly features: { [key: string]: boolean };
+}
+
+export interface IProcessResponse {
+  readonly data: any;
+  readonly type: string;
 }
 
 /**
@@ -41,6 +50,13 @@ export interface IProcessor {
    * @param actions the action handlers
    */
   register(...actions: IAction[]): void;
+
+  /**
+   * Create a new context.
+   * @param uri the uri of the context
+   * @param bufferStore bufferStore
+   */
+  newContext(uri: string, bufferStore: IBufferStore): Promise<IProcessContext>;
 
   /**
    * Process each actions with a context.
@@ -63,7 +79,7 @@ export interface IProcessor {
    * @param ctx the context
    * @param actions the actions
    */
-  process(ctx: IProcessContext, actions: string[]): Promise<void>;
+  process(ctx: IProcessContext, actions: string[]): Promise<IProcessResponse>;
 }
 
 /**

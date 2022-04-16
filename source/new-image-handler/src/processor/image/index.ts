@@ -1,6 +1,6 @@
 import * as sharp from 'sharp';
-import { Features, IAction, InvalidArgument, IProcessContext, IProcessor } from '../../processor';
-import { IKVStore, MemKVStore } from '../../store';
+import { Features, IAction, InvalidArgument, IProcessContext, IProcessor, IProcessResponse } from '../../processor';
+import { IBufferStore } from '../../store';
 import { AutoOrientAction } from './auto-orient';
 import { BlurAction } from './blur';
 import { BrightAction } from './bright';
@@ -23,12 +23,11 @@ export interface IImageAction extends IAction { }
 export interface IImageInfo {
   [key: string]: { value: string };
 }
-
-
 export interface IImageContext extends IProcessContext {
   image: sharp.Sharp;
   info?: IImageInfo;
 }
+
 export class ImageProcessor implements IProcessor {
   public static getInstance(): ImageProcessor {
     if (!ImageProcessor._instance) {
@@ -43,7 +42,17 @@ export class ImageProcessor implements IProcessor {
 
   private constructor() { }
 
-  public async process(ctx: IImageContext, actions: string[]): Promise<void> {
+  public async newContext(uri: string, bufferStore: IBufferStore): Promise<IImageContext> {
+    const { buffer } = await bufferStore.get(uri);
+    return {
+      uri,
+      bufferStore,
+      features: {},
+      image: sharp(buffer, { animated: true }),
+    };
+  }
+
+  public async process(ctx: IImageContext, actions: string[]): Promise<IProcessResponse> {
     if (!ctx.image) {
       throw new InvalidArgument('Invalid image context');
     }
@@ -64,6 +73,12 @@ export class ImageProcessor implements IProcessor {
       if (ctx.features[Features.ReturnInfo]) { break; }
     }
     if (ctx.features[Features.AutoWebp]) { ctx.image.webp(); }
+    if (ctx.features[Features.ReturnInfo]) {
+      return { data: ctx.info, type: 'application/json' };
+    } else {
+      const { data, info } = await ctx.image.toBuffer({ resolveWithObject: true });
+      return { data: data, type: info.format };
+    }
   }
 
   public action(name: string): IAction {
@@ -100,41 +115,4 @@ ImageProcessor.getInstance().register(
   new InfoAction(),
 );
 
-export class StyleProcessor implements IProcessor {
-  public static getInstance(kvstore?: IKVStore): StyleProcessor {
-    if (!StyleProcessor._instance) {
-      StyleProcessor._instance = new StyleProcessor();
-    }
-    if (kvstore) {
-      StyleProcessor._instance._kvstore = kvstore;
-    }
-    return StyleProcessor._instance;
-  }
-  private static _instance: StyleProcessor;
 
-  public readonly name: string = 'style';
-  private _kvstore: IKVStore = new MemKVStore({});
-
-  private constructor() { }
-
-  public async process(ctx: IImageContext, actions: string[]): Promise<void> {
-    if (!ctx.image) {
-      throw new InvalidArgument('Invalid style context');
-    }
-    if (actions.length !== 2) {
-      throw new InvalidArgument('Invalid style name');
-    }
-    const stylename = actions[1];
-    if (!stylename.match(/^[\w\-_\.]{1,63}$/)) {
-      throw new InvalidArgument('Invalid style name');
-    }
-    const { style } = await this._kvstore.get(stylename);
-    if (style && (typeof style === 'string' || style instanceof String)) {
-      await ImageProcessor.getInstance().process(ctx, style.split('/').filter(x => x));
-    } else {
-      throw new InvalidArgument('Style not found');
-    }
-  }
-
-  public register(..._: IAction[]): void { }
-}

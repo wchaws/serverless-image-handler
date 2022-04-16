@@ -5,7 +5,7 @@ import { LocalStore } from '../../../src/store';
 
 export const fixtureStore = new LocalStore(path.join(__dirname, '../../fixtures'));
 
-export async function mkctx(name: string): Promise<IImageContext> {
-  const image = sharp((await fixtureStore.get(name)).buffer);
-  return { image, bufferStore: fixtureStore, features: {} };
+export async function mkctx(name: string, sharpOpts?: sharp.SharpOptions): Promise<IImageContext> {
+  const image = sharp((await fixtureStore.get(name)).buffer, sharpOpts);
+  return { uri: name, image, bufferStore: fixtureStore, features: {} };
 }

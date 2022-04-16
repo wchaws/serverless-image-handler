@@ -1,11 +1,9 @@
 import * as sharp from 'sharp';
-import { IImageContext } from '../../../src/processor/image';
 import { CircleAction } from '../../../src/processor/image/circle';
-import { fixtureStore } from './utils';
+import { mkctx } from './utils';
 
 test('circle,r_500', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
 
   const action = new CircleAction();
   await action.process(ctx, 'circle,r_500'.split(','));
@@ -17,8 +15,7 @@ test('circle,r_500', async () => {
 });
 
 test('circle,r_100', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
 
   const action = new CircleAction();
   await action.process(ctx, 'circle,r_100'.split(','));
