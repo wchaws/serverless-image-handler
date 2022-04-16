@@ -5,8 +5,8 @@ import { ECSImageHandlerStack } from '../lib/constructs-stack';
 test('Snapshot', () => {
   const app = new App({
     context: {
-      buckets: ['bucket-0']
-    }
+      buckets: ['bucket-0'],
+    },
   });
   const stack = new ECSImageHandlerStack(app, 'test');
 
