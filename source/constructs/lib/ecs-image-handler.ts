@@ -69,10 +69,10 @@ export class ECSImageHandler extends Construct {
       this.distribution(new origins.LoadBalancerV2Origin(albFargateService.loadBalancer, {
         protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
         customHeaders: {
-          'x-bucket': bkt.bucketName
+          'x-bucket': bkt.bucketName,
         },
       }), index, `for s3://${bkt.bucketName}`);
-    })
+    });
   }
 
   private distribution(origin: cloudfront.IOrigin, index: number, msg?: string) {
@@ -118,7 +118,7 @@ function getBuckets(scope: Construct, id: string): s3.IBucket[] {
     throw new Error('Can\'t find context key="buckets" or the context key="buckets" is not an array of string.');
   }
   if (buckets.length < 1) {
-    throw new Error('You must specify at least one bucket.')
+    throw new Error('You must specify at least one bucket.');
   }
 
   return buckets.map((bkt: string, index: number) => s3.Bucket.fromBucketName(scope, `${id}${index}`, bkt));
