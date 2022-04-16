@@ -215,9 +215,11 @@ export class ConstructsStack extends cdk.Stack {
   }
 }
 
-export class ECSImageHandlerStack extends cdk.Stack {
+export class ECSImageHandlerStack extends SolutionStack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    this.setDescription('(SO0023) - Serverless Image Handler ECS API Adapter.');
 
     new ECSImageHandler(this, id);
   }
