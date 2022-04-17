@@ -1,7 +1,8 @@
 import * as sharp from 'sharp';
-import { IImageAction, IImageContext } from '.';
-import { IActionOpts, ReadOnly, InvalidArgument } from '..';
+import { IImageContext } from '.';
+import { IActionOpts, InvalidArgument, ReadOnly } from '..';
 import * as is from '../../is';
+import { BaseImageAction } from './_base';
 
 export const enum Mode {
   LFIT = 'lfit',
@@ -22,7 +23,7 @@ export interface ResizeOpts extends IActionOpts {
   p?: number;
 }
 
-export class ResizeAction implements IImageAction {
+export class ResizeAction extends BaseImageAction {
   public readonly name: string = 'resize';
 
   public validate(params: string[]): ReadOnly<ResizeOpts> {

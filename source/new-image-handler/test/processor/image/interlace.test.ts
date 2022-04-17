@@ -1,7 +1,6 @@
 import * as sharp from 'sharp';
-import { IImageContext } from '../../../src/processor/image';
 import { InterlaceAction } from '../../../src/processor/image/interlace';
-import { fixtureStore } from './utils';
+import { mkctx } from './utils';
 
 test('Interlace action validate', () => {
   const action = new InterlaceAction();
@@ -34,8 +33,7 @@ test('Interlace action validate', () => {
 
 
 test('interlace,1', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new InterlaceAction();
   await action.process(ctx, 'interlace,1'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -44,8 +42,7 @@ test('interlace,1', async () => {
 
 
 test('interlace,0', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new InterlaceAction();
   await action.process(ctx, 'interlace,0'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
@@ -53,8 +50,7 @@ test('interlace,0', async () => {
 });
 
 test('interlace,1 for gif', async () => {
-  const image = sharp((await fixtureStore.get('example.gif')).buffer, { animated: true });
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.gif');
   const action = new InterlaceAction();
   await action.process(ctx, 'interlace,1'.split(','));
   const { data, info } = await ctx.image.toBuffer({ resolveWithObject: true });

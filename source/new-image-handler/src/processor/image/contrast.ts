@@ -1,12 +1,13 @@
-import { IImageAction, IImageContext } from '.';
+import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
 import * as is from '../../is';
+import { BaseImageAction } from './_base';
 
 export interface ContrastOpts extends IActionOpts {
   contrast: number;
 }
 
-export class ContrastAction implements IImageAction {
+export class ContrastAction extends BaseImageAction {
   public readonly name: string = 'contrast';
 
   public validate(params: string[]): ReadOnly<ContrastOpts> {

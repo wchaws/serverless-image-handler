@@ -1,12 +1,10 @@
 import * as Jimp from 'jimp';
 import * as sharp from 'sharp';
-import { IImageContext } from '../../../src/processor/image';
 import { RoundedCornersAction } from '../../../src/processor/image/rounded-corners';
-import { fixtureStore } from './utils';
+import { mkctx } from './utils';
 
 test('rounded-corner validate', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
 
   const action = new RoundedCornersAction();
   await action.process(ctx, 'rounded-corners,r_100'.split(','));

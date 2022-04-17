@@ -1,7 +1,8 @@
 import * as sharp from 'sharp';
-import { IImageAction, IImageContext } from '.';
-import { IActionOpts, ReadOnly, InvalidArgument } from '..';
+import { IImageContext } from '.';
+import { IActionOpts, InvalidArgument, ReadOnly } from '..';
 import * as is from '../../is';
+import { BaseImageAction } from './_base';
 import * as jpeg from './jpeg';
 
 
@@ -14,7 +15,7 @@ export interface QualityOpts extends IActionOpts {
   Q?: number;
 }
 
-export class QualityAction implements IImageAction {
+export class QualityAction extends BaseImageAction {
   public readonly name: string = 'quality';
 
   public validate(params: string[]): ReadOnly<QualityOpts> {

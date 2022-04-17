@@ -2,7 +2,8 @@ import * as path from 'path';
 import { ParsedUrlQuery } from 'querystring';
 import config from './config';
 import { InvalidArgument, IProcessor } from './processor';
-import { ImageProcessor, StyleProcessor } from './processor/image';
+import { ImageProcessor } from './processor/image';
+import { StyleProcessor } from './processor/style';
 import { IBufferStore, S3Store, LocalStore, MemKVStore, DynamoDBStore, IKVStore } from './store';
 import * as style from './style.json';
 

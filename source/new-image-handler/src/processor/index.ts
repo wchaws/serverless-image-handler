@@ -12,6 +12,22 @@ export type ReadOnly<T> = {
  * Context object for processor.
  */
 export interface IProcessContext {
+  /**
+   * The context uri. e.g. 'a/b/example.jpg'
+   */
+  readonly uri: string;
+
+  /**
+   * The actions. e.g 'image/resize,w_100/format,png'.split('/')
+   */
+  readonly actions: string[];
+
+  /**
+   * The effective actions.
+   * If this value is undefined or empty list. All actions will be effective.
+   * Otherwise, only the action in this list will be effective.
+   */
+  effectiveActions?: string[];
 
   /**
    * A abstract store to get file data.
@@ -23,6 +39,11 @@ export interface IProcessContext {
    * Feature flags.
    */
   readonly features: { [key: string]: boolean };
+}
+
+export interface IProcessResponse {
+  readonly data: any;
+  readonly type: string;
 }
 
 /**
@@ -43,27 +64,34 @@ export interface IProcessor {
   register(...actions: IAction[]): void;
 
   /**
+   * Create a new context.
+   * @param uri e.g. 'a/b/example.jpg'
+   * @param actions e.g. 'image/resize,w_100/format,png'.split('/')
+   * @param bufferStore
+   */
+  newContext(uri: string, actions: string[], bufferStore: IBufferStore): Promise<IProcessContext>;
+
+  /**
    * Process each actions with a context.
    *
    * For example:
    *
    * ```ts
-   * const image = sharp({
+   * const bs = new SharpBufferStore(sharp({
    *   create: {
    *     width: 50,
    *     height: 50,
    *     channels: 3,
    *     background: { r: 255, g: 0, b: 0 },
    *   },
-   * });
-   * const ctx = { image, store: new NullStore() };
-   * await ImageProcessor.getInstance().process(ctx, 'image/resize,w_100,h_100,m_fixed,limit_0/'.split('/'));
+   * }).png());
+   * const ctx = ImageProcessor.getInstance().newContext('example.jpg', 'image/resize,w_100,h_100,m_fixed,limit_0/'.split('/'));
+   * await ImageProcessor.getInstance().process(ctx);
    * ```
    *
    * @param ctx the context
-   * @param actions the actions
    */
-  process(ctx: IProcessContext, actions: string[]): Promise<void>;
+  process(ctx: IProcessContext): Promise<IProcessResponse>;
 }
 
 /**
@@ -108,6 +136,14 @@ export interface IAction {
    * @param params the parameters
    */
   process(ctx: IProcessContext, params: string[]): Promise<void>;
+
+  /**
+   * This function is called before processor new context.
+   *
+   * @param ctx the context
+   * @param params the parameters
+   */
+  beforeNewContext(ctx: IProcessContext, params: string[]): void;
 }
 
 /**
@@ -119,4 +155,5 @@ export class InvalidArgument extends HttpErrors[400] { }
 export enum Features {
   AutoWebp = 'auto-webp',
   ReturnInfo = 'return-info',
+  ReadAllAnimatedFrames = 'read-all-animated-frames',
 }

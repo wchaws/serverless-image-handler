@@ -29,6 +29,8 @@ export class ECSImageHandler extends Construct {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
     });
 
+    this.cfnOutput('StyleConfig', table.tableName, 'The DynamoDB table for processing style');
+
     const albFargateService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, 'Service', {
       vpc: getOrCreateVpc(this),
       cpu: 4 * GB,
@@ -42,6 +44,7 @@ export class ECSImageHandler extends Construct {
         environment: {
           REGION: Aws.REGION,
           AWS_REGION: Aws.REGION,
+          VIPS_DISC_THRESHOLD: '600m', // https://github.com/lovell/sharp/issues/1851
           SRC_BUCKET: buckets[0].bucketName,
           STYLE_TABLE_NAME: table.tableName,
         },

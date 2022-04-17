@@ -1,12 +1,13 @@
-import { IImageAction, IImageContext } from '.';
+import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
 import * as is from '../../is';
+import { BaseImageAction } from './_base';
 
 export interface BrightOpts extends IActionOpts {
   bright: number;
 }
 
-export class BrightAction implements IImageAction {
+export class BrightAction extends BaseImageAction {
   public readonly name: string = 'bright';
 
   public validate(params: string[]): ReadOnly<BrightOpts> {

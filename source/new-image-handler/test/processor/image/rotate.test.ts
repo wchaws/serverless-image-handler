@@ -1,7 +1,6 @@
 import * as sharp from 'sharp';
-import { IImageContext } from '../../../src/processor/image';
 import { RotateAction } from '../../../src/processor/image/rotate';
-import { fixtureStore } from './utils';
+import { mkctx } from './utils';
 
 test('quality action validate', () => {
   const action = new RotateAction();
@@ -33,8 +32,7 @@ test('quality action validate', () => {
 
 
 test('quality action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new RotateAction();
   await action.process(ctx, 'interlace,1'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });

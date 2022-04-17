@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as DynamoDB from 'aws-sdk/clients/dynamodb';
 import * as S3 from 'aws-sdk/clients/s3';
+import * as sharp from 'sharp';
 import config from './config';
 
 /**
@@ -78,6 +79,18 @@ export class NullStore implements IBufferStore {
   }
 }
 
+/**
+ * A sharp image store. Only for unit test.
+ */
+export class SharpBufferStore implements IBufferStore {
+  constructor(private image: sharp.Sharp) { }
+
+  async get(_: string, __?: () => void): Promise<{ buffer: Buffer; type: string }> {
+    const { data, info } = await this.image.toBuffer({ resolveWithObject: true });
+    return { buffer: data, type: info.format };
+  }
+}
+
 
 export class DynamoDBStore implements IKVStore {
   private _ddb = new DynamoDB.DocumentClient({ region: config.region });
@@ -101,5 +114,5 @@ export class MemKVStore implements IKVStore {
 
 
 function filetype(file: string) {
-  return path.extname(file);
+  return path.extname(file).substring(1);
 }

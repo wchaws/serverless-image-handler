@@ -1,13 +1,14 @@
 import * as sharp from 'sharp';
-import { IImageAction, IImageContext } from '.';
+import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
 import * as is from '../../is';
+import { BaseImageAction } from './_base';
 
 export interface RoundedCornersOpts extends IActionOpts {
   r: number;
 }
 
-export class RoundedCornersAction implements IImageAction {
+export class RoundedCornersAction extends BaseImageAction {
   public readonly name: string = 'rounded-corners';
 
   public validate(params: string[]): ReadOnly<RoundedCornersOpts> {

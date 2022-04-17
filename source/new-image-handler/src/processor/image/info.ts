@@ -1,9 +1,21 @@
-import { IImageAction, IImageContext } from '.';
-import { IActionOpts, ReadOnly, InvalidArgument, Features } from '..';
+import { IImageContext } from '.';
+import { IActionOpts, ReadOnly, InvalidArgument, Features, IProcessContext } from '..';
+import { BaseImageAction } from './_base';
 
 
-export class InfoAction implements IImageAction {
+export class InfoAction extends BaseImageAction {
   public readonly name: string = 'info';
+
+  public beforeNewContext(ctx: IProcessContext, params: string[]): void {
+    this.validate(params);
+
+    const action = params.join(',');
+    if (ctx.effectiveActions) {
+      ctx.effectiveActions.push(action);
+    } else {
+      ctx.effectiveActions = [action];
+    }
+  }
 
   public validate(params: string[]): ReadOnly<IActionOpts> {
     if ((params.length !== 1) || (params[0] !== this.name)) {

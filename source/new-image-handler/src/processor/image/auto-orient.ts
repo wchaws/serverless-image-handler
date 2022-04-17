@@ -1,11 +1,12 @@
-import { IImageAction, IImageContext } from '.';
+import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
+import { BaseImageAction } from './_base';
 
 export interface AutoOrientOpts extends IActionOpts {
   auto: boolean;
 }
 
-export class AutoOrientAction implements IImageAction {
+export class AutoOrientAction extends BaseImageAction {
   public readonly name: string = 'auto-orient';
 
   public validate(params: string[]): ReadOnly<AutoOrientOpts> {

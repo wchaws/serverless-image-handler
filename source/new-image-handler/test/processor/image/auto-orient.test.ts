@@ -1,7 +1,6 @@
 import * as sharp from 'sharp';
-import { IImageContext } from '../../../src/processor/image';
 import { AutoOrientAction } from '../../../src/processor/image/auto-orient';
-import { fixtureStore } from './utils';
+import { mkctx } from './utils';
 
 test('auto-orient action validate', () => {
   const action = new AutoOrientAction();
@@ -36,8 +35,7 @@ test('auto-orient action validate', () => {
 
 
 test('quality action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new AutoOrientAction();
   await action.process(ctx, 'auto-orient,1'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });

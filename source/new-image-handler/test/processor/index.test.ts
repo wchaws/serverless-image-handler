@@ -1,9 +1,11 @@
 import * as sharp from 'sharp';
-import { Features } from '../../src/processor';
-import { ImageProcessor, StyleProcessor } from '../../src/processor/image';
+import { Features, IActionOpts, IProcessContext, ReadOnly } from '../../src/processor';
+import { ImageProcessor } from '../../src/processor/image';
+import { BaseImageAction } from '../../src/processor/image/_base';
 import { ResizeAction } from '../../src/processor/image/resize';
-import { MemKVStore, NullStore } from '../../src/store';
-import { fixtureStore } from './image/utils';
+import { StyleProcessor } from '../../src/processor/style';
+import { MemKVStore, SharpBufferStore } from '../../src/store';
+import { fixtureStore, mkctx } from './image/utils';
 
 
 test('image processor singleton', () => {
@@ -27,16 +29,16 @@ test('processor register', () => {
 });
 
 test('image processor test', async () => {
-  const image = sharp({
+  const bs = new SharpBufferStore(sharp({
     create: {
       width: 50,
       height: 50,
       channels: 3,
       background: { r: 255, g: 0, b: 0 },
     },
-  });
-  const ctx = { image, bufferStore: new NullStore(), features: {} };
-  await ImageProcessor.getInstance().process(ctx, 'image/resize,w_100,h_100,m_fixed,limit_0/'.split('/'));
+  }).png());
+  const ctx = await mkctx('', 'image/resize,w_100,h_100,m_fixed,limit_0/'.split('/'), bs);
+  await ImageProcessor.getInstance().process(ctx);
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
   expect(info.width).toBe(100);
@@ -44,9 +46,8 @@ test('image processor test', async () => {
 });
 
 test('image/crop,w_100,h_100/rounded-corners,r_10/format,png', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx = { image, bufferStore: new NullStore(), features: {} };
-  await ImageProcessor.getInstance().process(ctx, 'image/crop,w_100,h_100/rounded-corners,r_10/format,png'.split('/'));
+  const ctx = await ImageProcessor.getInstance().newContext('example.jpg', 'image/crop,w_100,h_100/rounded-corners,r_10/format,png'.split('/'), fixtureStore);
+  await ImageProcessor.getInstance().process(ctx);
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
   expect(info.width).toBe(100);
@@ -55,20 +56,16 @@ test('image/crop,w_100,h_100/rounded-corners,r_10/format,png', async () => {
 });
 
 test('image/resize,w_100/rounded-corners,r_10/format,png', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx = { image, bufferStore: new NullStore(), features: {} };
-  await ImageProcessor.getInstance().process(ctx, 'image/resize,w_100/rounded-corners,r_10/format,png'.split('/'));
+  const ctx = await ImageProcessor.getInstance().newContext('example.jpg', 'image/resize,w_100/rounded-corners,r_10/format,png'.split('/'), fixtureStore);
+  await ImageProcessor.getInstance().process(ctx);
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
-  // expect(info.width).toBe(100);
-  // expect(info.height).toBe(100);
   expect(info.channels).toBe(4);
 });
 
 test('image/resize,w_50/crop,w_100,h_100/rounded-corners,r_100/format,png', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx = { image, bufferStore: new NullStore(), features: {} };
-  await ImageProcessor.getInstance().process(ctx, 'image/resize,w_50/crop,w_100,h_100/rounded-corners,r_100/format,png'.split('/'));
+  const ctx = await ImageProcessor.getInstance().newContext('example.jpg', 'image/resize,w_50/crop,w_100,h_100/rounded-corners,r_100/format,png'.split('/'), fixtureStore);
+  await ImageProcessor.getInstance().process(ctx);
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
   expect(info.width).toBe(50);
@@ -77,18 +74,16 @@ test('image/resize,w_50/crop,w_100,h_100/rounded-corners,r_100/format,png', asyn
 });
 
 test('image/resize,w_20/indexcrop,x_50,i_0/', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx = { image, bufferStore: new NullStore(), features: {} };
-  await ImageProcessor.getInstance().process(ctx, 'image/resize,w_20/indexcrop,x_50,i_0/'.split('/'));
+  const ctx = await ImageProcessor.getInstance().newContext('example.jpg', 'image/resize,w_20/indexcrop,x_50,i_0/'.split('/'), fixtureStore);
+  await ImageProcessor.getInstance().process(ctx);
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
   expect(info.width).toBe(20);
 });
 
 test('example.gif?x-oss-process=image/format,jpg', async () => {
-  const image = sharp((await fixtureStore.get('example.gif')).buffer);
-  const ctx = { image, bufferStore: new NullStore(), features: {} };
-  await ImageProcessor.getInstance().process(ctx, 'image/format,jpg'.split('/'));
+  const ctx = await ImageProcessor.getInstance().newContext('example.gif', 'image/format,jpg'.split('/'), fixtureStore);
+  await ImageProcessor.getInstance().process(ctx);
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
   expect(info.width).toBe(500);
@@ -97,9 +92,8 @@ test('example.gif?x-oss-process=image/format,jpg', async () => {
 });
 
 test('example.jpg?x-oss-process=image/resize,w_200/rotate,90', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx = { image, bufferStore: new NullStore(), features: {} };
-  await ImageProcessor.getInstance().process(ctx, 'image/resize,w_200/rotate,90'.split('/'));
+  const ctx = await ImageProcessor.getInstance().newContext('example.jpg', 'image/resize,w_200/rotate,90'.split('/'), fixtureStore);
+  await ImageProcessor.getInstance().process(ctx);
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
   expect(info.width).toBe(134);
@@ -107,74 +101,108 @@ test('example.jpg?x-oss-process=image/resize,w_200/rotate,90', async () => {
   expect(info.channels).toBe(3);
 });
 
+test('example.gif?x-oss-process=image/format,png', async () => {
+  const ctx = await ImageProcessor.getInstance().newContext('example.gif', 'image/format,png'.split('/'), fixtureStore);
+  await ImageProcessor.getInstance().process(ctx);
+  const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
+
+  expect(ctx.features[Features.ReadAllAnimatedFrames]).toBe(false);
+  expect(info.width).toBe(500);
+  expect(info.height).toBe(300);
+  expect(info.format).toBe('png');
+});
+
 test('autowebp: example.jpg', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx = { image, bufferStore: new NullStore(), features: { [Features.AutoWebp]: true } };
-  await ImageProcessor.getInstance().process(ctx, []);
+  const ctx = await ImageProcessor.getInstance().newContext('example.jpg', [], fixtureStore);
+  ctx.features[Features.AutoWebp] = true;
+  await ImageProcessor.getInstance().process(ctx);
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
   expect(info.format).toBe('webp');
 });
 
 test('autowebp: example.jpg?x-oss-process=image/format,png', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx = { image, bufferStore: new NullStore(), features: { [Features.AutoWebp]: true } };
-  await ImageProcessor.getInstance().process(ctx, 'image/format,png'.split('/'));
+  const ctx = await ImageProcessor.getInstance().newContext('example.jpg', 'image/format,png'.split('/'), fixtureStore);
+  ctx.features[Features.AutoWebp] = true;
+  await ImageProcessor.getInstance().process(ctx);
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
   expect(info.format).toBe('png');
 });
 
-test('style processor test', async () => {
-  const image = sharp({
-    create: {
-      width: 50,
-      height: 50,
-      channels: 3,
-      background: { r: 255, g: 0, b: 0 },
-    },
+test.only('example.jpg?x-oss-process=image/fake/info', async () => {
+  const mockValidate = jest.fn<{}, any[]>();
+  const mockProcess = jest.fn<void, any[]>();
+
+  class FakeAction extends BaseImageAction {
+    public name: string = 'fake';
+    validate(params: string[]): ReadOnly<IActionOpts> {
+      return mockValidate(params);
+    }
+    process(ctx: IProcessContext, params: string[]): Promise<void> {
+      return Promise.resolve(mockProcess(ctx, params));
+    }
+  }
+
+  ImageProcessor.getInstance().register(new FakeAction());
+
+  const ctx = await ImageProcessor.getInstance().newContext('example.jpg', 'image/fake/info'.split('/'), fixtureStore);
+  const { data, type } = await ImageProcessor.getInstance().process(ctx);
+
+  expect(type).toBe('application/json');
+  expect(data).toEqual({
+    FileSize: { value: '21839' },
+    Format: { value: 'jpg' },
+    ImageHeight: { value: '267' },
+    ImageWidth: { value: '400' },
   });
-  const ctx = { image, bufferStore: new NullStore(), features: {} };
+  expect(mockProcess).not.toBeCalled();
+
+});
+
+test('style processor test', async () => {
   const styleStore = new MemKVStore({
     style1: { id: 'style1', style: 'image/resize,w_100,h_100,m_fixed,limit_0/' },
   });
-  await StyleProcessor.getInstance(styleStore).process(ctx, 'style/style1'.split('/'));
-  const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
+  const p = StyleProcessor.getInstance(styleStore);
+  const ctx = await p.newContext('example.jpg', 'style/style1'.split('/'), fixtureStore);
+  const { data } = await p.process(ctx);
+  const metadata = await sharp(data).metadata();
 
-  expect(info.width).toBe(100);
-  expect(info.height).toBe(100);
+  expect(metadata.width).toBe(100);
+  expect(metadata.height).toBe(100);
 });
 
 test('style processor test invalid style name', async () => {
-  const image = sharp({
+  const bs = new SharpBufferStore(sharp({
     create: {
       width: 50,
       height: 50,
       channels: 3,
       background: { r: 255, g: 0, b: 0 },
     },
-  });
-  const ctx = { image, bufferStore: new NullStore(), features: {} };
+  }).png());
+  const ctx = await mkctx('', 'style/ #$ '.split('/'), bs);
   const styleStore = new MemKVStore({
     style1: { id: 'style1', style: 'image/resize,w_100,h_100,m_fixed,limit_0/' },
   });
-  void expect(StyleProcessor.getInstance(styleStore).process(ctx, 'style/ #$ '.split('/')))
+  void expect(StyleProcessor.getInstance(styleStore).process(ctx))
     .rejects.toThrowError(/Invalid style name/);
 });
 
 test('style processor not found', async () => {
-  const image = sharp({
+  const bs = new SharpBufferStore(sharp({
     create: {
       width: 50,
       height: 50,
       channels: 3,
       background: { r: 255, g: 0, b: 0 },
     },
-  });
-  const ctx = { image, bufferStore: new NullStore(), features: {} };
+  }).png());
+  const ctx = await mkctx('', 'style/notfound'.split('/'), bs);
   const styleStore = new MemKVStore({
     style1: { id: 'style1', style: 'image/resize,w_100,h_100,m_fixed,limit_0/' },
   });
-  void expect(StyleProcessor.getInstance(styleStore).process(ctx, 'style/notfound'.split('/')))
+  void expect(StyleProcessor.getInstance(styleStore).process(ctx))
     .rejects.toThrowError(/Style not found/);
 });

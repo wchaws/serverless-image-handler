@@ -1,13 +1,11 @@
 // eslint-disable-next-line import/no-unresolved
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import * as HttpErrors from 'http-errors';
-import * as sharp from 'sharp';
 import config from './config';
 import debug from './debug';
 import { bufferStore, getProcessor, parseRequest } from './default';
 import * as is from './is';
 import { Features } from './processor';
-import { IImageContext } from './processor/image';
 
 
 export const handler = WrapError(async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
@@ -16,8 +14,7 @@ export const handler = WrapError(async (event: APIGatewayProxyEventV2): Promise<
   if (event.rawPath === '/' || event.rawPath === '/ping') {
     return resp(200, 'ok');
   } else if (event.rawPath === '/_debug') {
-    console.log(JSON.stringify(debug()));
-    return resp(200, 'please check debug log at server');
+    return resp(400, debug());
   }
 
   const accept = event.headers.Accept ?? event.headers.accept ?? '';
@@ -29,20 +26,12 @@ export const handler = WrapError(async (event: APIGatewayProxyEventV2): Promise<
   const { uri, actions } = parseRequest(event.rawPath, event.queryStringParameters ?? {});
 
   if (actions.length > 1) {
-    const { buffer } = await bs.get(uri);
-    const imagectx: IImageContext = {
-      image: sharp(buffer, { animated: true }),
-      bufferStore: bs,
-      features: { [Features.AutoWebp]: autoWebp },
-    };
     const processor = getProcessor(actions[0]);
-    await processor.process(imagectx, actions);
+    const context = await processor.newContext(uri, actions, bs);
+    context.features[Features.AutoWebp] = autoWebp;
+    const { data, type } = await processor.process(context);
 
-    if (imagectx.features[Features.ReturnInfo]) {
-      return resp(200, imagectx.info);
-    }
-    const { data, info } = await imagectx.image.toBuffer({ resolveWithObject: true });
-    return resp(200, data, info.format);
+    return resp(200, data, type);
   } else {
     const { buffer, type } = await bs.get(uri, bypass);
 

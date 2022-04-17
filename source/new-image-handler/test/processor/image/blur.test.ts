@@ -1,7 +1,6 @@
 import * as sharp from 'sharp';
-import { IImageContext } from '../../../src/processor/image';
 import { BlurAction } from '../../../src/processor/image/blur';
-import { fixtureStore } from './utils';
+import { mkctx } from './utils';
 
 test('quality action validate', () => {
   const action = new BlurAction();
@@ -30,8 +29,7 @@ test('quality action validate', () => {
 
 
 test('quality action', async () => {
-  const image = sharp((await fixtureStore.get('example.jpg')).buffer);
-  const ctx: IImageContext = { image, bufferStore: fixtureStore, features: {} };
+  const ctx = await mkctx('example.jpg');
   const action = new BlurAction();
   await action.process(ctx, 'blur,r_5,s_2'.split(','));
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
