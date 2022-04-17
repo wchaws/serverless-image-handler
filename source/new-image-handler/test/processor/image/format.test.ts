@@ -63,7 +63,7 @@ test('format,jpeg', async () => {
 });
 
 test('format,gif', async () => {
-  const ctx = await mkctx('example.gif', { animated: true });
+  const ctx = await mkctx('example.gif');
   const action = new FormatAction();
   await action.process(ctx, 'format,gif'.split(','));
   const { info, data } = await ctx.image.toBuffer({ resolveWithObject: true });

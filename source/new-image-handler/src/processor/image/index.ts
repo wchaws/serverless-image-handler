@@ -42,21 +42,26 @@ export class ImageProcessor implements IProcessor {
 
   private constructor() { }
 
-  public async newContext(uri: string, bufferStore: IBufferStore): Promise<IImageContext> {
+  public async newContext(uri: string, actions: string[], bufferStore: IBufferStore): Promise<IImageContext> {
     const { buffer } = await bufferStore.get(uri);
     return {
       uri,
+      actions,
       bufferStore,
       features: {},
       image: sharp(buffer, { animated: true }),
     };
   }
 
-  public async process(ctx: IImageContext, actions: string[]): Promise<IProcessResponse> {
+  public async process(ctx: IImageContext): Promise<IProcessResponse> {
     if (!ctx.image) {
-      throw new InvalidArgument('Invalid image context');
+      throw new InvalidArgument('Invalid image context! No "image" field.');
     }
-    for (const action of actions) {
+    if (!ctx.actions) {
+      throw new InvalidArgument('Invalid image context! No "actions" field.');
+    }
+
+    for (const action of ctx.actions) {
       if ((this.name === action) || (!action)) {
         continue;
       }

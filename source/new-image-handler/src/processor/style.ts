@@ -25,22 +25,23 @@ export class StyleProcessor implements IProcessor {
 
   private constructor() { }
 
-  public async newContext(uri: string, bufferStore: IBufferStore): Promise<IProcessContext> {
+  public async newContext(uri: string, actions: string[], bufferStore: IBufferStore): Promise<IProcessContext> {
     return Promise.resolve({
       uri,
+      actions,
       bufferStore,
       features: {},
     });
   }
 
   // e.g. https://Host/ObjectName?x-oss-process=style/<StyleName>
-  public async process(ctx: IProcessContext, actions: string[]): Promise<IProcessResponse> {
-    if (actions.length !== 2) {
-      throw new InvalidArgument('Invalid style name');
+  public async process(ctx: IProcessContext): Promise<IProcessResponse> {
+    if (ctx.actions.length !== 2) {
+      throw new InvalidArgument('Invalid style!');
     }
-    const stylename = actions[1];
+    const stylename = ctx.actions[1];
     if (!stylename.match(/^[\w\-_\.]{1,63}$/)) {
-      throw new InvalidArgument('Invalid style name');
+      throw new InvalidArgument('Invalid style name!');
     }
     // {
     //   "id": "stylename",
@@ -54,8 +55,8 @@ export class StyleProcessor implements IProcessor {
       if (!processor) {
         throw new InvalidArgument('Can Not find processor');
       }
-      const thectx = await processor.newContext(ctx.uri, ctx.bufferStore);
-      return await processor.process(thectx, acts);
+      const context = await processor.newContext(ctx.uri, acts, ctx.bufferStore);
+      return await processor.process(context);
     } else {
       throw new InvalidArgument('Style not found');
     }

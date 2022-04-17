@@ -28,9 +28,9 @@ export const handler = WrapError(async (event: APIGatewayProxyEventV2): Promise<
 
   if (actions.length > 1) {
     const processor = getProcessor(actions[0]);
-    const proctx = await processor.newContext(uri, bs);
-    proctx.features[Features.AutoWebp] = autoWebp;
-    const { data, type } = await processor.process(proctx, actions);
+    const context = await processor.newContext(uri, actions, bs);
+    context.features[Features.AutoWebp] = autoWebp;
+    const { data, type } = await processor.process(context);
 
     return resp(200, data, type);
   } else {

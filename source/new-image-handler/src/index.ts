@@ -99,8 +99,8 @@ async function ossprocess(ctx: Koa.ParameterizedContext): Promise<{ data: any; t
   const bs = getBufferStore(ctx);
   if (actions.length > 1) {
     const processor = getProcessor(actions[0]);
-    const proctx = await processor.newContext(uri, bs);
-    return processor.process(proctx, actions);
+    const context = await processor.newContext(uri, actions, bs);
+    return processor.process(context);
   } else {
     const { buffer, type } = await bs.get(uri);
     return { data: buffer, type: type };

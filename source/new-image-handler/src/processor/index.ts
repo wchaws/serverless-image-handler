@@ -13,9 +13,14 @@ export type ReadOnly<T> = {
  */
 export interface IProcessContext {
   /**
-   * The context uri.
+   * The context uri. e.g. 'a/b/example.jpg'
    */
   readonly uri: string;
+
+  /**
+   * The actions. e.g 'image/resize,w_100/format,png'.split('/')
+   */
+  readonly actions: string[];
 
   /**
    * A abstract store to get file data.
@@ -53,10 +58,11 @@ export interface IProcessor {
 
   /**
    * Create a new context.
-   * @param uri the uri of the context
-   * @param bufferStore bufferStore
+   * @param uri e.g. 'a/b/example.jpg'
+   * @param actions e.g. 'image/resize,w_100/format,png'.split('/')
+   * @param bufferStore
    */
-  newContext(uri: string, bufferStore: IBufferStore): Promise<IProcessContext>;
+  newContext(uri: string, actions: string[], bufferStore: IBufferStore): Promise<IProcessContext>;
 
   /**
    * Process each actions with a context.
@@ -64,22 +70,21 @@ export interface IProcessor {
    * For example:
    *
    * ```ts
-   * const image = sharp({
+   * const bs = new SharpBufferStore(sharp({
    *   create: {
    *     width: 50,
    *     height: 50,
    *     channels: 3,
    *     background: { r: 255, g: 0, b: 0 },
    *   },
-   * });
-   * const ctx = { image, store: new NullStore() };
-   * await ImageProcessor.getInstance().process(ctx, 'image/resize,w_100,h_100,m_fixed,limit_0/'.split('/'));
+   * }));
+   * const ctx = ImageProcessor.getInstance().newContext('example.jpg', 'image/resize,w_100,h_100,m_fixed,limit_0/'.split('/'));
+   * await ImageProcessor.getInstance().process(ctx);
    * ```
    *
    * @param ctx the context
-   * @param actions the actions
    */
-  process(ctx: IProcessContext, actions: string[]): Promise<IProcessResponse>;
+  process(ctx: IProcessContext): Promise<IProcessResponse>;
 }
 
 /**

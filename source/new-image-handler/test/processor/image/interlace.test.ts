@@ -50,7 +50,7 @@ test('interlace,0', async () => {
 });
 
 test('interlace,1 for gif', async () => {
-  const ctx = await mkctx('example.gif', { animated: true });
+  const ctx = await mkctx('example.gif');
   const action = new InterlaceAction();
   await action.process(ctx, 'interlace,1'.split(','));
   const { data, info } = await ctx.image.toBuffer({ resolveWithObject: true });
