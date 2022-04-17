@@ -24,6 +24,7 @@ router.post('/images', async (ctx) => {
   const opt = validatePostRequest(ctx);
   ctx.path = opt.sourceObject;
   ctx.query['x-oss-process'] = opt.params;
+  ctx.headers['x-bucket'] = opt.sourceBucket;
 
   const { data, type } = await ossprocess(ctx);
   if (type !== 'json') {

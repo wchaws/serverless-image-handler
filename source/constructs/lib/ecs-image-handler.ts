@@ -60,7 +60,7 @@ export class ECSImageHandler extends Construct {
 
     table.grantReadData(albFargateService.taskDefinition.taskRole);
     for (const bkt of buckets) {
-      bkt.grantRead(albFargateService.taskDefinition.taskRole);
+      bkt.grantReadWrite(albFargateService.taskDefinition.taskRole);
     }
 
     // TODO: Add restriction access to ALB
