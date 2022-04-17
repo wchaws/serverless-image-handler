@@ -23,6 +23,13 @@ export interface IProcessContext {
   readonly actions: string[];
 
   /**
+   * The effective actions.
+   * If this value is undefined or empty list. All actions will be effective.
+   * Otherwise, only the action in this list will be effective.
+   */
+  effectiveActions?: string[];
+
+  /**
    * A abstract store to get file data.
    * It can either get from s3 or local filesystem.
    */

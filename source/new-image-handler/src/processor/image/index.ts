@@ -67,6 +67,7 @@ export class ImageProcessor implements IProcessor {
     return {
       uri: ctx.uri,
       actions: ctx.actions,
+      effectiveActions: ctx.effectiveActions,
       bufferStore: ctx.bufferStore,
       features: ctx.features,
       image: sharp(buffer, { animated: ctx.features[Features.ReadAllAnimatedFrames] }),
@@ -81,7 +82,8 @@ export class ImageProcessor implements IProcessor {
       throw new InvalidArgument('Invalid image context! No "actions" field.');
     }
 
-    for (const action of ctx.actions) {
+    const actions = (ctx.effectiveActions && ctx.effectiveActions.length) ? ctx.effectiveActions : ctx.actions;
+    for (const action of actions) {
       if ((this.name === action) || (!action)) {
         continue;
       }

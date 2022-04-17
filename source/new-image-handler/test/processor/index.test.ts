@@ -1,6 +1,7 @@
 import * as sharp from 'sharp';
-import { Features } from '../../src/processor';
+import { Features, IActionOpts, IProcessContext, ReadOnly } from '../../src/processor';
 import { ImageProcessor } from '../../src/processor/image';
+import { BaseImageAction } from '../../src/processor/image/_base';
 import { ResizeAction } from '../../src/processor/image/resize';
 import { StyleProcessor } from '../../src/processor/style';
 import { MemKVStore, SharpBufferStore } from '../../src/store';
@@ -127,6 +128,36 @@ test('autowebp: example.jpg?x-oss-process=image/format,png', async () => {
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
 
   expect(info.format).toBe('png');
+});
+
+test.only('example.jpg?x-oss-process=image/fake/info', async () => {
+  const mockValidate = jest.fn<{}, any[]>();
+  const mockProcess = jest.fn<void, any[]>();
+
+  class FakeAction extends BaseImageAction {
+    public name: string = 'fake';
+    validate(params: string[]): ReadOnly<IActionOpts> {
+      return mockValidate(params);
+    }
+    process(ctx: IProcessContext, params: string[]): Promise<void> {
+      return Promise.resolve(mockProcess(ctx, params));
+    }
+  }
+
+  ImageProcessor.getInstance().register(new FakeAction());
+
+  const ctx = await ImageProcessor.getInstance().newContext('example.jpg', 'image/fake/info'.split('/'), fixtureStore);
+  const { data, type } = await ImageProcessor.getInstance().process(ctx);
+
+  expect(type).toBe('application/json');
+  expect(data).toEqual({
+    FileSize: { value: '21839' },
+    Format: { value: 'jpg' },
+    ImageHeight: { value: '267' },
+    ImageWidth: { value: '400' },
+  });
+  expect(mockProcess).not.toBeCalled();
+
 });
 
 test('style processor test', async () => {
