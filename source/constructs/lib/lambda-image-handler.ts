@@ -84,7 +84,6 @@ export class LambdaImageHandler extends Construct {
       }),
       environment: {
         REGION: Aws.REGION,
-        AWS_REGION: Aws.REGION,
         VIPS_DISC_THRESHOLD: '600m', // https://github.com/lovell/sharp/issues/1851
         NODE_ENV: 'production',
         NODE_OPTIONS: '--enable-source-maps',
