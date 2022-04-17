@@ -44,6 +44,7 @@ export class ECSImageHandler extends Construct {
         environment: {
           REGION: Aws.REGION,
           AWS_REGION: Aws.REGION,
+          VIPS_DISC_THRESHOLD: '600m', // https://github.com/lovell/sharp/issues/1851
           SRC_BUCKET: buckets[0].bucketName,
           STYLE_TABLE_NAME: table.tableName,
         },
