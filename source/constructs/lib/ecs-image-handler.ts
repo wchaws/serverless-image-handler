@@ -8,6 +8,7 @@ import * as ecsPatterns from '@aws-cdk/aws-ecs-patterns';
 import * as s3 from '@aws-cdk/aws-s3';
 import { Construct, CfnOutput, Duration, Stack, Aws } from '@aws-cdk/core';
 
+const GB = 1024;
 
 export class ECSImageHandler extends Construct {
   private originRequestPolicy = new cloudfront.OriginRequestPolicy(this, 'ForwardAllQueryString', {
@@ -30,11 +31,11 @@ export class ECSImageHandler extends Construct {
 
     const albFargateService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, 'Service', {
       vpc: getOrCreateVpc(this),
-      cpu: 2048,
-      memoryLimitMiB: 1024 * 4,
+      cpu: 4 * GB,
+      memoryLimitMiB: 8 * GB,
       minHealthyPercent: 100,
       maxHealthyPercent: 200,
-      desiredCount: 2,
+      desiredCount: 8,
       taskImageOptions: {
         image: ecs.ContainerImage.fromAsset(path.join(__dirname, '../../new-image-handler')),
         containerPort: 8080,
@@ -48,9 +49,10 @@ export class ECSImageHandler extends Construct {
     });
     albFargateService.targetGroup.configureHealthCheck({
       path: '/',
+      healthyThresholdCount: 3,
     });
     albFargateService.service.autoScaleTaskCount({
-      minCapacity: 2,
+      minCapacity: 8,
       maxCapacity: 20,
     }).scaleOnCpuUtilization('CpuScaling', {
       targetUtilizationPercent: 50,
@@ -69,10 +71,10 @@ export class ECSImageHandler extends Construct {
       this.distribution(new origins.LoadBalancerV2Origin(albFargateService.loadBalancer, {
         protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
         customHeaders: {
-          'x-bucket': bkt.bucketName
+          'x-bucket': bkt.bucketName,
         },
       }), index, `for s3://${bkt.bucketName}`);
-    })
+    });
   }
 
   private distribution(origin: cloudfront.IOrigin, index: number, msg?: string) {
@@ -118,7 +120,7 @@ function getBuckets(scope: Construct, id: string): s3.IBucket[] {
     throw new Error('Can\'t find context key="buckets" or the context key="buckets" is not an array of string.');
   }
   if (buckets.length < 1) {
-    throw new Error('You must specify at least one bucket.')
+    throw new Error('You must specify at least one bucket.');
   }
 
   return buckets.map((bkt: string, index: number) => s3.Bucket.fromBucketName(scope, `${id}${index}`, bkt));

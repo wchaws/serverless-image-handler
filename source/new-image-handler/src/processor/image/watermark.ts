@@ -1,6 +1,7 @@
 import * as sharp from 'sharp';
 import { IImageAction, IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
+import * as is from '../../is';
 const margin = 5;
 
 export interface WatermarkOpts extends IActionOpts {
@@ -20,7 +21,7 @@ export interface WatermarkOpts extends IActionOpts {
   interval: number; // 图文混排中，图片和文字间隔
   align: number; // 图文混排中，图片和文字对其方式
   type: string; // 字体
-
+  shadow: number;
 }
 
 interface WatermarkTextOpts extends IActionOpts {
@@ -48,7 +49,25 @@ export class WatermarkAction implements IImageAction {
   public readonly name: string = 'watermark';
 
   public validate(params: string[]): ReadOnly<WatermarkOpts> {
-    let opt: WatermarkOpts = { text: '', t: 100, g: 'se', fill: false, rotate: 0, size: 40, color: '000000', image: '', auto: true, order: 0, x: undefined, y: undefined, voffset: 0, interval: 0, align: 0, type: 'FZHei-B01'};
+    let opt: WatermarkOpts = {
+      text: '',
+      t: 100,
+      g: 'se',
+      fill: false,
+      rotate: 0,
+      size: 40,
+      color: '000000',
+      image: '',
+      auto: true,
+      order: 0,
+      x: undefined,
+      y: undefined,
+      voffset: 0,
+      interval: 0,
+      align: 0,
+      type: 'FZHei-B01',
+      shadow: 0,
+    };
 
     for (const param of params) {
       if ((this.name === param) || (!param)) {
@@ -130,6 +149,13 @@ export class WatermarkAction implements IImageAction {
           const buff = Buffer.from(v, 'base64');
           opt.type = buff.toString('utf-8');
         }
+      } else if (k === 'shadow') {
+        const shadow = Number.parseInt(v, 10);
+        if (is.inRange(shadow, 0, 100)) {
+          opt.shadow = shadow;
+        } else {
+          throw new InvalidArgument('Watermark param \'shadow\' must be between 0 and 100');
+        }
       } else {
         throw new InvalidArgument(`Unkown param: "${k}"`);
       }
@@ -144,6 +170,7 @@ export class WatermarkAction implements IImageAction {
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
     const opt = this.validate(params);
+    ctx.image = sharp(await ctx.image.toBuffer(), { animated: false });
     if (opt.text && opt.image) {
       await this.mixedWaterMark(ctx, opt);
     } else if (opt.text) {
@@ -334,11 +361,11 @@ export class WatermarkAction implements IImageAction {
     return overlapImg;
   }
 
-  calculateImgPos(opt: WatermarkOpts, metadata: sharp.Metadata, markMetadata:sharp.Metadata): WatermarkPosOpts {
+  calculateImgPos(opt: WatermarkOpts, metadata: sharp.Metadata, markMetadata: sharp.Metadata): WatermarkPosOpts {
     return this.calculatePos(opt, metadata.width, metadata.height, markMetadata.width, markMetadata.height);
   }
 
-  calculatePos(opt:WatermarkOpts, sourceW?: number, sourceH?: number, markW?: number, markH? :number): WatermarkPosOpts {
+  calculatePos(opt: WatermarkOpts, sourceW?: number, sourceH?: number, markW?: number, markH?: number): WatermarkPosOpts {
     let imgX = undefined;
     let imgY = undefined;
     if (markW && sourceW && markH && sourceH) {
@@ -378,7 +405,7 @@ export class WatermarkAction implements IImageAction {
     };
   }
 
-  calculateMixedGravity(opt: WatermarkOpts):WatermarkMixedGravityOpts {
+  calculateMixedGravity(opt: WatermarkOpts): WatermarkMixedGravityOpts {
     let imgGravity = 'west';
     let txtGravity = 'east';
     if (opt.order === 1) {
@@ -465,7 +492,7 @@ export class WatermarkAction implements IImageAction {
   }
 
   async extraImgOverlay(ctx: IImageContext, markImg: sharp.Sharp, markMetadata: sharp.Metadata,
-    opt: WatermarkOpts, pos?: WatermarkPosOpts):Promise<sharp.OverlayOptions> {
+    opt: WatermarkOpts, pos?: WatermarkPosOpts): Promise<sharp.OverlayOptions> {
     if (opt.t < 100 && !markMetadata.hasAlpha) {
       // jpeg or other no alpha image, we change the opacity by change the alpha channel
       markImg = markImg.removeAlpha().ensureAlpha(opt.t / 100);

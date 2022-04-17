@@ -1,5 +1,5 @@
-import * as sharp from 'sharp';
 import * as path from 'path';
+import * as sharp from 'sharp';
 import { IImageContext } from '../../../src/processor/image';
 import { LocalStore } from '../../../src/store';
 

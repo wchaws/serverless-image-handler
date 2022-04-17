@@ -25,11 +25,11 @@ test('info action', async () => {
 
   expect(ctx.features[Features.ReturnInfo]).toBeTruthy();
   expect(ctx.info).toEqual({
-    'FileSize': { 'value': '21839' },
-    'Format': { 'value': 'jpg' },
-    'ImageHeight': { 'value': '267' },
-    'ImageWidth': { 'value': '400' }
-  })
+    FileSize: { value: '21839' },
+    Format: { value: 'jpg' },
+    ImageHeight: { value: '267' },
+    ImageWidth: { value: '400' },
+  });
 });
 
 test('info action on gif', async () => {
@@ -39,9 +39,9 @@ test('info action on gif', async () => {
 
   expect(ctx.features[Features.ReturnInfo]).toBeTruthy();
   expect(ctx.info).toEqual({
-    'FileSize': { 'value': '21957' },
-    'Format': { 'value': 'gif' },
-    'ImageHeight': { 'value': '300' },
-    'ImageWidth': { 'value': '500' }
-  })
+    FileSize: { value: '21957' },
+    Format: { value: 'gif' },
+    ImageHeight: { value: '300' },
+    ImageWidth: { value: '500' },
+  });
 });

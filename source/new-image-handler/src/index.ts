@@ -1,20 +1,20 @@
+import * as S3 from 'aws-sdk/clients/s3';
 import * as Koa from 'koa'; // http://koajs.cn
-import * as Router from 'koa-router';
 import * as bodyParser from 'koa-bodyparser';
 import * as logger from 'koa-logger';
+import * as Router from 'koa-router';
 import * as sharp from 'sharp';
 import config from './config';
 import debug from './debug';
 import { bufferStore, getProcessor, parseRequest } from './default';
 import { InvalidArgument, Features } from './processor';
 import { IImageContext } from './processor/image';
-import * as S3 from 'aws-sdk/clients/s3';
 
 const DefaultBufferStore = bufferStore();
 const app = new Koa();
 const router = new Router();
 
-app.use(logger())
+app.use(logger());
 app.use(errorHandler());
 app.use(bodyParser());
 
@@ -97,7 +97,7 @@ function getBufferStore(ctx: Koa.ParameterizedContext) {
   return DefaultBufferStore;
 }
 
-async function ossprocess(ctx: Koa.ParameterizedContext): Promise<{ data: any; type: string; }> {
+async function ossprocess(ctx: Koa.ParameterizedContext): Promise<{ data: any; type: string }> {
   const { uri, actions } = parseRequest(ctx.path, ctx.query);
   const bs = getBufferStore(ctx);
   if (actions.length > 1) {
@@ -149,5 +149,5 @@ function validatePostRequest(ctx: Koa.ParameterizedContext): PostBody {
     sourceObject: body.sourceObject,
     targetBucket: body.targetBucket,
     targetObject: body.targetObject,
-  }
+  };
 }
