@@ -43,6 +43,7 @@ router.get(['/', '/ping'], async (ctx) => {
 });
 
 router.get(['/debug', '/_debug'], async (ctx) => {
+  ctx.status = 400;
   ctx.body = debug();
 });
 
