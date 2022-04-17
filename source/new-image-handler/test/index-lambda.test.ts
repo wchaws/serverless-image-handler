@@ -97,3 +97,39 @@ test('index-lambda.ts example.gif?x-oss-process=image/resize,w_100/quality,q_50'
   expect(metadata.format).toBe('gif');
   expect(metadata.pages).toBe(3);
 });
+
+test('index-lambda.ts example.gif?x-oss-process=image/format,png', async () => {
+  const res: any = await handler(mkevt('example.gif?x-oss-process=image/format,png'));
+
+  expect(res.isBase64Encoded).toBeTruthy();
+  expect(res.statusCode).toBe(200);
+  expect(res.headers['Content-Type']).toBe('png');
+
+  const metadata = await sharp(Buffer.from(res.body, 'base64')).metadata();
+
+  expect(metadata.width).toBe(500);
+  expect(metadata.height).toBe(300);
+  expect(metadata.format).toBe('png');
+});
+
+test('index-lambda.ts example.gif?x-oss-process=image/resize,w_1/info', async () => {
+  const res: any = await handler(mkevt('example.gif?x-oss-process=image/resize,w_1/info'));
+
+  expect(res.isBase64Encoded).toBeFalsy();
+  expect(res.statusCode).toBe(200);
+  expect(res.headers['Content-Type']).toBe('application/json');
+  expect(res.body).toBe(JSON.stringify({
+    FileSize: {
+      value: '21957',
+    },
+    Format: {
+      value: 'gif',
+    },
+    ImageHeight: {
+      value: '300',
+    },
+    ImageWidth: {
+      value: '500',
+    },
+  }));
+});

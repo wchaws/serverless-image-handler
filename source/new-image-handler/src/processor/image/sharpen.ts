@@ -1,12 +1,13 @@
-import { IImageAction, IImageContext } from '.';
+import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
 import * as is from '../../is';
+import { BaseImageAction } from './_base';
 
 export interface SharpenOpts extends IActionOpts {
   sharpen: number;
 }
 
-export class SharpenAction implements IImageAction {
+export class SharpenAction extends BaseImageAction {
   public readonly name: string = 'sharpen';
 
   public validate(params: string[]): ReadOnly<SharpenOpts> {

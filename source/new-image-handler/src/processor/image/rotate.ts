@@ -1,13 +1,14 @@
 import * as sharp from 'sharp';
-import { IImageAction, IImageContext } from '.';
+import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
 import * as is from '../../is';
+import { BaseImageAction } from './_base';
 
 export interface RotateOpts extends IActionOpts {
   degree: number;
 }
 
-export class RotateAction implements IImageAction {
+export class RotateAction extends BaseImageAction {
   public readonly name: string = 'rotate';
 
   public validate(params: string[]): ReadOnly<RotateOpts> {

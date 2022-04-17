@@ -1,6 +1,7 @@
 import * as sharp from 'sharp';
-import { IImageAction, IImageContext } from '.';
+import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
+import { BaseImageAction } from './_base';
 
 export interface CropOpts extends IActionOpts {
   w: number;
@@ -10,7 +11,7 @@ export interface CropOpts extends IActionOpts {
   g: 'nw' | 'north' | 'ne' | 'west' | 'center' | 'east' | 'sw' | 'south' | 'se';
 }
 
-export class CropAction implements IImageAction {
+export class CropAction extends BaseImageAction {
   public readonly name: string = 'crop';
 
   public validate(params: string[]): ReadOnly<CropOpts> {

@@ -1,4 +1,5 @@
 import * as sharp from 'sharp';
+import { Features } from '../../../src/processor';
 import { WatermarkAction } from '../../../src/processor/image/watermark';
 import { mkctx } from './utils';
 
@@ -43,4 +44,12 @@ test(testMixedParam, async () => {
 
   const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
   expect(info.format).toBe(sharp.format.jpeg.id);
+});
+
+test(`disable ${Features.ReadAllAnimatedFrames}`, async () => {
+  const ctx = await mkctx('example.gif');
+  const action = new WatermarkAction();
+  action.beforeNewContext(ctx, testMixedParam.split(','));
+
+  expect(ctx.features[Features.ReadAllAnimatedFrames]).toBe(false);
 });

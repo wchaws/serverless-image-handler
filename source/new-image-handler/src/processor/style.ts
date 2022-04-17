@@ -1,4 +1,5 @@
 import { IAction, InvalidArgument, IProcessContext, IProcessor, IProcessResponse } from '.';
+import * as is from '../is';
 import { IBufferStore, IKVStore, MemKVStore } from '../store';
 import { ImageProcessor } from './image/index';
 
@@ -49,7 +50,7 @@ export class StyleProcessor implements IProcessor {
     // }
     const { style } = await this._kvstore.get(stylename);
     const param = style; // e.g. image/resize,w_100,h_100,m_fixed,limit_0/
-    if (param && (typeof param === 'string' || param instanceof String)) {
+    if (is.string(param)) {
       const acts = param.split('/').filter((x: any) => x);
       const processor = PROCESSOR_MAP[acts[0]];
       if (!processor) {

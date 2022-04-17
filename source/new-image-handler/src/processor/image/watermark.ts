@@ -1,7 +1,8 @@
 import * as sharp from 'sharp';
-import { IImageAction, IImageContext } from '.';
-import { IActionOpts, ReadOnly, InvalidArgument } from '..';
+import { IImageContext } from '.';
+import { IActionOpts, ReadOnly, InvalidArgument, Features, IProcessContext } from '..';
 import * as is from '../../is';
+import { BaseImageAction } from './_base';
 const margin = 5;
 
 export interface WatermarkOpts extends IActionOpts {
@@ -45,8 +46,13 @@ interface WatermarkMixedGravityOpts extends IActionOpts {
   textGravity: string;
 }
 
-export class WatermarkAction implements IImageAction {
+export class WatermarkAction extends BaseImageAction {
   public readonly name: string = 'watermark';
+
+  public beforeNewContext(ctx: IProcessContext, params: string[]): void {
+    this.validate(params);
+    ctx.features[Features.ReadAllAnimatedFrames] = false;
+  }
 
   public validate(params: string[]): ReadOnly<WatermarkOpts> {
     let opt: WatermarkOpts = {
@@ -170,7 +176,6 @@ export class WatermarkAction implements IImageAction {
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
     const opt = this.validate(params);
-    ctx.image = sharp(await ctx.image.toBuffer(), { animated: false });
     if (opt.text && opt.image) {
       await this.mixedWaterMark(ctx, opt);
     } else if (opt.text) {

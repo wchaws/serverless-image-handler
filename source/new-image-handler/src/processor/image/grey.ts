@@ -1,11 +1,12 @@
-import { IImageAction, IImageContext } from '.';
+import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
+import { BaseImageAction } from './_base';
 
 export interface GreyOpts extends IActionOpts {
   grey: boolean;
 }
 
-export class GreyAction implements IImageAction {
+export class GreyAction extends BaseImageAction {
   public readonly name: string = 'grey';
 
   public validate(params: string[]): ReadOnly<GreyOpts> {

@@ -1,8 +1,9 @@
-import { IImageAction, IImageContext } from '.';
+import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument, Features } from '..';
+import { BaseImageAction } from './_base';
 
 
-export class InfoAction implements IImageAction {
+export class InfoAction extends BaseImageAction {
   public readonly name: string = 'info';
 
   public validate(params: string[]): ReadOnly<IActionOpts> {
@@ -23,6 +24,7 @@ export class InfoAction implements IImageAction {
       ImageWidth: { value: String(metadata.width) },
     };
 
+    // TODO: Figure out how to skip the previous actions for example: image/resize,w_1/info
     ctx.features[Features.ReturnInfo] = true;
   }
 }

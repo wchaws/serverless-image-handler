@@ -1,13 +1,14 @@
-import { IImageAction, IImageContext } from '.';
+import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
 import * as is from '../../is';
+import { BaseImageAction } from './_base';
 
 export interface BlurOpts extends IActionOpts {
   r: number;
   s: number;
 }
 
-export class BlurAction implements IImageAction {
+export class BlurAction extends BaseImageAction {
   public readonly name: string = 'blur';
 
   public validate(params: string[]): ReadOnly<BlurOpts> {

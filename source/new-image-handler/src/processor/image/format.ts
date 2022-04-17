@@ -1,19 +1,29 @@
 import * as sharp from 'sharp';
-import { IImageAction, IImageContext } from '.';
-import { IActionOpts, ReadOnly, InvalidArgument, Features } from '..';
+import { IImageContext } from '.';
+import { IActionOpts, ReadOnly, InvalidArgument, Features, IProcessContext } from '..';
+import { BaseImageAction } from './_base';
 
 export interface FormatOpts extends IActionOpts {
   format: string;
 }
 
-export class FormatAction implements IImageAction {
+export class FormatAction extends BaseImageAction {
   public readonly name: string = 'format';
+
+  public beforeNewContext(ctx: IProcessContext, params: string[]): void {
+    const opts = this.validate(params);
+    if (['webp', 'gif'].includes(opts.format)) {
+      ctx.features[Features.ReadAllAnimatedFrames] = true;
+    } else {
+      ctx.features[Features.ReadAllAnimatedFrames] = false;
+    }
+  }
 
   public validate(params: string[]): ReadOnly<FormatOpts> {
     let opt: FormatOpts = { format: '' };
 
     if (params.length !== 2) {
-      throw new InvalidArgument('Format param error, e.g: format,jpg   (jpg,png,webp)');
+      throw new InvalidArgument(`Format param error, e.g: format,jpg (${SUPPORTED_FORMAT.toString()})`);
     }
     opt.format = params[1];
 

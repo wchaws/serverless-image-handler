@@ -1,10 +1,11 @@
-import { IImageAction, IImageContext } from '.';
+import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
+import { BaseImageAction } from './_base';
 export interface InterlaceOpts extends IActionOpts {
   interlace: boolean;
 }
 
-export class InterlaceAction implements IImageAction {
+export class InterlaceAction extends BaseImageAction {
   public readonly name: string = 'interlace';
 
   public validate(params: string[]): ReadOnly<InterlaceOpts> {

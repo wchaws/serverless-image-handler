@@ -100,6 +100,17 @@ test('example.jpg?x-oss-process=image/resize,w_200/rotate,90', async () => {
   expect(info.channels).toBe(3);
 });
 
+test('example.gif?x-oss-process=image/format,png', async () => {
+  const ctx = await ImageProcessor.getInstance().newContext('example.gif', 'image/format,png'.split('/'), fixtureStore);
+  await ImageProcessor.getInstance().process(ctx);
+  const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
+
+  expect(ctx.features[Features.ReadAllAnimatedFrames]).toBe(false);
+  expect(info.width).toBe(500);
+  expect(info.height).toBe(300);
+  expect(info.format).toBe('png');
+});
+
 test('autowebp: example.jpg', async () => {
   const ctx = await ImageProcessor.getInstance().newContext('example.jpg', [], fixtureStore);
   ctx.features[Features.AutoWebp] = true;

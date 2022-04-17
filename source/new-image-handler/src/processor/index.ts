@@ -77,7 +77,7 @@ export interface IProcessor {
    *     channels: 3,
    *     background: { r: 255, g: 0, b: 0 },
    *   },
-   * }));
+   * }).png());
    * const ctx = ImageProcessor.getInstance().newContext('example.jpg', 'image/resize,w_100,h_100,m_fixed,limit_0/'.split('/'));
    * await ImageProcessor.getInstance().process(ctx);
    * ```
@@ -129,6 +129,14 @@ export interface IAction {
    * @param params the parameters
    */
   process(ctx: IProcessContext, params: string[]): Promise<void>;
+
+  /**
+   * This function is called before processor new context.
+   *
+   * @param ctx the context
+   * @param params the parameters
+   */
+  beforeNewContext(ctx: IProcessContext, params: string[]): void;
 }
 
 /**
@@ -140,4 +148,5 @@ export class InvalidArgument extends HttpErrors[400] { }
 export enum Features {
   AutoWebp = 'auto-webp',
   ReturnInfo = 'return-info',
+  ReadAllAnimatedFrames = 'read-all-animated-frames',
 }

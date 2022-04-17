@@ -1,6 +1,7 @@
 import * as sharp from 'sharp';
-import { IImageAction, IImageContext } from '.';
+import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument } from '..';
+import { BaseImageAction } from './_base';
 
 export interface IndexCropOpts extends IActionOpts {
   x: number;
@@ -8,7 +9,7 @@ export interface IndexCropOpts extends IActionOpts {
   i: number;
 }
 
-export class IndexCropAction implements IImageAction {
+export class IndexCropAction extends BaseImageAction {
   public readonly name: string = 'indexcrop';
 
   public validate(params: string[]): ReadOnly<IndexCropOpts> {

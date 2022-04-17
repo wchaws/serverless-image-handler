@@ -1,4 +1,5 @@
 import * as sharp from 'sharp';
+import { Features } from '../../../src/processor';
 import { FormatAction } from '../../../src/processor/image/format';
 import { mkctx } from './utils';
 
@@ -72,4 +73,25 @@ test('format,gif', async () => {
 
   const metadata = await sharp(data, { animated: true }).metadata();
   expect(metadata.pages).toBe(3);
+});
+
+test(`format,png disable ${Features.ReadAllAnimatedFrames}`, async () => {
+  const ctx = await mkctx('example.gif');
+  const action = new FormatAction();
+  action.beforeNewContext(ctx, 'format,png'.split(','));
+  expect(ctx.features[Features.ReadAllAnimatedFrames]).toBe(false);
+  action.beforeNewContext(ctx, 'format,jpg'.split(','));
+  expect(ctx.features[Features.ReadAllAnimatedFrames]).toBe(false);
+  action.beforeNewContext(ctx, 'format,jpeg'.split(','));
+  expect(ctx.features[Features.ReadAllAnimatedFrames]).toBe(false);
+});
+
+
+test(`format,png enable ${Features.ReadAllAnimatedFrames}`, async () => {
+  const ctx = await mkctx('example.gif');
+  const action = new FormatAction();
+  action.beforeNewContext(ctx, 'format,gif'.split(','));
+  expect(ctx.features[Features.ReadAllAnimatedFrames]).toBe(true);
+  action.beforeNewContext(ctx, 'format,webp'.split(','));
+  expect(ctx.features[Features.ReadAllAnimatedFrames]).toBe(true);
 });

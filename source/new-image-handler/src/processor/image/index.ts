@@ -19,7 +19,6 @@ import { RoundedCornersAction } from './rounded-corners';
 import { SharpenAction } from './sharpen';
 import { WatermarkAction } from './watermark';
 
-export interface IImageAction extends IAction { }
 export interface IImageInfo {
   [key: string]: { value: string };
 }
@@ -43,13 +42,34 @@ export class ImageProcessor implements IProcessor {
   private constructor() { }
 
   public async newContext(uri: string, actions: string[], bufferStore: IBufferStore): Promise<IImageContext> {
-    const { buffer } = await bufferStore.get(uri);
-    return {
+    const ctx: IProcessContext = {
       uri,
       actions,
       bufferStore,
-      features: {},
-      image: sharp(buffer, { animated: true }),
+      features: {
+        [Features.ReadAllAnimatedFrames]: true,
+      },
+    };
+    for (const action of actions) {
+      if ((this.name === action) || (!action)) {
+        continue;
+      }
+      // "<action-name>,<param-1>,<param-2>,..."
+      const params = action.split(',');
+      const name = params[0];
+      const act = this.action(name);
+      if (!act) {
+        throw new InvalidArgument(`Unkown action: "${name}"`);
+      }
+      act.beforeNewContext.bind(act)(ctx, params);
+    }
+    const { buffer } = await bufferStore.get(uri);
+    return {
+      uri: ctx.uri,
+      actions: ctx.actions,
+      bufferStore: ctx.bufferStore,
+      features: ctx.features,
+      image: sharp(buffer, { animated: ctx.features[Features.ReadAllAnimatedFrames] }),
     };
   }
 
@@ -65,7 +85,6 @@ export class ImageProcessor implements IProcessor {
       if ((this.name === action) || (!action)) {
         continue;
       }
-
       // "<action-name>,<param-1>,<param-2>,..."
       const params = action.split(',');
       const name = params[0];
@@ -90,7 +109,7 @@ export class ImageProcessor implements IProcessor {
     return this._actions[name];
   }
 
-  public register(...actions: IImageAction[]): void {
+  public register(...actions: IAction[]): void {
     for (const action of actions) {
       if (!this._actions[action.name]) {
         this._actions[action.name] = action;
