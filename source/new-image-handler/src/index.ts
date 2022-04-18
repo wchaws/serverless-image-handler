@@ -1,4 +1,5 @@
 import * as S3 from 'aws-sdk/clients/s3';
+import * as HttpErrors from 'http-errors';
 import * as Koa from 'koa'; // http://koajs.cn
 import * as bodyParser from 'koa-bodyparser';
 import * as logger from 'koa-logger';
@@ -48,7 +49,7 @@ router.get(['/debug', '/_debug'], async (ctx) => {
 });
 
 router.get('/(.*)', async (ctx) => {
-  const { data, type } = await ossprocess(ctx);
+  const { data, type } = await ossprocess(ctx, bypass);
   ctx.body = data;
   ctx.type = type;
 });
@@ -95,7 +96,7 @@ function getBufferStore(ctx: Koa.ParameterizedContext) {
   return DefaultBufferStore;
 }
 
-async function ossprocess(ctx: Koa.ParameterizedContext): Promise<{ data: any; type: string }> {
+async function ossprocess(ctx: Koa.ParameterizedContext, beforeGetFn?: () => void): Promise<{ data: any; type: string }> {
   const { uri, actions } = parseRequest(ctx.path, ctx.query);
   const bs = getBufferStore(ctx);
   if (actions.length > 1) {
@@ -103,7 +104,7 @@ async function ossprocess(ctx: Koa.ParameterizedContext): Promise<{ data: any; t
     const context = await processor.newContext(uri, actions, bs);
     return processor.process(context);
   } else {
-    const { buffer, type } = await bs.get(uri);
+    const { buffer, type } = await bs.get(uri, beforeGetFn);
     return { data: buffer, type: type };
   }
 }
@@ -136,4 +137,9 @@ function validatePostRequest(ctx: Koa.ParameterizedContext): PostBody {
     targetBucket: body.targetBucket,
     targetObject: body.targetObject,
   };
+}
+
+function bypass() {
+  // NOTE: This is intended to tell CloudFront to directly access the s3 object.
+  throw new HttpErrors[403]('Please visit s3 directly');
 }

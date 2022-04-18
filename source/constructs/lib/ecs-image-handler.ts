@@ -5,8 +5,9 @@ import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import * as ec2 from '@aws-cdk/aws-ec2';
 import * as ecs from '@aws-cdk/aws-ecs';
 import * as ecsPatterns from '@aws-cdk/aws-ecs-patterns';
+import * as iam from '@aws-cdk/aws-iam';
 import * as s3 from '@aws-cdk/aws-s3';
-import { Construct, CfnOutput, Duration, Stack, Aws } from '@aws-cdk/core';
+import { Aws, CfnOutput, Construct, Duration, Stack } from '@aws-cdk/core';
 
 const GB = 1024;
 
@@ -71,12 +72,31 @@ export class ECSImageHandler extends Construct {
     // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-listenerrule.html
 
     buckets.forEach((bkt, index) => {
-      this.distribution(new origins.LoadBalancerV2Origin(albFargateService.loadBalancer, {
-        protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
-        customHeaders: {
-          'x-bucket': bkt.bucketName,
-        },
-      }), index, `for s3://${bkt.bucketName}`);
+      const bktoai = new cloudfront.OriginAccessIdentity(this, `S3Origin${index}`, {
+        comment: `Identity for s3://${bkt.bucketName}`,
+      });
+      const bktplcy = new iam.PolicyStatement({
+        resources: [bkt.arnForObjects('*')],
+        actions: ['s3:GetObject'],
+        principals: [bktoai.grantPrincipal],
+      });
+      bkt.addToResourcePolicy(bktplcy);
+
+      this.cfnOutput(`BucketPolicy${index}`, `${JSON.stringify(bktplcy.toStatementJson())}`, `NOTICE!: Please add this statement in the bucket policy of bucket${index}: ${bkt.bucketName}`);
+
+      this.distribution(new origins.OriginGroup({
+        primaryOrigin: new origins.LoadBalancerV2Origin(
+          albFargateService.loadBalancer,
+          {
+            protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
+          }),
+        fallbackOrigin: new origins.S3Origin(
+          bkt,
+          {
+            originAccessIdentity: bktoai,
+          }),
+        fallbackStatusCodes: [403],
+      }), index, `for bucket${index}: ${bkt.bucketName}`);
     });
   }
 
