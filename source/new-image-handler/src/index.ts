@@ -9,6 +9,8 @@ import debug from './debug';
 import { bufferStore, getProcessor, parseRequest } from './default';
 import { InvalidArgument } from './processor';
 
+config.isProd = true;
+config.srcBucket = 'serverless-ecs-image-han-serverlessecsimagehandle-7mt1pkt0p339';
 const DefaultBufferStore = bufferStore();
 const app = new Koa();
 const router = new Router();
@@ -50,9 +52,24 @@ router.get(['/debug', '/_debug'], async (ctx) => {
 });
 
 router.get('/(.*)', async (ctx) => {
-  const { data, type } = await ossprocess(ctx, bypass);
+  const { data, type, headers } = await ossprocess(ctx, bypass);
   ctx.body = data;
   ctx.type = type;
+  console.log('Set etag: ', headers?.etag);
+  if (!! headers?.etag) {
+    ctx.etag = headers.etag;
+  }
+  if (!! headers?.lastModified) {
+    let lastModified;
+    if (typeof headers.lastModified === 'string') {
+      lastModified = new Date(headers.lastModified);
+    } else {
+      lastModified = headers.lastModified;
+    }
+
+    console.log('set lastmodified: ', lastModified);
+    ctx.lastModified = lastModified;
+  }
 });
 
 app.use(router.routes());
@@ -97,16 +114,18 @@ function getBufferStore(ctx: Koa.ParameterizedContext) {
   return DefaultBufferStore;
 }
 
-async function ossprocess(ctx: Koa.ParameterizedContext, beforeGetFn?: () => void): Promise<{ data: any; type: string }> {
+async function ossprocess(ctx: Koa.ParameterizedContext, beforeGetFn?: () => void):
+Promise<{ data: any; type: string; headers?:{etag?: string; lastModified?: string | Date } }> {
   const { uri, actions } = parseRequest(ctx.path, ctx.query);
   const bs = getBufferStore(ctx);
   if (actions.length > 1) {
     const processor = getProcessor(actions[0]);
     const context = await processor.newContext(uri, actions, bs);
+    ctx.set(context.headers);
     return processor.process(context);
   } else {
-    const { buffer, type } = await bs.get(uri, beforeGetFn);
-    return { data: buffer, type: type };
+    const { buffer, type, headers } = await bs.get(uri, beforeGetFn);
+    return { data: buffer, type: type, headers: headers };
   }
 }
 

@@ -39,6 +39,12 @@ export interface IProcessContext {
    * Feature flags.
    */
   readonly features: { [key: string]: boolean };
+
+  readonly headers: IHttpHeaders;
+}
+
+export interface IHttpHeaders {
+  [key: string]: any;
 }
 
 export interface IProcessResponse {
