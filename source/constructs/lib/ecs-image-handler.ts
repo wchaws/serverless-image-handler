@@ -89,6 +89,9 @@ export class ECSImageHandler extends Construct {
           albFargateService.loadBalancer,
           {
             protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
+            customHeaders: {
+              'x-bucket': bkt.bucketName,
+            },
           }),
         fallbackOrigin: new origins.S3Origin(
           bkt,
