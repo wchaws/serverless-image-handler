@@ -98,10 +98,14 @@ function getBufferStore(ctx: Koa.ParameterizedContext) {
 }
 
 async function ossprocess(ctx: Koa.ParameterizedContext, beforeGetFn?: () => void): Promise<{ data: any; type: string }> {
-  const { uri, actions } = parseRequest(ctx.path, ctx.query);
+  let { uri, actions } = parseRequest(ctx.path, ctx.query);
   const bs = getBufferStore(ctx);
   if (actions.length > 1) {
     const processor = getProcessor(actions[0]);
+    if (actions[0] === 'video') {
+      const videoUri = ctx.headers['x-bucket'] + '*' + uri;
+      uri = videoUri;
+    }
     const context = await processor.newContext(uri, actions, bs);
     return processor.process(context);
   } else {

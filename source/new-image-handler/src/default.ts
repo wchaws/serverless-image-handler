@@ -4,12 +4,14 @@ import config from './config';
 import { InvalidArgument, IProcessor } from './processor';
 import { ImageProcessor } from './processor/image';
 import { StyleProcessor } from './processor/style';
+import { VideoProcessor } from './processor/video';
 import { IBufferStore, S3Store, LocalStore, MemKVStore, DynamoDBStore, IKVStore } from './store';
 import * as style from './style.json';
 
 const PROCESSOR_MAP: { [key: string]: IProcessor } = {
   [ImageProcessor.getInstance().name]: ImageProcessor.getInstance(),
   [StyleProcessor.getInstance().name]: StyleProcessor.getInstance(kvstore()),
+  [VideoProcessor.getInstance().name]: VideoProcessor.getInstance(),
 };
 
 export function getProcessor(name: string): IProcessor {
