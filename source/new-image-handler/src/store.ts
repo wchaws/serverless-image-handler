@@ -65,7 +65,7 @@ export class S3Store implements IBufferStore {
       return {
         buffer: res.Body as Buffer,
         type: res.ContentType ?? '',
-        headers: { 'Etag': res.ETag , 'Last-Modified': res.LastModified },
+        headers: { 'Etag': res.ETag, 'Last-Modified': res.LastModified },
       };
     };
     throw new Error('S3 response body is not a Buffer type');
