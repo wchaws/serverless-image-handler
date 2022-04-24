@@ -50,7 +50,7 @@ COPY package.json yarn.lock /app/
 COPY ./fonts/* /usr/share/fonts/
 
 RUN apk update && \
-    apk add fontconfig
+    apk add fontconfig ffmpeg
 
 # ENV NODE_ENV=production
 
