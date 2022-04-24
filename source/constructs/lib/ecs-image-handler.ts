@@ -64,7 +64,20 @@ export class ECSImageHandler extends Construct {
 
     table.grantReadData(albFargateService.taskDefinition.taskRole);
     for (const bkt of buckets) {
-      bkt.grantReadWrite(albFargateService.taskDefinition.taskRole);
+
+      // bkt.grantReadWrite(albFargateService.taskDefinition.taskRole);
+      bkt.policy?.document.addStatements(new iam.PolicyStatement({
+        actions: [
+          's3:GetObject*',
+          's3:GetBucket*',
+          's3:List*',
+          's3:PutObject*',
+          's3:Abort*'
+        ],
+        principals: [albFargateService.taskDefinition.taskRole],
+        resources: [bkt.bucketArn, bkt.bucketArn + '/*'],
+      })
+      );
     }
 
     // TODO: Add restriction access to ALB
