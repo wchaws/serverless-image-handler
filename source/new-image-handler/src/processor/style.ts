@@ -31,6 +31,7 @@ export class StyleProcessor implements IProcessor {
       uri,
       actions,
       bufferStore,
+      headers: {},
       features: {},
     });
   }
