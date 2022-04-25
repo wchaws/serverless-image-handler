@@ -7,7 +7,7 @@ import * as Router from 'koa-router';
 import config from './config';
 import debug from './debug';
 import { bufferStore, getProcessor, parseRequest } from './default';
-import { InvalidArgument } from './processor';
+import { IHttpHeaders, InvalidArgument } from './processor';
 
 const DefaultBufferStore = bufferStore();
 const app = new Koa();
@@ -36,7 +36,6 @@ router.post('/images', async (ctx) => {
     }).promise();
 
     ctx.body = `saved result to s3://${opt.targetBucket}/${opt.targetObject}`;
-    console.log(ctx.body);
   }
 });
 
@@ -53,21 +52,7 @@ router.get('/(.*)', async (ctx) => {
   const { data, type, headers } = await ossprocess(ctx, bypass);
   ctx.body = data;
   ctx.type = type;
-  console.log('Set etag: ', headers?.etag);
-  if (!! headers?.etag) {
-    ctx.etag = headers.etag;
-  }
-  if (!! headers?.lastModified) {
-    let lastModified;
-    if (typeof headers.lastModified === 'string') {
-      lastModified = new Date(headers.lastModified);
-    } else {
-      lastModified = headers.lastModified;
-    }
-
-    console.log('set lastmodified: ', lastModified);
-    ctx.lastModified = lastModified;
-  }
+  ctx.set(headers);
 });
 
 app.use(router.routes());
@@ -113,14 +98,14 @@ function getBufferStore(ctx: Koa.ParameterizedContext) {
 }
 
 async function ossprocess(ctx: Koa.ParameterizedContext, beforeGetFn?: () => void):
-Promise<{ data: any; type: string; headers?:{etag?: string; lastModified?: string | Date } }> {
+  Promise<{ data: any; type: string; headers: IHttpHeaders }> {
   const { uri, actions } = parseRequest(ctx.path, ctx.query);
   const bs = getBufferStore(ctx);
   if (actions.length > 1) {
     const processor = getProcessor(actions[0]);
     const context = await processor.newContext(uri, actions, bs);
-    ctx.set(context.headers);
-    return processor.process(context);
+    const { data, type } = await processor.process(context);
+    return { data, type, headers: context.headers };
   } else {
     const { buffer, type, headers } = await bs.get(uri, beforeGetFn);
     return { data: buffer, type: type, headers: headers };
