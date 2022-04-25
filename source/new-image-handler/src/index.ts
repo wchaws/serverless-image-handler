@@ -7,7 +7,10 @@ import * as Router from 'koa-router';
 import config from './config';
 import debug from './debug';
 import { bufferStore, getProcessor, parseRequest } from './default';
-import { InvalidArgument } from './processor';
+import { IHttpHeaders, InvalidArgument } from './processor';
+config.isProd = true;
+config.srcBucket = 'serverless-ecs-image-han-serverlessecsimagehandle-7mt1pkt0p339';
+
 
 const DefaultBufferStore = bufferStore();
 const app = new Koa();
@@ -50,24 +53,9 @@ router.get(['/debug', '/_debug'], async (ctx) => {
 });
 
 router.get('/(.*)', async (ctx) => {
-  const { data, type, headers } = await ossprocess(ctx, bypass);
+  const { data, type } = await ossprocess(ctx, bypass);
   ctx.body = data;
   ctx.type = type;
-  console.log('Set etag: ', headers?.etag);
-  if (!! headers?.etag) {
-    ctx.etag = headers.etag;
-  }
-  if (!! headers?.lastModified) {
-    let lastModified;
-    if (typeof headers.lastModified === 'string') {
-      lastModified = new Date(headers.lastModified);
-    } else {
-      lastModified = headers.lastModified;
-    }
-
-    console.log('set lastmodified: ', lastModified);
-    ctx.lastModified = lastModified;
-  }
 });
 
 app.use(router.routes());
@@ -113,7 +101,7 @@ function getBufferStore(ctx: Koa.ParameterizedContext) {
 }
 
 async function ossprocess(ctx: Koa.ParameterizedContext, beforeGetFn?: () => void):
-Promise<{ data: any; type: string; headers?:{etag?: string; lastModified?: string | Date } }> {
+Promise<{ data: any; type: string; headers?: IHttpHeaders }> {
   const { uri, actions } = parseRequest(ctx.path, ctx.query);
   const bs = getBufferStore(ctx);
   if (actions.length > 1) {

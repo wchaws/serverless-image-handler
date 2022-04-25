@@ -37,7 +37,7 @@ export interface IKVStore extends IStore<IKeyValue> { }
 export class LocalStore implements IBufferStore {
   public constructor(private root: string = '') { }
   public async get(p: string, _?: () => void):
-  Promise<{ buffer: Buffer; type: string; headers?: IHttpHeaders}> {
+  Promise<{ buffer: Buffer; type: string; headers?: IHttpHeaders }> {
     p = path.join(this.root, p);
     return {
       buffer: await fs.promises.readFile(p),
@@ -53,7 +53,7 @@ export class S3Store implements IBufferStore {
   private _s3: S3 = new S3({ region: config.region });
   public constructor(public readonly bucket: string) { }
   public async get(p: string, beforeGetFunc?: () => void):
-  Promise<{ buffer: Buffer; type: string; headers?: IHttpHeaders}> {
+  Promise<{ buffer: Buffer; type: string; headers?: IHttpHeaders }> {
     beforeGetFunc?.();
     const res = await this._s3.getObject({
       Bucket: this.bucket,
@@ -61,7 +61,6 @@ export class S3Store implements IBufferStore {
     }).promise();
 
     if (Buffer.isBuffer(res.Body)) {
-      console.log(`etag: ${res.ETag}, lastmodified: ${res.LastModified}`);
       return {
         buffer: res.Body as Buffer,
         type: res.ContentType ?? '',
@@ -90,7 +89,7 @@ export class NullStore implements IBufferStore {
 export class SharpBufferStore implements IBufferStore {
   constructor(private image: sharp.Sharp) { }
 
-  async get(_: string, __?: () => void): Promise<{ buffer: Buffer; type: string; headers?: IHttpHeaders}> {
+  async get(_: string, __?: () => void): Promise<{ buffer: Buffer; type: string; headers?: IHttpHeaders }> {
     const { data, info } = await this.image.toBuffer({ resolveWithObject: true });
     return { buffer: data, type: info.format };
   }
