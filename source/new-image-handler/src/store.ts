@@ -42,7 +42,7 @@ export class LocalStore implements IBufferStore {
     return {
       buffer: await fs.promises.readFile(p),
       type: filetype(p),
-      headers: {}
+      headers: {},
     };
   }
 }
@@ -80,7 +80,7 @@ export class NullStore implements IBufferStore {
     return Promise.resolve({
       buffer: Buffer.from(p),
       type: '',
-      headers: {}
+      headers: {},
     });
   }
 }
