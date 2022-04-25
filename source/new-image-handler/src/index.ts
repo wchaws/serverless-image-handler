@@ -9,8 +9,6 @@ import debug from './debug';
 import { bufferStore, getProcessor, parseRequest } from './default';
 import { InvalidArgument } from './processor';
 
-config.isProd = true;
-config.srcBucket = 'serverless-ecs-image-han-serverlessecsimagehandle-7mt1pkt0p339';
 const DefaultBufferStore = bufferStore();
 const app = new Koa();
 const router = new Router();
