@@ -1,3 +1,4 @@
+
 import * as path from 'path';
 import * as cloudfront from '@aws-cdk/aws-cloudfront';
 import * as origins from '@aws-cdk/aws-cloudfront-origins';
@@ -62,11 +63,16 @@ export class ECSImageHandler extends Construct {
       targetUtilizationPercent: 50,
     });
 
-    table.grantReadData(albFargateService.taskDefinition.taskRole);
+    const taskRole = albFargateService.taskDefinition.taskRole;
+    table.grantReadData(taskRole);
     for (const bkt of buckets) {
 
       // bkt.grantReadWrite(albFargateService.taskDefinition.taskRole);
-      bkt.policy?.document.addStatements(new iam.PolicyStatement({
+      // taskRole.attachInlinePolicy(new iam.Policy(this, 'userpool-policy', { statements: [
+        
+      // ]}));
+
+      taskRole.addToPrincipalPolicy(new iam.PolicyStatement({
         actions: [
           's3:GetObject*',
           's3:GetBucket*',
@@ -74,10 +80,8 @@ export class ECSImageHandler extends Construct {
           's3:PutObject*',
           's3:Abort*'
         ],
-        principals: [albFargateService.taskDefinition.taskRole],
         resources: [bkt.bucketArn, bkt.bucketArn + '/*'],
-      })
-      );
+      }));
     }
 
     // TODO: Add restriction access to ALB
