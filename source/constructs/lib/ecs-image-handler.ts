@@ -67,11 +67,6 @@ export class ECSImageHandler extends Construct {
     table.grantReadData(taskRole);
     for (const bkt of buckets) {
 
-      // bkt.grantReadWrite(albFargateService.taskDefinition.taskRole);
-      // taskRole.attachInlinePolicy(new iam.Policy(this, 'userpool-policy', { statements: [
-        
-      // ]}));
-
       taskRole.addToPrincipalPolicy(new iam.PolicyStatement({
         actions: [
           's3:GetObject*',
