@@ -1,4 +1,5 @@
 import * as S3 from 'aws-sdk/clients/s3';
+import * as SecretsManager from 'aws-sdk/clients/secretsmanager';
 import * as HttpErrors from 'http-errors';
 import * as Koa from 'koa'; // http://koajs.cn
 import * as bodyParser from 'koa-bodyparser';
@@ -20,7 +21,8 @@ app.use(bodyParser());
 router.post('/images', async (ctx) => {
   console.log('post request body=', ctx.request.body);
 
-  const opt = validatePostRequest(ctx);
+  const opt = await validatePostRequest(ctx);
+  console.log(opt);
   ctx.path = opt.sourceObject;
   ctx.query['x-oss-process'] = opt.params;
   ctx.headers['x-bucket'] = opt.sourceBucket;
@@ -110,15 +112,29 @@ async function ossprocess(ctx: Koa.ParameterizedContext, beforeGetFn?: () => voi
   }
 }
 
-interface PostBody {
-  params: string;
-  sourceBucket: string;
-  sourceObject: string;
-  targetBucket: string;
-  targetObject: string;
-}
+// interface PostBody {
+//   params: string;
+//   sourceBucket: string;
+//   sourceObject: string;
+//   targetBucket: string;
+//   targetObject: string;
+// }
 
-function validatePostRequest(ctx: Koa.ParameterizedContext): PostBody {
+async function validatePostRequest(ctx: Koa.ParameterizedContext) {
+  // Fox edited in 2022/04/25: enhance the security of the post requests
+  let authHeader = ctx.get('X-Client-Authorization');
+  let secretHeader = await getHeaderFromSecretsManager();
+
+  if (authHeader !== secretHeader) {
+    throw new InvalidArgument('Invalid post header.');
+  }
+
+  // let ip = ctx.get('X-Forwarded-For');
+  // let cidrSettings = '192.168.0.2/32, 192.168.0.0/31, 192.168.0.3/32, 10.0.0.1/16';
+  // if (!ipValidation(ip, cidrSettings)) {
+  //   throw new InvalidArgument('Invalid post IP.');
+  // }
+
   const body = ctx.request.body;
   if (!body) {
     throw new InvalidArgument('Empty post body.');
@@ -143,4 +159,54 @@ function validatePostRequest(ctx: Koa.ParameterizedContext): PostBody {
 function bypass() {
   // NOTE: This is intended to tell CloudFront to directly access the s3 object.
   throw new HttpErrors[403]('Please visit s3 directly');
+}
+
+// Turn IP into a int (a.b.c.d) = a*256*256*256 + b*256*256 + c*256 + d
+/* eslint no-bitwise: ["error", { "allow": [">>>", "<<", "~", "&"] }] */
+// function ipToInt(ip: string) {
+//   let result = ip.split('.').reduce((int, oct) => (int << 8) + parseInt(oct, 10), 0) >>> 0;
+//   return result;
+// }
+
+// // See if the IP is in a specific CIDR
+// function ipInCidr(ip: string, cidr: string) {
+//   const [range, bits = 32] = cidr.split('/');
+//   let mask = ~(2 ** (32 - Number(bits)) - 1);
+//   let result = (ipToInt(ip) & mask) === (ipToInt(range) & mask);
+//   console.log(mask, result);
+//   return result;
+// }
+
+// // Make sure the IP is whitelisted
+// function ipValidation(ip: string, cidrSettings: string) {
+//   let result = false;
+//   let cidrArr = cidrSettings.split(',');
+//   for (const cidr of cidrArr) {
+//     console.log(ip, cidr.trim());
+//     if (ipInCidr(ip, cidr)) {
+//       result = true;
+//       return result;
+//     }
+//   }
+//   return result;
+// }
+
+async function getSecretFromSecretsManager() {
+  // Load the AWS SDK
+  const region = 'ap-southeast-1',
+    secretName = 'X-Client-Authorization';
+
+  // Create a Secrets Manager client
+  const client = new SecretsManager({
+    region: region,
+  });
+
+  return client.getSecretValue({ SecretId: secretName }).promise();
+}
+
+async function getHeaderFromSecretsManager() {
+  const secret = await getSecretFromSecretsManager();
+  const secretString = secret.SecretString!;
+  const keypair = JSON.parse(secretString);
+  return keypair['X-Client-Authorization'];
 }
