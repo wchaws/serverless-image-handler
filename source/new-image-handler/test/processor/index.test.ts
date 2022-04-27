@@ -131,7 +131,7 @@ test('autowebp: example.jpg?x-oss-process=image/format,png', async () => {
   expect(info.format).toBe('png');
 });
 
-test('example.jpg?x-oss-process=video/snapshot,t_1,f_jpg,m_fast', async () => {
+test.skip('example.jpg?x-oss-process=video/snapshot,t_1,f_jpg,m_fast', async () => {
   const ctx = await VideoProcessor.getInstance().newContext('example-video.mp4', 'video/snapshot,t_1,f_jpg,m_fast'.split('/'), fixtureStore);
   const { data, type } = await VideoProcessor.getInstance().process(ctx);
   const metadata = await sharp(data).metadata();
