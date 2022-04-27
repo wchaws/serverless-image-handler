@@ -97,8 +97,8 @@ export class VideoProcessor implements IProcessor {
         throw new InvalidArgument('Invalid video request! Params .e.g ?x-oss-process=video/snapshot,t_1,f_jpg,m_fast');
       }
       const opt = this.validate(params);
-      const s3PresignUrl = await ctx.bufferStore.url(ctx.uri);
-      const data = await _videoScreenShot('ffmpeg', ['-i', s3PresignUrl, '-ss', opt.t.toString(), '-vframes', '1', '-c:v', opt.f, '-f', 'image2pipe', '-']);
+      const url = await ctx.bufferStore.url(ctx.uri);
+      const data = await _videoScreenShot('ffmpeg', ['-i', url, '-ss', opt.t.toString(), '-vframes', '1', '-c:v', opt.f, '-f', 'image2pipe', '-']);
       return { data: data, type: opt.o };
     } else {
       return { data: '{}', type: 'application/json' };
@@ -110,6 +110,9 @@ export class VideoProcessor implements IProcessor {
 
 const MB = 1024 * 1024;
 const MAX_BUFFER = 5 * MB;
+
+// https://sourcegraph.com/github.com/nodejs/node@f7668fa2aa2781dc57d5423a0cfcfa933539779e/-/blob/lib/child_process.js?L279:10
+// TODO: Return stderr when raise exception.
 function _videoScreenShot(cmd: string, args: readonly string[]) {
   const child = child_process.spawn(cmd, args);
 

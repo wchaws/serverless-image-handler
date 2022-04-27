@@ -4,6 +4,7 @@ import { ImageProcessor } from '../../src/processor/image';
 import { BaseImageAction } from '../../src/processor/image/_base';
 import { ResizeAction } from '../../src/processor/image/resize';
 import { StyleProcessor } from '../../src/processor/style';
+import { VideoProcessor } from '../../src/processor/video';
 import { MemKVStore, SharpBufferStore } from '../../src/store';
 import { fixtureStore, mkctx } from './image/utils';
 
@@ -130,7 +131,16 @@ test('autowebp: example.jpg?x-oss-process=image/format,png', async () => {
   expect(info.format).toBe('png');
 });
 
-test.only('example.jpg?x-oss-process=image/fake/info', async () => {
+test('example.jpg?x-oss-process=video/snapshot,t_1,f_jpg,m_fast', async () => {
+  const ctx = await VideoProcessor.getInstance().newContext('example-video.mp4', 'video/snapshot,t_1,f_jpg,m_fast'.split('/'), fixtureStore);
+  const { data, type } = await VideoProcessor.getInstance().process(ctx);
+  const metadata = await sharp(data).metadata();
+
+  expect(type).toBe('image/jpeg');
+  expect(metadata.format).toBe('jpeg');
+});
+
+test('example.jpg?x-oss-process=image/fake/info', async () => {
   const mockValidate = jest.fn<{}, any[]>();
   const mockProcess = jest.fn<void, any[]>();
 
