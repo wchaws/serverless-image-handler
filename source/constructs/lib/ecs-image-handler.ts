@@ -76,7 +76,7 @@ export class ECSImageHandler extends Construct {
           's3:GetBucket*',
           's3:List*',
           's3:PutObject*',
-          's3:Abort*'
+          's3:Abort*',
         ],
         resources: [bkt.bucketArn, bkt.bucketArn + '/*'],
       }));
