@@ -4,8 +4,6 @@ WORKDIR /app
 
 COPY package.json yarn.lock /app/
 
-RUN yum install -y ffmpeg
-
 RUN npx yarn
 
 COPY . /app/
