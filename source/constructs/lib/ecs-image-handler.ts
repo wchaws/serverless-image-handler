@@ -51,7 +51,7 @@ export class ECSImageHandler extends Construct {
           VIPS_DISC_THRESHOLD: '600m', // https://github.com/lovell/sharp/issues/1851
           SRC_BUCKET: buckets[0].bucketName,
           STYLE_TABLE_NAME: table.tableName,
-          SECRET_NAME: secret.secretName,
+          SECRET_NAME: secret.secretArn,
         },
       },
     });
