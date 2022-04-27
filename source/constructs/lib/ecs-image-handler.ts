@@ -64,6 +64,7 @@ export class ECSImageHandler extends Construct {
       maxCapacity: 20,
     }).scaleOnCpuUtilization('CpuScaling', {
       targetUtilizationPercent: 50,
+      scaleOutCooldown: Duration.seconds(10),
     });
 
     const taskRole = albFargateService.taskDefinition.taskRole;
