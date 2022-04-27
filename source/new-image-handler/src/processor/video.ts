@@ -108,8 +108,8 @@ export class VideoProcessor implements IProcessor {
   public register(..._: IAction[]): void { }
 }
 
-
-const MAX_BUFFER = 1024 * 1024;
+const MB = 1024 * 1024;
+const MAX_BUFFER = 5 * MB;
 function _videoScreenShot(cmd: string, args: readonly string[]) {
   const child = child_process.spawn(cmd, args);
 
