@@ -104,10 +104,6 @@ Promise<{ data: any; type: string; headers: IHttpHeaders }> {
   const bs = getBufferStore(ctx);
   if (actions.length > 1) {
     const processor = getProcessor(actions[0]);
-    if (actions[0] === 'video') {
-      const videoUri = ctx.headers['x-bucket'] + '*' + uri;
-      uri = videoUri;
-    }
     const context = await processor.newContext(uri, actions, bs);
     const { data, type } = await processor.process(context);
     return { data, type, headers: context.headers };

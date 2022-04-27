@@ -1,10 +1,7 @@
 import * as child_process from 'child_process';
-import * as AWS from 'aws-sdk';
 import { IAction, InvalidArgument, IProcessContext, IProcessor, IProcessResponse, IActionOpts, ReadOnly } from '.';
 import * as is from '../is';
 import { IBufferStore } from '../store';
-
-const s3 = new AWS.S3();
 
 export interface VideoOpts extends IActionOpts {
   t: number; // 指定截图时间, 单位：s
@@ -32,6 +29,7 @@ export class VideoProcessor implements IProcessor {
       actions,
       bufferStore,
       features: {},
+      headers: {},
     });
   }
 
@@ -99,7 +97,7 @@ export class VideoProcessor implements IProcessor {
         throw new InvalidArgument('Invalid video request! Params .e.g ?x-oss-process=video/snapshot,t_1,f_jpg,m_fast');
       }
       const opt = this.validate(params);
-      const s3PresignUrl = _getS3PresignUrl(ctx.uri);
+      const s3PresignUrl = await ctx.bufferStore.url(ctx.uri);
       const data = await _videoScreenShot('ffmpeg', ['-i', s3PresignUrl, '-ss', opt.t.toString(), '-vframes', '1', '-c:v', opt.f, '-f', 'image2pipe', '-']);
       return { data: data, type: opt.o };
     } else {
@@ -108,18 +106,6 @@ export class VideoProcessor implements IProcessor {
   }
 
   public register(..._: IAction[]): void { }
-}
-
-function _getS3PresignUrl(uri: String) {
-  const s3Info = uri.split('*');
-  const bucket = s3Info[0];
-  const objectKey = s3Info[1];
-  const url = s3.getSignedUrl('getObject', {
-    Bucket: bucket,
-    Key: objectKey,
-    Expires: 1200,
-  });
-  return url;
 }
 
 
