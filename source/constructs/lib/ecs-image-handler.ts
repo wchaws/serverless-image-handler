@@ -50,7 +50,7 @@ export class ECSImageHandler extends Construct {
           VIPS_DISC_THRESHOLD: '600m', // https://github.com/lovell/sharp/issues/1851
           SRC_BUCKET: buckets[0].bucketName,
           STYLE_TABLE_NAME: table.tableName,
-          SECRET_NAME: secret.secretName
+          SECRET_NAME: secret.secretName,
         },
       },
     });
@@ -70,7 +70,7 @@ export class ECSImageHandler extends Construct {
       bkt.grantReadWrite(albFargateService.taskDefinition.taskRole);
     }
 
-    secret.grantRead(albFargateService.taskDefinition.taskRole)
+    secret.grantRead(albFargateService.taskDefinition.taskRole);
 
     // TODO: Add restriction access to ALB
     // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/restrict-access-to-load-balancer.html
