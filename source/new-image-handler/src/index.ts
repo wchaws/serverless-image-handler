@@ -151,8 +151,8 @@ function bypass() {
 
 async function getSecretFromSecretsManager() {
   // Load the AWS SDK
-  const region = 'ap-southeast-1',
-    secretName = 'X-Client-Authorization';
+  const region = config.region;
+  const secretName = config.secretName;
 
   // Create a Secrets Manager client
   const client = new SecretsManager({
