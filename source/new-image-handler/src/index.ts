@@ -114,14 +114,6 @@ Promise<{ data: any; type: string; headers: IHttpHeaders }> {
   }
 }
 
-// interface PostBody {
-//   params: string;
-//   sourceBucket: string;
-//   sourceObject: string;
-//   targetBucket: string;
-//   targetObject: string;
-// }
-
 async function validatePostRequest(ctx: Koa.ParameterizedContext) {
   // Fox edited in 2022/04/25: enhance the security of the post requests
   let authHeader = ctx.get('X-Client-Authorization');
@@ -130,12 +122,6 @@ async function validatePostRequest(ctx: Koa.ParameterizedContext) {
   if (authHeader !== secretHeader) {
     throw new InvalidArgument('Invalid post header.');
   }
-
-  // let ip = ctx.get('X-Forwarded-For');
-  // let cidrSettings = '192.168.0.2/32, 192.168.0.0/31, 192.168.0.3/32, 10.0.0.1/16';
-  // if (!ipValidation(ip, cidrSettings)) {
-  //   throw new InvalidArgument('Invalid post IP.');
-  // }
 
   const body = ctx.request.body;
   if (!body) {
@@ -162,36 +148,6 @@ function bypass() {
   // NOTE: This is intended to tell CloudFront to directly access the s3 object.
   throw new HttpErrors[403]('Please visit s3 directly');
 }
-
-// Turn IP into a int (a.b.c.d) = a*256*256*256 + b*256*256 + c*256 + d
-/* eslint no-bitwise: ["error", { "allow": [">>>", "<<", "~", "&"] }] */
-// function ipToInt(ip: string) {
-//   let result = ip.split('.').reduce((int, oct) => (int << 8) + parseInt(oct, 10), 0) >>> 0;
-//   return result;
-// }
-
-// // See if the IP is in a specific CIDR
-// function ipInCidr(ip: string, cidr: string) {
-//   const [range, bits = 32] = cidr.split('/');
-//   let mask = ~(2 ** (32 - Number(bits)) - 1);
-//   let result = (ipToInt(ip) & mask) === (ipToInt(range) & mask);
-//   console.log(mask, result);
-//   return result;
-// }
-
-// // Make sure the IP is whitelisted
-// function ipValidation(ip: string, cidrSettings: string) {
-//   let result = false;
-//   let cidrArr = cidrSettings.split(',');
-//   for (const cidr of cidrArr) {
-//     console.log(ip, cidr.trim());
-//     if (ipInCidr(ip, cidr)) {
-//       result = true;
-//       return result;
-//     }
-//   }
-//   return result;
-// }
 
 async function getSecretFromSecretsManager() {
   // Load the AWS SDK
