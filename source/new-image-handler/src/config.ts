@@ -15,7 +15,7 @@ const conf: IConfig = {
   srcBucket: process.env.BUCKET || process.env.SRC_BUCKET || 'sih-input',
   styleTableName: process.env.STYLE_TABLE_NAME || 'style-table-name',
   autoWebp: ['yes', '1', 'true'].includes((process.env.AUTO_WEBP ?? '').toLowerCase()),
-  secretName: process.env.SECRET_NAME ?? 'X-Client-Authorization', 
+  secretName: process.env.SECRET_NAME ?? 'X-Client-Authorization',
 };
 
 export default conf;
