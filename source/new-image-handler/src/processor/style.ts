@@ -2,10 +2,12 @@ import { IAction, InvalidArgument, IProcessContext, IProcessor, IProcessResponse
 import * as is from '../is';
 import { IBufferStore, IKVStore, MemKVStore } from '../store';
 import { ImageProcessor } from './image/index';
+import { VideoProcessor } from './video';
 
 
 const PROCESSOR_MAP: { [key: string]: IProcessor } = {
   [ImageProcessor.getInstance().name]: ImageProcessor.getInstance(),
+  [VideoProcessor.getInstance().name]: VideoProcessor.getInstance(),
 };
 
 

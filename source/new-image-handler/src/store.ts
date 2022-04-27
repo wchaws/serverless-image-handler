@@ -21,6 +21,8 @@ export interface IStore<T> {
    * @param beforeGetFunc a hook function that will be executed before get
    */
   get(p: string, beforeGetFunc?: () => void): Promise<T>;
+
+  url(p: string): Promise<string>;
 }
 
 export interface IKeyValue {
@@ -44,6 +46,10 @@ export class LocalStore implements IBufferStore {
       type: filetype(p),
       headers: {},
     };
+  }
+
+  public async url(p: string): Promise<string> {
+    return Promise.resolve(path.join(this.root, p));
   }
 }
 
@@ -70,12 +76,23 @@ export class S3Store implements IBufferStore {
     };
     throw new Error('S3 response body is not a Buffer type');
   }
+
+  public async url(p: string): Promise<string> {
+    return this._s3.getSignedUrlPromise('getObject', {
+      Bucket: this.bucket,
+      Key: p,
+      Expires: 1200,
+    });
+  }
 }
 
 /**
  * A fake store. Only for unit test.
  */
 export class NullStore implements IBufferStore {
+  public url(_: string): Promise<string> {
+    throw new Error('Method not implemented.');
+  }
   public async get(p: string, _?: () => void): Promise<{ buffer: Buffer; type: string; headers: IHttpHeaders }> {
     return Promise.resolve({
       buffer: Buffer.from(p),
@@ -90,6 +107,9 @@ export class NullStore implements IBufferStore {
  */
 export class SharpBufferStore implements IBufferStore {
   constructor(private image: sharp.Sharp) { }
+  public url(_: string): Promise<string> {
+    throw new Error('Method not implemented.');
+  }
 
   async get(_: string, __?: () => void): Promise<{ buffer: Buffer; type: string; headers: IHttpHeaders }> {
     const { data, info } = await this.image.toBuffer({ resolveWithObject: true });
@@ -101,6 +121,9 @@ export class SharpBufferStore implements IBufferStore {
 export class DynamoDBStore implements IKVStore {
   private _ddb = new DynamoDB.DocumentClient({ region: config.region });
   public constructor(public readonly tableName: string) { }
+  public url(_: string): Promise<string> {
+    throw new Error('Method not implemented.');
+  }
   public async get(key: string, _?: () => void): Promise<IKeyValue> {
     const data = await this._ddb.get({
       TableName: this.tableName,
@@ -112,6 +135,9 @@ export class DynamoDBStore implements IKVStore {
 
 export class MemKVStore implements IKVStore {
   public constructor(public readonly dict: IKeyValue) { }
+  public url(_: string): Promise<string> {
+    throw new Error('Method not implemented.');
+  }
 
   public async get(key: string, _?: () => void): Promise<IKeyValue> {
     return Promise.resolve(this.dict[key] ?? {});

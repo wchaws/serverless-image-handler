@@ -97,6 +97,7 @@ function getBufferStore(ctx: Koa.ParameterizedContext) {
   return DefaultBufferStore;
 }
 
+
 async function ossprocess(ctx: Koa.ParameterizedContext, beforeGetFn?: () => void):
 Promise<{ data: any; type: string; headers: IHttpHeaders }> {
   const { uri, actions } = parseRequest(ctx.path, ctx.query);
