@@ -8,7 +8,7 @@ import * as Router from 'koa-router';
 import config from './config';
 import debug from './debug';
 import { bufferStore, getProcessor, parseRequest } from './default';
-import { InvalidArgument } from './processor';
+import { IHttpHeaders, InvalidArgument } from './processor';
 
 const DefaultBufferStore = bufferStore();
 const app = new Koa();
@@ -38,7 +38,6 @@ router.post('/images', async (ctx) => {
     }).promise();
 
     ctx.body = `saved result to s3://${opt.targetBucket}/${opt.targetObject}`;
-    console.log(ctx.body);
   }
 });
 
@@ -52,9 +51,10 @@ router.get(['/debug', '/_debug'], async (ctx) => {
 });
 
 router.get('/(.*)', async (ctx) => {
-  const { data, type } = await ossprocess(ctx, bypass);
+  const { data, type, headers } = await ossprocess(ctx, bypass);
   ctx.body = data;
   ctx.type = type;
+  ctx.set(headers);
 });
 
 app.use(router.routes());
@@ -99,16 +99,18 @@ function getBufferStore(ctx: Koa.ParameterizedContext) {
   return DefaultBufferStore;
 }
 
-async function ossprocess(ctx: Koa.ParameterizedContext, beforeGetFn?: () => void): Promise<{ data: any; type: string }> {
+async function ossprocess(ctx: Koa.ParameterizedContext, beforeGetFn?: () => void):
+Promise<{ data: any; type: string; headers: IHttpHeaders }> {
   const { uri, actions } = parseRequest(ctx.path, ctx.query);
   const bs = getBufferStore(ctx);
   if (actions.length > 1) {
     const processor = getProcessor(actions[0]);
     const context = await processor.newContext(uri, actions, bs);
-    return processor.process(context);
+    const { data, type } = await processor.process(context);
+    return { data, type, headers: context.headers };
   } else {
-    const { buffer, type } = await bs.get(uri, beforeGetFn);
-    return { data: buffer, type: type };
+    const { buffer, type, headers } = await bs.get(uri, beforeGetFn);
+    return { data: buffer, type: type, headers: headers };
   }
 }
 
