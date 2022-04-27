@@ -21,6 +21,8 @@ export interface IStore<T> {
    * @param beforeGetFunc a hook function that will be executed before get
    */
   get(p: string, beforeGetFunc?: () => void): Promise<T>;
+
+  url(): string;
 }
 
 export interface IKeyValue {
