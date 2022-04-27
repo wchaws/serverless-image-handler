@@ -58,7 +58,7 @@ export class WatermarkAction extends BaseImageAction {
     let opt: WatermarkOpts = {
       text: '',
       t: 100,
-      g: 'se',
+      g: 'southeast',
       fill: false,
       rotate: 0,
       size: 40,

@@ -49,6 +49,7 @@ export class ImageProcessor implements IProcessor {
       features: {
         [Features.ReadAllAnimatedFrames]: true,
       },
+      headers: {},
     };
     for (const action of actions) {
       if ((this.name === action) || (!action)) {
@@ -63,13 +64,14 @@ export class ImageProcessor implements IProcessor {
       }
       act.beforeNewContext.bind(act)(ctx, params);
     }
-    const { buffer } = await bufferStore.get(uri);
+    const { buffer, headers } = await bufferStore.get(uri);
     return {
       uri: ctx.uri,
       actions: ctx.actions,
       effectiveActions: ctx.effectiveActions,
       bufferStore: ctx.bufferStore,
       features: ctx.features,
+      headers: Object.assign(ctx.headers, headers),
       image: sharp(buffer, { animated: ctx.features[Features.ReadAllAnimatedFrames] }),
     };
   }
