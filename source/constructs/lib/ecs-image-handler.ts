@@ -1,3 +1,4 @@
+
 import * as path from 'path';
 import * as cloudfront from '@aws-cdk/aws-cloudfront';
 import * as origins from '@aws-cdk/aws-cloudfront-origins';
@@ -65,9 +66,20 @@ export class ECSImageHandler extends Construct {
       targetUtilizationPercent: 50,
     });
 
-    table.grantReadData(albFargateService.taskDefinition.taskRole);
+    const taskRole = albFargateService.taskDefinition.taskRole;
+    table.grantReadData(taskRole);
     for (const bkt of buckets) {
-      bkt.grantReadWrite(albFargateService.taskDefinition.taskRole);
+
+      taskRole.addToPrincipalPolicy(new iam.PolicyStatement({
+        actions: [
+          's3:GetObject*',
+          's3:GetBucket*',
+          's3:List*',
+          's3:PutObject*',
+          's3:Abort*'
+        ],
+        resources: [bkt.bucketArn, bkt.bucketArn + '/*'],
+      }));
     }
 
     secret.grantRead(albFargateService.taskDefinition.taskRole);
