@@ -62,4 +62,4 @@ COPY --from=builder /app/lib /app/lib
 
 EXPOSE 8080
 
-CMD ["node_modules/.bin/pm2-runtime", "-i", "max", "/app/lib/src/index.js"]
+CMD ["node_modules/.bin/pm2-runtime", "/app/lib/src/index.js"]

@@ -116,8 +116,8 @@ Promise<{ data: any; type: string; headers: IHttpHeaders }> {
 
 async function validatePostRequest(ctx: Koa.ParameterizedContext) {
   // Fox edited in 2022/04/25: enhance the security of the post requests
-  let authHeader = ctx.get('X-Client-Authorization');
-  let secretHeader = await getHeaderFromSecretsManager();
+  const authHeader = ctx.get('X-Client-Authorization');
+  const secretHeader = await getHeaderFromSecretsManager();
 
   if (authHeader !== secretHeader) {
     throw new InvalidArgument('Invalid post header.');
@@ -149,17 +149,15 @@ function bypass() {
   throw new HttpErrors[403]('Please visit s3 directly');
 }
 
+// Create a Secrets Manager client
+const smclient = new SecretsManager({
+  region: config.region,
+});
+
 async function getSecretFromSecretsManager() {
   // Load the AWS SDK
-  const region = config.region;
   const secretName = config.secretName;
-
-  // Create a Secrets Manager client
-  const client = new SecretsManager({
-    region: region,
-  });
-
-  return client.getSecretValue({ SecretId: secretName }).promise();
+  return smclient.getSecretValue({ SecretId: secretName }).promise();
 }
 
 async function getHeaderFromSecretsManager() {
