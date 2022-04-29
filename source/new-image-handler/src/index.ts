@@ -1,4 +1,5 @@
 import * as S3 from 'aws-sdk/clients/s3';
+import * as SecretsManager from 'aws-sdk/clients/secretsmanager';
 import * as HttpErrors from 'http-errors';
 import * as Koa from 'koa'; // http://koajs.cn
 import * as bodyParser from 'koa-bodyparser';
@@ -20,7 +21,8 @@ app.use(bodyParser());
 router.post('/images', async (ctx) => {
   console.log('post request body=', ctx.request.body);
 
-  const opt = validatePostRequest(ctx);
+  const opt = await validatePostRequest(ctx);
+  console.log(opt);
   ctx.path = opt.sourceObject;
   ctx.query['x-oss-process'] = opt.params;
   ctx.headers['x-bucket'] = opt.sourceBucket;
@@ -113,15 +115,15 @@ Promise<{ data: any; type: string; headers: IHttpHeaders }> {
   }
 }
 
-interface PostBody {
-  params: string;
-  sourceBucket: string;
-  sourceObject: string;
-  targetBucket: string;
-  targetObject: string;
-}
+async function validatePostRequest(ctx: Koa.ParameterizedContext) {
+  // Fox edited in 2022/04/25: enhance the security of the post requests
+  const authHeader = ctx.get('X-Client-Authorization');
+  const secretHeader = await getHeaderFromSecretsManager();
 
-function validatePostRequest(ctx: Koa.ParameterizedContext): PostBody {
+  if (authHeader !== secretHeader) {
+    throw new InvalidArgument('Invalid post header.');
+  }
+
   const body = ctx.request.body;
   if (!body) {
     throw new InvalidArgument('Empty post body.');
@@ -146,4 +148,22 @@ function validatePostRequest(ctx: Koa.ParameterizedContext): PostBody {
 function bypass() {
   // NOTE: This is intended to tell CloudFront to directly access the s3 object.
   throw new HttpErrors[403]('Please visit s3 directly');
+}
+
+// Create a Secrets Manager client
+const smclient = new SecretsManager({
+  region: config.region,
+});
+
+async function getSecretFromSecretsManager() {
+  // Load the AWS SDK
+  const secretName = config.secretName;
+  return smclient.getSecretValue({ SecretId: secretName }).promise();
+}
+
+async function getHeaderFromSecretsManager() {
+  const secret = await getSecretFromSecretsManager();
+  const secretString = secret.SecretString!;
+  const keypair = JSON.parse(secretString);
+  return keypair['X-Client-Authorization'];
 }

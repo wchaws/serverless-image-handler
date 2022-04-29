@@ -7,6 +7,7 @@ import * as ecs from '@aws-cdk/aws-ecs';
 import * as ecsPatterns from '@aws-cdk/aws-ecs-patterns';
 import * as iam from '@aws-cdk/aws-iam';
 import * as s3 from '@aws-cdk/aws-s3';
+import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
 import { Aws, CfnOutput, Construct, Duration, Stack } from '@aws-cdk/core';
 
 const GB = 1024;
@@ -25,6 +26,7 @@ export class ECSImageHandler extends Construct {
     super(scope, id);
 
     const buckets = getBuckets(this, 'ImageBucket');
+    const secret = getSecret(this);
     const table = new dynamodb.Table(this, 'StyleTable', {
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -48,6 +50,7 @@ export class ECSImageHandler extends Construct {
           VIPS_DISC_THRESHOLD: '600m', // https://github.com/lovell/sharp/issues/1851
           SRC_BUCKET: buckets[0].bucketName,
           STYLE_TABLE_NAME: table.tableName,
+          SECRET_NAME: secret.secretArn,
         },
       },
     });
@@ -60,12 +63,26 @@ export class ECSImageHandler extends Construct {
       maxCapacity: 20,
     }).scaleOnCpuUtilization('CpuScaling', {
       targetUtilizationPercent: 50,
+      scaleOutCooldown: Duration.seconds(10),
     });
 
-    table.grantReadData(albFargateService.taskDefinition.taskRole);
+    const taskRole = albFargateService.taskDefinition.taskRole;
+    table.grantReadData(taskRole);
     for (const bkt of buckets) {
-      bkt.grantReadWrite(albFargateService.taskDefinition.taskRole);
+
+      taskRole.addToPrincipalPolicy(new iam.PolicyStatement({
+        actions: [
+          's3:GetObject*',
+          's3:GetBucket*',
+          's3:List*',
+          's3:PutObject*',
+          's3:Abort*',
+        ],
+        resources: [bkt.bucketArn, bkt.bucketArn + '/*'],
+      }));
     }
+
+    secret.grantRead(albFargateService.taskDefinition.taskRole);
 
     // TODO: Add restriction access to ALB
     // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/restrict-access-to-load-balancer.html
@@ -150,4 +167,15 @@ function getBuckets(scope: Construct, id: string): s3.IBucket[] {
   }
 
   return buckets.map((bkt: string, index: number) => s3.Bucket.fromBucketName(scope, `${id}${index}`, bkt));
+}
+
+function getSecret(scope: Construct): secretsmanager.ISecret {
+  const secretArn = scope.node.tryGetContext('secret_arn');
+  if (!!secretArn) {
+    return secretsmanager.Secret.fromSecretAttributes(scope, 'ImportedSecret', {
+      secretArn: secretArn,
+    });
+  } else {
+    throw new Error('You must specify one secret manager arn for POST security.');
+  }
 }

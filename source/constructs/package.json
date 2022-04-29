@@ -44,7 +44,6 @@
     "typescript": "^4.3.5"
   },
   "dependencies": {
-    "cdk-bootstrapless-synthesizer": "0.7.15",
     "@aws-cdk/aws-apigateway": "1.124.0",
     "@aws-cdk/aws-apigatewayv2": "1.124.0",
     "@aws-cdk/aws-apigatewayv2-integrations": "1.124.0",
@@ -58,11 +57,13 @@
     "@aws-cdk/aws-lambda": "1.124.0",
     "@aws-cdk/aws-logs": "1.124.0",
     "@aws-cdk/aws-s3": "1.124.0",
+    "@aws-cdk/aws-secretsmanager": "1.124.0",
     "@aws-cdk/core": "1.124.0",
     "@aws-solutions-constructs/aws-apigateway-lambda": "1.124.0",
     "@aws-solutions-constructs/aws-cloudfront-apigateway-lambda": "1.124.0",
     "@aws-solutions-constructs/aws-cloudfront-s3": "1.124.0",
-    "@aws-solutions-constructs/core": "1.124.0"
+    "@aws-solutions-constructs/core": "1.124.0",
+    "cdk-bootstrapless-synthesizer": "0.7.15"
   },
   "engines": {
     "node": ">= 12.0.0"
