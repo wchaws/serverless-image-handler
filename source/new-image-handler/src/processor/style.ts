@@ -60,7 +60,7 @@ export class StyleProcessor implements IProcessor {
         throw new InvalidArgument('Can Not find processor');
       }
       const context = await processor.newContext(ctx.uri, acts, ctx.bufferStore);
-      return await processor.process(context);
+      return processor.process(context);
     } else {
       throw new InvalidArgument('Style not found');
     }
