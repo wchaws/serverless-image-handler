@@ -16,6 +16,12 @@ const ecsStack = new ECSImageHandlerStack(app, 'serverless-ecs-image-handler-sta
 });
 
 cdk.Tags.of(ecsStack).add('name', 'serverless-ecs-image-handler');
+const stackTags = ecsStack.node.tryGetContext('stack_tags');
+if (!!stackTags) {
+  for (const [key, value] of Object.entries(stackTags)) {
+    cdk.Tags.of(ecsStack).add(key, value as string);
+  }
+}
 
 new LambdaImageHandlerStack(app, 'lambda-image-handler-cn', {
   isChinaRegion: true,
