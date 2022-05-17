@@ -6,6 +6,7 @@ export interface IConfig {
   styleTableName: string;
   autoWebp: boolean;
   secretName: string;
+  RateLimitPerSec: number;
 }
 
 const conf: IConfig = {
@@ -16,6 +17,7 @@ const conf: IConfig = {
   styleTableName: process.env.STYLE_TABLE_NAME || 'style-table-name',
   autoWebp: ['yes', '1', 'true'].includes((process.env.AUTO_WEBP ?? '').toLowerCase()),
   secretName: process.env.SECRET_NAME ?? 'X-Client-Authorization',
+  RateLimitPerSec: Number.parseInt(process.env.RATE_LIMIT_PER_SEC ?? '100', 10),
 };
 
 export default conf;

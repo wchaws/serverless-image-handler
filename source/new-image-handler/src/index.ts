@@ -5,6 +5,7 @@ import * as Koa from 'koa'; // http://koajs.cn
 import * as bodyParser from 'koa-bodyparser';
 import * as logger from 'koa-logger';
 import * as Router from 'koa-router';
+import { RateLimit } from 'koa2-ratelimit';
 import config from './config';
 import debug from './debug';
 import { bufferStore, getProcessor, parseRequest } from './default';
@@ -13,6 +14,12 @@ import { IHttpHeaders, InvalidArgument } from './processor';
 const DefaultBufferStore = bufferStore();
 const app = new Koa();
 const router = new Router();
+const ratelimit = RateLimit.middleware({
+  max: config.RateLimitPerSec * 60,
+  interval: { min: 1 },
+  timeWait: 0,
+  delayAfter: 0,
+});
 
 app.use(logger());
 app.use(errorHandler());
@@ -50,7 +57,7 @@ router.get(['/debug', '/_debug'], async (ctx) => {
   ctx.body = debug();
 });
 
-router.get('/(.*)', async (ctx) => {
+router.get('/(.*)', ratelimit, async (ctx) => {
   const { data, type, headers } = await ossprocess(ctx, bypass);
   ctx.body = data;
   ctx.type = type;
@@ -67,6 +74,7 @@ app.on('error', (err: Error) => {
 
 app.listen(config.port, () => {
   console.log(`Server running on port ${config.port}`);
+  console.log('Config:', config);
 });
 
 function errorHandler(): Koa.Middleware<Koa.DefaultState, Koa.DefaultContext, any> {

@@ -51,6 +51,7 @@ export class ECSImageHandler extends Construct {
           SRC_BUCKET: buckets[0].bucketName,
           STYLE_TABLE_NAME: table.tableName,
           SECRET_NAME: secret.secretArn,
+          RATE_LIMIT_PER_SEC: String(this.node.tryGetContext('rate-limit-per-sec')) ?? '100',
         },
       },
     });
