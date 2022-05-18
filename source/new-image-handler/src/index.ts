@@ -5,6 +5,7 @@ import * as Koa from 'koa'; // http://koajs.cn
 import * as bodyParser from 'koa-bodyparser';
 import * as logger from 'koa-logger';
 import * as Router from 'koa-router';
+import * as sharp from 'sharp';
 import config from './config';
 import debug from './debug';
 import { bufferStore, getProcessor, parseRequest } from './default';
@@ -13,6 +14,8 @@ import { IHttpHeaders, InvalidArgument } from './processor';
 const DefaultBufferStore = bufferStore();
 const app = new Koa();
 const router = new Router();
+
+sharp.cache({ items: 1000, files: 200, memory: 2000 });
 
 app.use(logger());
 app.use(errorHandler());
@@ -51,6 +54,12 @@ router.get(['/debug', '/_debug'], async (ctx) => {
 });
 
 router.get('/(.*)', async (ctx) => {
+  const queue = sharp.counters().queue;
+  if (queue > 1) {
+    ctx.body = { message: 'Too many requests, please try again later.' };
+    ctx.status = 429;
+    return;
+  }
   const { data, type, headers } = await ossprocess(ctx, bypass);
   ctx.body = data;
   ctx.type = type;
