@@ -1,5 +1,5 @@
 import { IImageContext } from '.';
-import { IActionOpts, ReadOnly, InvalidArgument } from '..';
+import { IActionOpts, ReadOnly, InvalidArgument, IProcessContext, Features } from '..';
 import { BaseImageAction } from './_base';
 
 export interface AutoOrientOpts extends IActionOpts {
@@ -8,6 +8,10 @@ export interface AutoOrientOpts extends IActionOpts {
 
 export class AutoOrientAction extends BaseImageAction {
   public readonly name: string = 'auto-orient';
+
+  public beforeNewContext(ctx: IProcessContext, _: string[]): void {
+    ctx.features[Features.AutoOrient] = false;
+  }
 
   public validate(params: string[]): ReadOnly<AutoOrientOpts> {
     const opt: AutoOrientOpts = { auto: false };
