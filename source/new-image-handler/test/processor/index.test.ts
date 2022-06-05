@@ -216,3 +216,33 @@ test('style processor not found', async () => {
   void expect(StyleProcessor.getInstance(styleStore).process(ctx))
     .rejects.toThrowError(/Style not found/);
 });
+
+test('f.jpg?x-oss-process=image/resize,w_100/', async () => {
+  const ctx = await ImageProcessor.getInstance().newContext('f.jpg', 'image/resize,w_100/'.split('/'), fixtureStore);
+  const { data, type } = await ImageProcessor.getInstance().process(ctx);
+  const metadata = await sharp(data).metadata();
+
+  expect(type).toBe('jpeg');
+  expect(metadata.width).toBe(100);
+  expect(metadata.height).toBe(128);
+});
+
+test('f.jpg?x-oss-process=image/resize,w_100/auto-orient,0', async () => {
+  const ctx = await ImageProcessor.getInstance().newContext('f.jpg', 'image/resize,w_100/auto-orient,0'.split('/'), fixtureStore);
+  const { data, type } = await ImageProcessor.getInstance().process(ctx);
+  const metadata = await sharp(data).metadata();
+
+  expect(type).toBe('jpeg');
+  expect(metadata.width).toBe(100);
+  expect(metadata.height).toBe(78);
+});
+
+test('f.jpg?x-oss-process=image/resize,w_100/auto-orient,1', async () => {
+  const ctx = await ImageProcessor.getInstance().newContext('f.jpg', 'image/resize,w_100/auto-orient,1'.split('/'), fixtureStore);
+  const { data, type } = await ImageProcessor.getInstance().process(ctx);
+  const metadata = await sharp(data).metadata();
+
+  expect(type).toBe('jpeg');
+  expect(metadata.width).toBe(100);
+  expect(metadata.height).toBe(128);
+});

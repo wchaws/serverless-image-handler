@@ -160,6 +160,7 @@ export class InvalidArgument extends HttpErrors[400] { }
 
 export enum Features {
   AutoWebp = 'auto-webp',
+  AutoOrient = 'auto-orient',
   ReturnInfo = 'return-info',
   ReadAllAnimatedFrames = 'read-all-animated-frames',
 }

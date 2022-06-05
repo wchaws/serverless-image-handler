@@ -47,6 +47,7 @@ export class ImageProcessor implements IProcessor {
       actions,
       bufferStore,
       features: {
+        [Features.AutoOrient]: true,
         [Features.ReadAllAnimatedFrames]: true,
       },
       headers: {},
@@ -83,6 +84,8 @@ export class ImageProcessor implements IProcessor {
     if (!ctx.actions) {
       throw new InvalidArgument('Invalid image context! No "actions" field.');
     }
+
+    if (ctx.features[Features.AutoOrient]) { ctx.image.rotate(); }
 
     const actions = (ctx.effectiveActions && ctx.effectiveActions.length) ? ctx.effectiveActions : ctx.actions;
     for (const action of actions) {
