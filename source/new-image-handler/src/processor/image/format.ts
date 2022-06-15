@@ -1,4 +1,3 @@
-import * as sharp from 'sharp';
 import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument, Features, IProcessContext } from '..';
 import { BaseImageAction } from './_base';
@@ -41,22 +40,17 @@ export class FormatAction extends BaseImageAction {
     }
 
     const opt = this.validate(params);
-    if ('gif' === opt.format) { return; } // nothing to do
-    const buffer = await ctx.image.toBuffer();
-    const metadata = await sharp(buffer).metadata(); // https://github.com/lovell/sharp/issues/2959
-    const pages = metadata.pages;
-    const srcImgIsAnimated = !!(pages && (pages > 0));
-    const notToAnimatedFormat = !['webp', 'gif'].includes(opt.format);
-
-    if (srcImgIsAnimated && notToAnimatedFormat) {
-      ctx.image = sharp(buffer, { page: 0 });
+    if ('gif' === opt.format) {
+      return; // nothing to do
     }
-
     if (['jpeg', 'jpg'].includes(opt.format)) {
+      ctx.metadata.format = 'jpeg';
       ctx.image.jpeg();
     } else if (opt.format === 'png') {
+      ctx.metadata.format = 'png';
       ctx.image.png({ effort: 2, quality: 80 });
     } else if (opt.format === 'webp') {
+      ctx.metadata.format = 'webp';
       ctx.image.webp({ effort: 2, quality: 80 });
     }
 

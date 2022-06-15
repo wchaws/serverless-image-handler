@@ -97,7 +97,7 @@ export class ResizeAction extends BaseImageAction {
     } else if (o.m === Mode.FIXED) {
       opt.fit = sharp.fit.fill;
     }
-    const metadata = await ctx.image.metadata();
+    const metadata = ctx.metadata;
     if (!(metadata.width && metadata.height)) {
       throw new InvalidArgument('Can\'t read image\'s width and height');
     }

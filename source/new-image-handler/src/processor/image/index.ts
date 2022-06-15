@@ -24,6 +24,7 @@ export interface IImageInfo {
 }
 export interface IImageContext extends IProcessContext {
   image: sharp.Sharp;
+  metadata: sharp.Metadata;
   info?: IImageInfo;
 }
 
@@ -66,6 +67,8 @@ export class ImageProcessor implements IProcessor {
       act.beforeNewContext.bind(act)(ctx, params);
     }
     const { buffer, headers } = await bufferStore.get(uri);
+    const image = sharp(buffer, { animated: ctx.features[Features.ReadAllAnimatedFrames] });
+
     return {
       uri: ctx.uri,
       actions: ctx.actions,
@@ -73,7 +76,8 @@ export class ImageProcessor implements IProcessor {
       bufferStore: ctx.bufferStore,
       features: ctx.features,
       headers: Object.assign(ctx.headers, headers),
-      image: sharp(buffer, { animated: ctx.features[Features.ReadAllAnimatedFrames] }),
+      metadata: await image.metadata(),
+      image,
     };
   }
 
