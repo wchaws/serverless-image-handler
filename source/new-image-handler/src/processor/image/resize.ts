@@ -122,10 +122,6 @@ export class ResizeAction extends BaseImageAction {
       }
     }
 
-    if ('gif' === metadata.format) {
-      ctx.image.resize(null, null, opt).gif({ effort: 1 }); // https://github.com/lovell/sharp/issues/3176
-    } else {
-      ctx.image.resize(null, null, opt);
-    }
+    ctx.image.resize(null, null, opt);
   }
 }

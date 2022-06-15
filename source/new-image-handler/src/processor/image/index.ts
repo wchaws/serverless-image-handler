@@ -68,6 +68,11 @@ export class ImageProcessor implements IProcessor {
     }
     const { buffer, headers } = await bufferStore.get(uri);
     const image = sharp(buffer, { animated: ctx.features[Features.ReadAllAnimatedFrames] });
+    const metadata = await image.metadata();
+
+    if ('gif' === metadata.format) {
+      image.gif({ effort: 1 }); // https://github.com/lovell/sharp/issues/3176
+    }
 
     return {
       uri: ctx.uri,
@@ -76,7 +81,7 @@ export class ImageProcessor implements IProcessor {
       bufferStore: ctx.bufferStore,
       features: ctx.features,
       headers: Object.assign(ctx.headers, headers),
-      metadata: await image.metadata(),
+      metadata,
       image,
     };
   }
