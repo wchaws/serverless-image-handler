@@ -41,6 +41,7 @@ export class FormatAction extends BaseImageAction {
     }
 
     const opt = this.validate(params);
+    if ('gif' === opt.format) { return; } // nothing to do
     const buffer = await ctx.image.toBuffer();
     const metadata = await sharp(buffer).metadata(); // https://github.com/lovell/sharp/issues/2959
     const pages = metadata.pages;
@@ -52,11 +53,11 @@ export class FormatAction extends BaseImageAction {
     }
 
     if (['jpeg', 'jpg'].includes(opt.format)) {
-      ctx.image.toFormat('jpg');
+      ctx.image.jpeg();
     } else if (opt.format === 'png') {
-      ctx.image.toFormat('png');
+      ctx.image.png({ effort: 2, quality: 80 });
     } else if (opt.format === 'webp') {
-      ctx.image.toFormat('webp');
+      ctx.image.webp({ effort: 2, quality: 80 });
     }
 
   }

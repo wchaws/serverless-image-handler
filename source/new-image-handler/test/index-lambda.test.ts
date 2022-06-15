@@ -93,7 +93,7 @@ test('index-lambda.ts example.gif?x-oss-process=image/resize,w_100/quality,q_50'
 
   expect(metadata.width).toBe(100);
   expect(metadata.height).toBe(60);
-  expect(metadata.size).toBe(4967);
+  expect(metadata.size).toBe(3820);
   expect(metadata.format).toBe('gif');
   expect(metadata.pages).toBe(3);
 });
