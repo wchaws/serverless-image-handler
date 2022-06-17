@@ -12,5 +12,5 @@ export async function mkctx(name: string, actions?: string[], bufferStore?: IBuf
   const image = sharp((await bufferStore.get(name)).buffer, {
     animated: (name.endsWith('.gif') || name.endsWith('.webp')),
   });
-  return { uri: name, actions: actions ?? [], image, bufferStore, features: {}, headers: {} };
+  return { uri: name, actions: actions ?? [], image, bufferStore, features: {}, headers: {}, metadata: await image.metadata() };
 }

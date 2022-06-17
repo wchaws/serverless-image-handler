@@ -97,7 +97,7 @@ export class ResizeAction extends BaseImageAction {
     } else if (o.m === Mode.FIXED) {
       opt.fit = sharp.fit.fill;
     }
-    const metadata = await ctx.image.metadata();
+    const metadata = ctx.metadata;
     if (!(metadata.width && metadata.height)) {
       throw new InvalidArgument('Can\'t read image\'s width and height');
     }
@@ -122,10 +122,6 @@ export class ResizeAction extends BaseImageAction {
       }
     }
 
-    if ('gif' === metadata.format) {
-      ctx.image.resize(null, null, opt).gif({ effort: 1 }); // https://github.com/lovell/sharp/issues/3176
-    } else {
-      ctx.image.resize(null, null, opt);
-    }
+    ctx.image.resize(null, null, opt);
   }
 }
