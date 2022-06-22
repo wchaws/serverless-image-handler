@@ -55,7 +55,7 @@ export class WatermarkAction extends BaseImageAction {
   }
 
   public validate(params: string[]): ReadOnly<WatermarkOpts> {
-    let opt: WatermarkOpts = {
+    const opt: WatermarkOpts = {
       text: '',
       t: 100,
       g: 'southeast',
@@ -187,7 +187,7 @@ export class WatermarkAction extends BaseImageAction {
 
   async textWaterMark(ctx: IImageContext, opt: WatermarkOpts): Promise<void> {
     const textOpt = this.calculateTextSize(opt.text, opt.size);
-    const svg = this.textSvgStr(opt, textOpt);
+    const svg = this.textSvgStr(opt, textOpt, true, opt.shadow / 100);
     const svgBytes = Buffer.from(svg);
     const metadata = await ctx.image.metadata();
     if (0 < opt.rotate) {
@@ -265,7 +265,7 @@ export class WatermarkAction extends BaseImageAction {
   async mixedWaterMark(ctx: IImageContext, opt: WatermarkOpts): Promise<void> {
     const bs = ctx.bufferStore;
     const textOpt = this.calculateTextSize(opt.text, opt.size);
-    const svg = this.textSvgStr(opt, textOpt, false);
+    const svg = this.textSvgStr(opt, textOpt, false, opt.shadow / 100);
     const svgBytes = Buffer.from(svg);
 
     const watermarkImgBuffer = (await bs.get(opt.image)).buffer;
@@ -342,13 +342,16 @@ export class WatermarkAction extends BaseImageAction {
       height: Math.round(fontSize * 1.2),
     };
   }
-  textSvgStr(opt: WatermarkOpts, textOpt: WatermarkTextOpts, applyOpacity: boolean = true): string {
+  textSvgStr(opt: WatermarkOpts, textOpt: WatermarkTextOpts, applyOpacity: boolean = true, shadow: number = 0): string {
     const xOffset = Math.round(textOpt.width / 2);
     const yOffset = Math.round(textOpt.height * 0.8);
     const color = `#${opt.color}`;
     const opacity = applyOpacity ? opt.t / 100 : 1;
+    // https://gitlab.gnome.org/GNOME/librsvg/-/blob/main/FEATURES.md
+    // https://gitlab.gnome.org/GNOME/librsvg/-/merge_requests/529
+    // https://github.com/lovell/sharp/issues/1490#issuecomment-1162760143
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${textOpt.width} ${textOpt.height}" text-anchor="middle">
-    <text font-size='${opt.size}'  x="${xOffset}" y="${yOffset}" fill="${color}" opacity="${opacity}" font-family="${opt.type}">${opt.text}</text>
+    <text filter="drop-shadow(rgba(0,0,0,${shadow}) 2px 0px 2px)" font-size="${opt.size}" x="${xOffset}" y="${yOffset}" fill="${color}" opacity="${opacity}" font-family="${opt.type}">${opt.text}</text>
     </svg>`;
     return svg;
   }
