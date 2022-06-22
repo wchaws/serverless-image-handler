@@ -67,7 +67,7 @@ export class ImageProcessor implements IProcessor {
       act.beforeNewContext.bind(act)(ctx, params);
     }
     const { buffer, headers } = await bufferStore.get(uri);
-    const image = sharp(buffer, { animated: ctx.features[Features.ReadAllAnimatedFrames] });
+    const image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames] });
     const metadata = await image.metadata();
 
     if ('gif' === metadata.format) {
