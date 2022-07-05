@@ -40,18 +40,18 @@ export class ECSImageHandler extends Construct {
       memoryLimitMiB: 8 * GB,
       minHealthyPercent: 100,
       maxHealthyPercent: 200,
-      desiredCount: 8,
+      desiredCount: getECSDesiredCount(this),
       taskImageOptions: {
         image: ecs.ContainerImage.fromAsset(path.join(__dirname, '../../new-image-handler')),
         containerPort: 8080,
-        environment: {
+        environment: Object.assign({
           REGION: Aws.REGION,
           AWS_REGION: Aws.REGION,
           VIPS_DISC_THRESHOLD: '600m', // https://github.com/lovell/sharp/issues/1851
           SRC_BUCKET: buckets[0].bucketName,
           STYLE_TABLE_NAME: table.tableName,
           SECRET_NAME: secret.secretArn,
-        },
+        }, scope.node.tryGetContext('env')),
       },
     });
     albFargateService.targetGroup.configureHealthCheck({
@@ -178,4 +178,12 @@ function getSecret(scope: Construct): secretsmanager.ISecret {
   } else {
     throw new Error('You must specify one secret manager arn for POST security.');
   }
+}
+
+function getECSDesiredCount(scope: Construct, defaultCount: number = 8): number {
+  const desiredCount = scope.node.tryGetContext('ecs_desired_count');
+  if (desiredCount) {
+    return desiredCount;
+  }
+  return defaultCount;
 }

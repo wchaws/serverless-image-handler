@@ -37,6 +37,7 @@ router.post('/images', async (ctx) => {
     await _s3.putObject({
       Bucket: opt.targetBucket,
       Key: opt.targetObject,
+      ContentType: type,
       Body: data,
     }).promise();
 
@@ -55,7 +56,7 @@ router.get(['/debug', '/_debug'], async (ctx) => {
 
 router.get('/(.*)', async (ctx) => {
   const queue = sharp.counters().queue;
-  if (queue > 1) {
+  if (queue > config.sharpQueueLimit) {
     ctx.body = { message: 'Too many requests, please try again later.' };
     ctx.status = 429;
     return;
@@ -76,6 +77,7 @@ app.on('error', (err: Error) => {
 
 app.listen(config.port, () => {
   console.log(`Server running on port ${config.port}`);
+  console.log('Config:', config);
 });
 
 function errorHandler(): Koa.Middleware<Koa.DefaultState, Koa.DefaultContext, any> {
