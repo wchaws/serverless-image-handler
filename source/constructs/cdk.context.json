@@ -4,5 +4,9 @@
     "<image-bucket-1>"
   ],
   "secret_arn": "arn:aws:secretsmanager:<region>:<account-id-number>:secret:<secret-name>-<random-6-characters>",
-  "stack_tags":{"key1":"value1", "key2":"value2"}
+  "stack_tags":{"key1":"value1", "key2":"value2"},
+  "ecs_desired_count": 10,
+  "env": {
+    "SHARP_QUEUE_LIMIT": "1"
+  }
 }

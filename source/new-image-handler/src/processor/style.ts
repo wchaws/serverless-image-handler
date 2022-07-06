@@ -1,6 +1,7 @@
 import { IAction, InvalidArgument, IProcessContext, IProcessor, IProcessResponse } from '.';
 import * as is from '../is';
 import { IBufferStore, IKVStore, MemKVStore } from '../store';
+import { ActionMask } from './image/_base';
 import { ImageProcessor } from './image/index';
 import { VideoProcessor } from './video';
 
@@ -32,6 +33,7 @@ export class StyleProcessor implements IProcessor {
     return Promise.resolve({
       uri,
       actions,
+      mask: new ActionMask(actions),
       bufferStore,
       headers: {},
       features: {},

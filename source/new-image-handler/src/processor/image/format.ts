@@ -18,6 +18,13 @@ export class FormatAction extends BaseImageAction {
     }
   }
 
+  public beforeProcess(ctx: IImageContext, params: string[], index: number): void {
+    const opts = this.validate(params);
+    if (('gif' === ctx.metadata.format) && ('gif' === opts.format)) {
+      ctx.mask.disable(index);
+    }
+  }
+
   public validate(params: string[]): ReadOnly<FormatOpts> {
     let opt: FormatOpts = { format: '' };
 

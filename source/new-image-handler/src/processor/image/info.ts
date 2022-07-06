@@ -1,20 +1,14 @@
 import { IImageContext } from '.';
-import { IActionOpts, ReadOnly, InvalidArgument, Features, IProcessContext } from '..';
+import { IActionOpts, ReadOnly, InvalidArgument, Features } from '..';
 import { BaseImageAction } from './_base';
 
 
 export class InfoAction extends BaseImageAction {
   public readonly name: string = 'info';
 
-  public beforeNewContext(ctx: IProcessContext, params: string[]): void {
-    this.validate(params);
-
-    const action = params.join(',');
-    if (ctx.effectiveActions) {
-      ctx.effectiveActions.push(action);
-    } else {
-      ctx.effectiveActions = [action];
-    }
+  public beforeProcess(ctx: IImageContext, _2: string[], index: number): void {
+    ctx.mask.disableAll();
+    ctx.mask.enable(index);
   }
 
   public validate(params: string[]): ReadOnly<IActionOpts> {
