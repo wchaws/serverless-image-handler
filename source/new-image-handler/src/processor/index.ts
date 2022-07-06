@@ -8,6 +8,18 @@ export type ReadOnly<T> = {
   readonly [K in keyof T]: ReadOnly<T[K]>;
 }
 
+export interface IActionMask {
+  readonly length: number;
+  getAction(index: number): string;
+  isEnabled(index: number): boolean;
+  isDisabled(index: number): boolean;
+  enable(index: number): void;
+  disable(index: number): void;
+  disableAll(): void;
+  filterEnabledActions(): string[];
+  forEachAction(cb: (action: string, enabled: boolean, index: number) => void): void;
+}
+
 /**
  * Context object for processor.
  */
@@ -22,12 +34,7 @@ export interface IProcessContext {
    */
   readonly actions: string[];
 
-  /**
-   * The effective actions.
-   * If this value is undefined or empty list. All actions will be effective.
-   * Otherwise, only the action in this list will be effective.
-   */
-  effectiveActions?: string[];
+  readonly mask: IActionMask;
 
   /**
    * A abstract store to get file data.
@@ -149,7 +156,9 @@ export interface IAction {
    * @param ctx the context
    * @param params the parameters
    */
-  beforeNewContext(ctx: IProcessContext, params: string[]): void;
+  beforeNewContext(ctx: IProcessContext, params: string[], index: number): void;
+
+  beforeProcess(ctx: IProcessContext, params: string[], index: number): void;
 }
 
 /**

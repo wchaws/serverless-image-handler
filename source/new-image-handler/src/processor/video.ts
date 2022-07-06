@@ -2,6 +2,7 @@ import * as child_process from 'child_process';
 import { IAction, InvalidArgument, IProcessContext, IProcessor, IProcessResponse, IActionOpts, ReadOnly } from '.';
 import * as is from '../is';
 import { IBufferStore } from '../store';
+import { ActionMask } from './image/_base';
 
 export interface VideoOpts extends IActionOpts {
   t: number; // 指定截图时间, 单位：s
@@ -27,6 +28,7 @@ export class VideoProcessor implements IProcessor {
     return Promise.resolve({
       uri,
       actions,
+      mask: new ActionMask(actions),
       bufferStore,
       features: {},
       headers: {},

@@ -18,6 +18,12 @@ export interface QualityOpts extends IActionOpts {
 export class QualityAction extends BaseImageAction {
   public readonly name: string = 'quality';
 
+  public beforeProcess(ctx: IImageContext, _2: string[], index: number): void {
+    if ('gif' === ctx.metadata.format) {
+      ctx.mask.disable(index);
+    }
+  }
+
   public validate(params: string[]): ReadOnly<QualityOpts> {
     const opt: QualityOpts = {};
     for (const param of params) {

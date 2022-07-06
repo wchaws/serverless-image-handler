@@ -1,6 +1,7 @@
 import * as sharp from 'sharp';
 import { Features, IAction, InvalidArgument, IProcessContext, IProcessor, IProcessResponse } from '../../processor';
 import { IBufferStore } from '../../store';
+import { ActionMask } from './_base';
 import { AutoOrientAction } from './auto-orient';
 import { BlurAction } from './blur';
 import { BrightAction } from './bright';
@@ -46,6 +47,7 @@ export class ImageProcessor implements IProcessor {
     const ctx: IProcessContext = {
       uri,
       actions,
+      mask: new ActionMask(actions),
       bufferStore,
       features: {
         [Features.AutoOrient]: true,
@@ -53,7 +55,8 @@ export class ImageProcessor implements IProcessor {
       },
       headers: {},
     };
-    for (const action of actions) {
+    for (let i = 0; i < actions.length; i++) {
+      const action = actions[i];
       if ((this.name === action) || (!action)) {
         continue;
       }
@@ -64,7 +67,7 @@ export class ImageProcessor implements IProcessor {
       if (!act) {
         throw new InvalidArgument(`Unkown action: "${name}"`);
       }
-      act.beforeNewContext.bind(act)(ctx, params);
+      act.beforeNewContext.bind(act)(ctx, params, i);
     }
     const { buffer, headers } = await bufferStore.get(uri);
     const image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames] });
@@ -77,7 +80,7 @@ export class ImageProcessor implements IProcessor {
     return {
       uri: ctx.uri,
       actions: ctx.actions,
-      effectiveActions: ctx.effectiveActions,
+      mask: ctx.mask,
       bufferStore: ctx.bufferStore,
       features: ctx.features,
       headers: Object.assign(ctx.headers, headers),
@@ -96,8 +99,28 @@ export class ImageProcessor implements IProcessor {
 
     if (ctx.features[Features.AutoOrient]) { ctx.image.rotate(); }
 
-    const actions = (ctx.effectiveActions && ctx.effectiveActions.length) ? ctx.effectiveActions : ctx.actions;
-    for (const action of actions) {
+    ctx.mask.forEachAction((action, _, index) => {
+      if ((this.name === action) || (!action)) {
+        return;
+      }
+      // "<action-name>,<param-1>,<param-2>,..."
+      const params = action.split(',');
+      const name = params[0];
+      const act = this.action(name);
+      if (!act) {
+        throw new InvalidArgument(`Unkown action: "${name}"`);
+      }
+      act.beforeProcess.bind(act)(ctx, params, index);
+    });
+    const enabledActions = ctx.mask.filterEnabledActions();
+    const nothing2do = (enabledActions.length === 1) && (this.name === enabledActions[0]);
+
+    if (nothing2do && (!ctx.features[Features.AutoWebp])) {
+      const { buffer } = await ctx.bufferStore.get(ctx.uri);
+      return { data: buffer, type: ctx.metadata.format! };
+    }
+
+    for (const action of enabledActions) {
       if ((this.name === action) || (!action)) {
         continue;
       }
