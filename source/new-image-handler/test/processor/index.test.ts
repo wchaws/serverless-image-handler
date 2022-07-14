@@ -136,7 +136,7 @@ test.skip('example.jpg?x-oss-process=video/snapshot,t_1,f_jpg,m_fast', async () 
   const { data, type } = await VideoProcessor.getInstance().process(ctx);
   const metadata = await sharp(data).metadata();
 
-  expect(type).toBe('image/jpeg');
+  expect(type).toBe('image/image/jpeg');
   expect(metadata.format).toBe('jpeg');
 });
 
@@ -222,7 +222,7 @@ test('f.jpg?x-oss-process=image/resize,w_100/', async () => {
   const { data, type } = await ImageProcessor.getInstance().process(ctx);
   const metadata = await sharp(data).metadata();
 
-  expect(type).toBe('jpeg');
+  expect(type).toBe('image/jpeg');
   expect(metadata.width).toBe(100);
   expect(metadata.height).toBe(128);
 });
@@ -232,7 +232,7 @@ test('f.jpg?x-oss-process=image/resize,w_100/auto-orient,0', async () => {
   const { data, type } = await ImageProcessor.getInstance().process(ctx);
   const metadata = await sharp(data).metadata();
 
-  expect(type).toBe('jpeg');
+  expect(type).toBe('image/jpeg');
   expect(metadata.width).toBe(100);
   expect(metadata.height).toBe(78);
 });
@@ -242,7 +242,7 @@ test('f.jpg?x-oss-process=image/resize,w_100/auto-orient,1', async () => {
   const { data, type } = await ImageProcessor.getInstance().process(ctx);
   const metadata = await sharp(data).metadata();
 
-  expect(type).toBe('jpeg');
+  expect(type).toBe('image/jpeg');
   expect(metadata.width).toBe(100);
   expect(metadata.height).toBe(128);
 });

@@ -31,7 +31,7 @@ router.post('/images', async (ctx) => {
   ctx.headers['x-bucket'] = opt.sourceBucket;
 
   const { data, type } = await ossprocess(ctx);
-  if (type !== 'json') {
+  if (type !== 'application/json') {
     // TODO: Do we need to abstract this with IBufferStore?
     const _s3: S3 = new S3({ region: config.region });
     await _s3.putObject({

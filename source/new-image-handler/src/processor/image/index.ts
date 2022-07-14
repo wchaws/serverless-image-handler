@@ -1,3 +1,4 @@
+import * as mime from 'mime-types';
 import * as sharp from 'sharp';
 import { Features, IAction, InvalidArgument, IProcessContext, IProcessor, IProcessResponse } from '../../processor';
 import { IBufferStore } from '../../store';
@@ -140,7 +141,7 @@ export class ImageProcessor implements IProcessor {
       return { data: ctx.info, type: 'application/json' };
     } else {
       const { data, info } = await ctx.image.toBuffer({ resolveWithObject: true });
-      return { data: data, type: info.format };
+      return { data: data, type: (mime.lookup(info.format) || info.format) };
     }
   }
 
