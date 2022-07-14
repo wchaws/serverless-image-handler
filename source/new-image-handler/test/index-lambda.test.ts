@@ -72,7 +72,7 @@ test('index-lambda.ts example.jpg?x-oss-process=image/resize,w_100/quality,q_50'
 
   expect(res.isBase64Encoded).toBeTruthy();
   expect(res.statusCode).toBe(200);
-  expect(res.headers['Content-Type']).toBe('jpeg');
+  expect(res.headers['Content-Type']).toBe('image/jpeg');
 
   const metadata = await sharp(Buffer.from(res.body, 'base64')).metadata();
 
@@ -87,7 +87,7 @@ test('index-lambda.ts example.gif?x-oss-process=image/resize,w_100/quality,q_50'
 
   expect(res.isBase64Encoded).toBeTruthy();
   expect(res.statusCode).toBe(200);
-  expect(res.headers['Content-Type']).toBe('gif');
+  expect(res.headers['Content-Type']).toBe('image/gif');
 
   const metadata = await sharp(Buffer.from(res.body, 'base64')).metadata();
 
@@ -103,7 +103,7 @@ test('index-lambda.ts example.gif?x-oss-process=image/format,png', async () => {
 
   expect(res.isBase64Encoded).toBeTruthy();
   expect(res.statusCode).toBe(200);
-  expect(res.headers['Content-Type']).toBe('png');
+  expect(res.headers['Content-Type']).toBe('image/png');
 
   const metadata = await sharp(Buffer.from(res.body, 'base64')).metadata();
 

@@ -46,12 +46,14 @@
     "typescript": "^4.6.4"
   },
   "dependencies": {
+    "@types/mime-types": "^2.1.1",
     "aws-sdk": "^2.1130.0",
     "http-errors": "^1.8.1",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
     "koa-logger": "^3.2.1",
     "koa-router": "^10.1.1",
+    "mime-types": "^2.1.35",
     "sharp": "^0.30.4"
   },
   "bundledDependencies": [],
