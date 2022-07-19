@@ -2,9 +2,32 @@
 
 exports[`Snapshot 1`] = `
 Object {
+  "Description": "(SO0023) - Serverless Image Handler ECS API Adapter.",
   "Outputs": Object {
+    "BucketPolicy0": Object {
+      "Description": "NOTICE!: Please add this statement in the bucket policy of bucket0: bucket-0",
+      "Value": Object {
+        "Fn::Join": Array [
+          "",
+          Array [
+            "{\\"Action\\":\\"s3:GetObject\\",\\"Effect\\":\\"Allow\\",\\"Principal\\":{\\"CanonicalUser\\":\\"",
+            Object {
+              "Fn::GetAtt": Array [
+                "testS3Origin0AF84CF30",
+                "S3CanonicalUserId",
+              ],
+            },
+            "\\"},\\"Resource\\":\\"arn:",
+            Object {
+              "Ref": "AWS::Partition",
+            },
+            ":s3:::bucket-0/*\\"}",
+          ],
+        ],
+      },
+    },
     "DistributionUrl0": Object {
-      "Description": "The CloudFront distribution url0 for s3://bucket-0",
+      "Description": "The CloudFront distribution url0 for bucket0: bucket-0",
       "Value": Object {
         "Fn::Join": Array [
           "",
@@ -18,6 +41,12 @@ Object {
             },
           ],
         ],
+      },
+    },
+    "StyleConfig": Object {
+      "Description": "The DynamoDB table for processing style",
+      "Value": Object {
+        "Ref": "testStyleTable3315E595",
       },
     },
     "testServiceLoadBalancerDNS9D168467": Object {
@@ -121,12 +150,39 @@ Object {
             "OriginRequestPolicyId": Object {
               "Ref": "testForwardAllQueryString59F56102",
             },
-            "TargetOriginId": "testDistribution0Origin1612AADC4",
+            "TargetOriginId": "testDistribution0OriginGroup1E5970E8B",
             "ViewerProtocolPolicy": "redirect-to-https",
           },
           "Enabled": true,
           "HttpVersion": "http2",
           "IPV6Enabled": true,
+          "OriginGroups": Object {
+            "Items": Array [
+              Object {
+                "FailoverCriteria": Object {
+                  "StatusCodes": Object {
+                    "Items": Array [
+                      403,
+                    ],
+                    "Quantity": 1,
+                  },
+                },
+                "Id": "testDistribution0OriginGroup1E5970E8B",
+                "Members": Object {
+                  "Items": Array [
+                    Object {
+                      "OriginId": "testDistribution0Origin1612AADC4",
+                    },
+                    Object {
+                      "OriginId": "testDistribution0Origin23E04A7BB",
+                    },
+                  ],
+                  "Quantity": 2,
+                },
+              },
+            ],
+            "Quantity": 1,
+          },
           "Origins": Array [
             Object {
               "CustomOriginConfig": Object {
@@ -148,6 +204,37 @@ Object {
                   "HeaderValue": "bucket-0",
                 },
               ],
+            },
+            Object {
+              "DomainName": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "bucket-0.s3.",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                    ".",
+                    Object {
+                      "Ref": "AWS::URLSuffix",
+                    },
+                  ],
+                ],
+              },
+              "Id": "testDistribution0Origin23E04A7BB",
+              "S3OriginConfig": Object {
+                "OriginAccessIdentity": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "origin-access-identity/cloudfront/",
+                      Object {
+                        "Ref": "testS3Origin0AF84CF30",
+                      },
+                    ],
+                  ],
+                },
+              },
             },
           ],
         },
@@ -185,6 +272,14 @@ Object {
       },
       "Type": "AWS::CloudFront::OriginRequestPolicy",
     },
+    "testS3Origin0AF84CF30": Object {
+      "Properties": Object {
+        "CloudFrontOriginAccessIdentityConfig": Object {
+          "Comment": "Identity for s3://bucket-0",
+        },
+      },
+      "Type": "AWS::CloudFront::CloudFrontOriginAccessIdentity",
+    },
     "testService8DB925F6": Object {
       "DependsOn": Array [
         "testServiceLBPublicListenerECSGroup7DFD31EB",
@@ -198,7 +293,7 @@ Object {
           "MaximumPercent": 200,
           "MinimumHealthyPercent": 100,
         },
-        "DesiredCount": 2,
+        "DesiredCount": 8,
         "EnableECSManagedTags": false,
         "HealthCheckGracePeriodSeconds": 60,
         "LaunchType": "FARGATE",
@@ -292,6 +387,7 @@ Object {
     "testServiceLBPublicListenerECSGroup7DFD31EB": Object {
       "Properties": Object {
         "HealthCheckPath": "/",
+        "HealthyThresholdCount": 3,
         "Port": 80,
         "Protocol": "HTTP",
         "TargetType": "ip",
@@ -388,6 +484,7 @@ Object {
           "PredefinedMetricSpecification": Object {
             "PredefinedMetricType": "ECSServiceAverageCPUUtilization",
           },
+          "ScaleOutCooldown": 10,
           "TargetValue": 50,
         },
       },
@@ -396,7 +493,7 @@ Object {
     "testServiceTaskCountTargetD1C54E8B": Object {
       "Properties": Object {
         "MaxCapacity": 20,
-        "MinCapacity": 2,
+        "MinCapacity": 8,
         "ResourceId": Object {
           "Fn::Join": Array [
             "",
@@ -533,6 +630,10 @@ Object {
                 },
               },
               Object {
+                "Name": "VIPS_DISC_THRESHOLD",
+                "Value": "600m",
+              },
+              Object {
                 "Name": "SRC_BUCKET",
                 "Value": "bucket-0",
               },
@@ -541,6 +642,10 @@ Object {
                 "Value": Object {
                   "Ref": "testStyleTable3315E595",
                 },
+              },
+              Object {
+                "Name": "SECRET_NAME",
+                "Value": "arn:aws:secretsmanager:us-east-9:123456789012:secret:test-aaabbb",
               },
             ],
             "Essential": true,
@@ -559,7 +664,7 @@ Object {
                   Object {
                     "Ref": "AWS::URLSuffix",
                   },
-                  "/aws-cdk/assets:312de2f6fd6af253f3cbae2590af59b85c40d9524685ad5fac31574b02d08e28",
+                  "/aws-cdk/assets:54c82fc6cf0dc849bcfccf16e82ec871b67c0e6fa7d368a4eacb25921c51cc94",
                 ],
               ],
             },
@@ -584,7 +689,7 @@ Object {
             ],
           },
         ],
-        "Cpu": "2048",
+        "Cpu": "4096",
         "ExecutionRoleArn": Object {
           "Fn::GetAtt": Array [
             "testServiceTaskDefExecutionRole91AF1139",
@@ -592,7 +697,7 @@ Object {
           ],
         },
         "Family": "testServiceTaskDef47B6F147",
-        "Memory": "4096",
+        "Memory": "8192",
         "NetworkMode": "awsvpc",
         "RequiresCompatibilities": Array [
           "FARGATE",
@@ -638,6 +743,8 @@ Object {
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
+                "s3:PutObject*",
+                "s3:Abort*",
               ],
               "Effect": "Allow",
               "Resource": Array [
@@ -666,6 +773,14 @@ Object {
                   ],
                 },
               ],
+            },
+            Object {
+              "Action": Array [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:secretsmanager:us-east-9:123456789012:secret:test-aaabbb",
             },
           ],
           "Version": "2012-10-17",

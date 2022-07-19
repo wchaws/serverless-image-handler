@@ -20,6 +20,7 @@ import { RotateAction } from './rotate';
 import { RoundedCornersAction } from './rounded-corners';
 import { SharpenAction } from './sharpen';
 import { WatermarkAction } from './watermark';
+import { CgitAction } from './cgif';
 
 export interface IImageInfo {
   [key: string]: { value: string };
@@ -56,6 +57,7 @@ export class ImageProcessor implements IProcessor {
       },
       headers: {},
     };
+    let cgifFramesNum = 0;
     for (let i = 0; i < actions.length; i++) {
       const action = actions[i];
       if ((this.name === action) || (!action)) {
@@ -68,10 +70,26 @@ export class ImageProcessor implements IProcessor {
       if (!act) {
         throw new InvalidArgument(`Unkown action: "${name}"`);
       }
+      if (name === 'cgif') {
+        if (params.length !== 2) {
+          throw new InvalidArgument('Cut gif param error, e.g: cgif,s_1');
+        }
+        const [k, v] = params[1].split('_');
+        if (k === 's') {
+          cgifFramesNum = Number.parseInt(v, 10);
+        } else {
+          throw new InvalidArgument(`Unkown param: "${k}"`);
+        }
+      }
       act.beforeNewContext.bind(act)(ctx, params, i);
     }
     const { buffer, headers } = await bufferStore.get(uri);
-    const image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames] });
+    let image;
+    if (cgifFramesNum === 0) {
+      image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames] });
+    } else {
+      image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames], pages: cgifFramesNum });
+    }
     const metadata = await image.metadata();
 
     if ('gif' === metadata.format) {
@@ -177,6 +195,7 @@ ImageProcessor.getInstance().register(
   new RoundedCornersAction(),
   new WatermarkAction(),
   new InfoAction(),
+  new CgitAction(),
 );
 
 
