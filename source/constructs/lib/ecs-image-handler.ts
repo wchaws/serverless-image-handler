@@ -161,16 +161,16 @@ function getOrCreateVpc(scope: Construct): ec2.IVpc {
     return ec2.Vpc.fromLookup(scope, 'Vpc', { isDefault: true });
   } else if (scope.node.tryGetContext('use_vpc_id')) {
     const vpcFromLookup = ec2.Vpc.fromLookup(scope, 'Vpc', { vpcId: scope.node.tryGetContext('use_vpc_id') })
-    const subnetIds: string[] = scope.node.tryGetContext('subnet_ids');
-    let public_subnetIds: string[] = [];
+    const privateSubnetIds: string[] = scope.node.tryGetContext('subnet_ids');
+    let publicSubnetIds: string[] = [];
     vpcFromLookup.publicSubnets.forEach((subnet) => {
-      public_subnetIds.push(subnet.subnetId);
+      publicSubnetIds.push(subnet.subnetId);
     });
     const vpc = ec2.Vpc.fromVpcAttributes(scope, "VpcFromAttributes", {
       availabilityZones: vpcFromLookup.availabilityZones,
       vpcId: vpcFromLookup.vpcId,
-      publicSubnetIds: public_subnetIds,
-      privateSubnetIds: subnetIds
+      publicSubnetIds: publicSubnetIds,
+      privateSubnetIds: privateSubnetIds
     })
     return vpc;
   }
@@ -182,7 +182,7 @@ function getTaskSubnets(scope: Construct, vpc: ec2.IVpc): ec2.ISubnet[] {
   let subnets: ec2.ISubnet[] = [];
   if (subnetIds) {
     subnetIds.forEach((subnetId, index) => {
-      subnets[index] = ec2.Subnet.fromSubnetId(scope, 'subnet' + index, subnetId);
+      subnets.push(ec2.Subnet.fromSubnetId(scope, 'subnet' + index, subnetId));
     });
     return subnets;
   } else {
