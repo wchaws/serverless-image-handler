@@ -84,14 +84,16 @@ export class ImageProcessor implements IProcessor {
       act.beforeNewContext.bind(act)(ctx, params, i);
     }
     const { buffer, headers } = await bufferStore.get(uri);
-    let image;
-    if (cgifFramesNum === 0) {
-      image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames] });
-    } else {
-      image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames], pages: cgifFramesNum });
-    }
+    let image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames] });
     const metadata = await image.metadata();
-
+    if (cgifFramesNum > 0) {
+      if (!(metadata.pages)) {
+        throw new InvalidArgument('Can\'t read git\'s pages');
+      }
+      if (cgifFramesNum < metadata.pages) {
+        image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames], pages: cgifFramesNum });
+      }
+    }
     if ('gif' === metadata.format) {
       image.gif({ effort: 1 }); // https://github.com/lovell/sharp/issues/3176
     }
