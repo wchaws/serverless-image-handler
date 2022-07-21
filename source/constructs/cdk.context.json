@@ -3,6 +3,13 @@
     "<image-bucket-0>",
     "<image-bucket-1>"
   ],
+  "use_vpc_id": "vpc-id",
+  "subnet_ids": [
+    "<subnet-id-1>",
+    "<subnet-id-2>"
+  ] ,
+  "enable_public_alb": true,
+  "enable_cloudfront": true,
   "secret_arn": "arn:aws:secretsmanager:<region>:<account-id-number>:secret:<secret-name>-<random-6-characters>",
   "stack_tags":{"key1":"value1", "key2":"value2"},
   "ecs_desired_count": 10,
