@@ -1,5 +1,6 @@
 import * as mime from 'mime-types';
 import * as sharp from 'sharp';
+import * as is from '../../is';
 import { Features, IAction, InvalidArgument, IProcessContext, IProcessor, IProcessResponse } from '../../processor';
 import { IBufferStore } from '../../store';
 import { ActionMask } from './_base';
@@ -77,6 +78,9 @@ export class ImageProcessor implements IProcessor {
         const [k, v] = params[1].split('_');
         if (k === 's') {
           cgifFramesNum = Number.parseInt(v, 10);
+          if (!is.inRange(cgifFramesNum, 1, 1000)) {
+            throw new InvalidArgument(`Unkown param: "${k}"`);
+          }
         } else {
           throw new InvalidArgument(`Unkown param: "${k}"`);
         }
@@ -87,11 +91,16 @@ export class ImageProcessor implements IProcessor {
     let image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames] });
     const metadata = await image.metadata();
     if (cgifFramesNum > 0) {
+      if (!('gif' === metadata.format)) {
+        throw new InvalidArgument('Format must be Gif');
+      }
       if (!(metadata.pages)) {
         throw new InvalidArgument('Can\'t read git\'s pages');
       }
       if (cgifFramesNum < metadata.pages) {
         image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames], pages: cgifFramesNum });
+      } else {
+        image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames], pages: metadata.pages });
       }
     }
     if ('gif' === metadata.format) {
