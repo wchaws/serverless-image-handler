@@ -42,7 +42,7 @@ export class ECSImageHandler extends Construct {
       memoryLimitMiB: 8 * GB,
       minHealthyPercent: 100,
       maxHealthyPercent: 200,
-      publicLoadBalancer: getenablePublicALB(this),
+      publicLoadBalancer: getEnablePublicALB(this),
       taskSubnets: {
         subnets: taskSubnets,
       },
@@ -94,7 +94,7 @@ export class ECSImageHandler extends Construct {
     // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/restrict-access-to-load-balancer.html
     // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-listenerrule.html
 
-    if (getenableCloudFront(this)) {
+    if (getEnableCloudFront(this)) {
       buckets.forEach((bkt, index) => {
         const bktoai = new cloudfront.OriginAccessIdentity(this, `S3Origin${index}`, {
           comment: `Identity for s3://${bkt.bucketName}`,
@@ -190,7 +190,7 @@ function getTaskSubnets(scope: Construct, vpc: ec2.IVpc): ec2.ISubnet[] {
   }
 }
 
-function getenablePublicALB(scope: Construct, defaultCount: boolean = true): boolean {
+function getEnablePublicALB(scope: Construct, defaultCount: boolean = true): boolean {
   const publicLoadBalancer = scope.node.tryGetContext('enable_public_alb');
   if (publicLoadBalancer === false) {
     return publicLoadBalancer;
@@ -199,7 +199,7 @@ function getenablePublicALB(scope: Construct, defaultCount: boolean = true): boo
   }
 }
 
-function getenableCloudFront(scope: Construct, defaultCount: boolean = true): boolean {
+function getEnableCloudFront(scope: Construct, defaultCount: boolean = true): boolean {
   const enableCloudFront = scope.node.tryGetContext('enable_cloudfront');
   if (enableCloudFront === false) {
     return enableCloudFront;
