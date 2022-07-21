@@ -160,18 +160,18 @@ function getOrCreateVpc(scope: Construct): ec2.IVpc {
   if (scope.node.tryGetContext('use_default_vpc') === '1' || process.env.CDK_USE_DEFAULT_VPC === '1') {
     return ec2.Vpc.fromLookup(scope, 'Vpc', { isDefault: true });
   } else if (scope.node.tryGetContext('use_vpc_id')) {
-    const vpcFromLookup = ec2.Vpc.fromLookup(scope, 'Vpc', { vpcId: scope.node.tryGetContext('use_vpc_id') })
+    const vpcFromLookup = ec2.Vpc.fromLookup(scope, 'Vpc', { vpcId: scope.node.tryGetContext('use_vpc_id') });
     const privateSubnetIds: string[] = scope.node.tryGetContext('subnet_ids');
     let publicSubnetIds: string[] = [];
     vpcFromLookup.publicSubnets.forEach((subnet) => {
       publicSubnetIds.push(subnet.subnetId);
     });
-    const vpc = ec2.Vpc.fromVpcAttributes(scope, "VpcFromAttributes", {
+    const vpc = ec2.Vpc.fromVpcAttributes(scope, 'VpcFromAttributes', {
       availabilityZones: vpcFromLookup.availabilityZones,
       vpcId: vpcFromLookup.vpcId,
       publicSubnetIds: publicSubnetIds,
-      privateSubnetIds: privateSubnetIds
-    })
+      privateSubnetIds: privateSubnetIds,
+    });
     return vpc;
   }
   return new ec2.Vpc(scope, 'Vpc', { maxAzs: 3, natGateways: 1 });
