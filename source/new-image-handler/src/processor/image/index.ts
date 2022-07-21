@@ -7,6 +7,7 @@ import { ActionMask } from './_base';
 import { AutoOrientAction } from './auto-orient';
 import { BlurAction } from './blur';
 import { BrightAction } from './bright';
+import { CgitAction } from './cgif';
 import { CircleAction } from './circle';
 import { ContrastAction } from './contrast';
 import { CropAction } from './crop';
@@ -21,7 +22,6 @@ import { RotateAction } from './rotate';
 import { RoundedCornersAction } from './rounded-corners';
 import { SharpenAction } from './sharpen';
 import { WatermarkAction } from './watermark';
-import { CgitAction } from './cgif';
 
 export interface IImageInfo {
   [key: string]: { value: string };
@@ -97,11 +97,10 @@ export class ImageProcessor implements IProcessor {
       if (!(metadata.pages)) {
         throw new InvalidArgument('Can\'t read git\'s pages');
       }
-      if (cgifFramesNum < metadata.pages) {
-        image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames], pages: cgifFramesNum });
-      } else {
-        image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames], pages: metadata.pages });
+      if (!(cgifFramesNum < metadata.pages)) {
+        cgifFramesNum = metadata.pages;
       }
+      image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames], pages: cgifFramesNum });
     }
     if ('gif' === metadata.format) {
       image.gif({ effort: 1 }); // https://github.com/lovell/sharp/issues/3176
