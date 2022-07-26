@@ -72,18 +72,23 @@ export class ImageProcessor implements IProcessor {
       act.beforeNewContext.bind(act)(ctx, params, i);
     }
     const { buffer, headers } = await bufferStore.get(uri);
-    let image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames] });
-    let metadata = await image.metadata();
+    let image;
+    let metadata;
     if (ctx.features[Features.LimitAnimatedFrames] > 0) {
+      image = sharp(buffer, { failOnError: false, animated: false });
+      metadata = await image.metadata();
       let cutGifFramesNum = ctx.features[Features.LimitAnimatedFrames];
       if (!('gif' === metadata.format)) {
         throw new InvalidArgument('Format must be Gif');
       }
       if (!(metadata.pages)) {
-        throw new InvalidArgument('Can\'t read git\'s pages');
+        throw new InvalidArgument('Can\'t read gif\'s pages');
       }
       cutGifFramesNum = Math.min(cutGifFramesNum, metadata.pages);
       image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames], pages: cutGifFramesNum });
+      metadata = await image.metadata();
+    } else {
+      image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames] });
       metadata = await image.metadata();
     }
     if ('gif' === metadata.format) {

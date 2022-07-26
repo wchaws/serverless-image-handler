@@ -253,3 +253,10 @@ test('example.gif?x-oss-process=image/cgif,s_2', async () => {
   const metadata = await sharp(data).metadata();
   expect(metadata.pages).toBe(2);
 });
+
+test('example.gif?x-oss-process=image/cgif,s_100', async () => {
+  const ctx = await ImageProcessor.getInstance().newContext('example.gif', 'image/cgif,s_100'.split('/'), fixtureStore);
+  const { data } = await ImageProcessor.getInstance().process(ctx);
+  const metadata = await sharp(data).metadata();
+  expect(metadata.pages).toBe(3);
+});
