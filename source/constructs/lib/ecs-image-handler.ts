@@ -34,12 +34,18 @@ export class ECSImageHandler extends Construct {
 
     this.cfnOutput('StyleConfig', table.tableName, 'The DynamoDB table for processing style');
 
+    const vpc = getOrCreateVpc(this);
+    const taskSubnets = getTaskSubnets(this, vpc);
     const albFargateService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, 'Service', {
-      vpc: getOrCreateVpc(this),
+      vpc: vpc,
       cpu: 4 * GB,
       memoryLimitMiB: 8 * GB,
       minHealthyPercent: 100,
       maxHealthyPercent: 200,
+      publicLoadBalancer: getEnablePublicALB(this),
+      taskSubnets: {
+        subnets: taskSubnets,
+      },
       desiredCount: getECSDesiredCount(this),
       taskImageOptions: {
         image: ecs.ContainerImage.fromAsset(path.join(__dirname, '../../new-image-handler')),
@@ -88,36 +94,38 @@ export class ECSImageHandler extends Construct {
     // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/restrict-access-to-load-balancer.html
     // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-listenerrule.html
 
-    buckets.forEach((bkt, index) => {
-      const bktoai = new cloudfront.OriginAccessIdentity(this, `S3Origin${index}`, {
-        comment: `Identity for s3://${bkt.bucketName}`,
-      });
-      const bktplcy = new iam.PolicyStatement({
-        resources: [bkt.arnForObjects('*')],
-        actions: ['s3:GetObject'],
-        principals: [bktoai.grantPrincipal],
-      });
-      bkt.addToResourcePolicy(bktplcy);
+    if (getEnableCloudFront(this)) {
+      buckets.forEach((bkt, index) => {
+        const bktoai = new cloudfront.OriginAccessIdentity(this, `S3Origin${index}`, {
+          comment: `Identity for s3://${bkt.bucketName}`,
+        });
+        const bktplcy = new iam.PolicyStatement({
+          resources: [bkt.arnForObjects('*')],
+          actions: ['s3:GetObject'],
+          principals: [bktoai.grantPrincipal],
+        });
+        bkt.addToResourcePolicy(bktplcy);
 
-      this.cfnOutput(`BucketPolicy${index}`, `${JSON.stringify(bktplcy.toStatementJson())}`, `NOTICE!: Please add this statement in the bucket policy of bucket${index}: ${bkt.bucketName}`);
+        this.cfnOutput(`BucketPolicy${index}`, `${JSON.stringify(bktplcy.toStatementJson())}`, `NOTICE!: Please add this statement in the bucket policy of bucket${index}: ${bkt.bucketName}`);
 
-      this.distribution(new origins.OriginGroup({
-        primaryOrigin: new origins.LoadBalancerV2Origin(
-          albFargateService.loadBalancer,
-          {
-            protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
-            customHeaders: {
-              'x-bucket': bkt.bucketName,
-            },
-          }),
-        fallbackOrigin: new origins.S3Origin(
-          bkt,
-          {
-            originAccessIdentity: bktoai,
-          }),
-        fallbackStatusCodes: [403],
-      }), index, `for bucket${index}: ${bkt.bucketName}`);
-    });
+        this.distribution(new origins.OriginGroup({
+          primaryOrigin: new origins.LoadBalancerV2Origin(
+            albFargateService.loadBalancer,
+            {
+              protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY,
+              customHeaders: {
+                'x-bucket': bkt.bucketName,
+              },
+            }),
+          fallbackOrigin: new origins.S3Origin(
+            bkt,
+            {
+              originAccessIdentity: bktoai,
+            }),
+          fallbackStatusCodes: [403],
+        }), index, `for bucket${index}: ${bkt.bucketName}`);
+      });
+    }
   }
 
   private distribution(origin: cloudfront.IOrigin, index: number, msg?: string) {
@@ -152,9 +160,52 @@ function getOrCreateVpc(scope: Construct): ec2.IVpc {
   if (scope.node.tryGetContext('use_default_vpc') === '1' || process.env.CDK_USE_DEFAULT_VPC === '1') {
     return ec2.Vpc.fromLookup(scope, 'Vpc', { isDefault: true });
   } else if (scope.node.tryGetContext('use_vpc_id')) {
-    return ec2.Vpc.fromLookup(scope, 'Vpc', { vpcId: scope.node.tryGetContext('use_vpc_id') });
+    const vpcFromLookup = ec2.Vpc.fromLookup(scope, 'Vpc', { vpcId: scope.node.tryGetContext('use_vpc_id') });
+    const privateSubnetIds: string[] = scope.node.tryGetContext('subnet_ids');
+    let publicSubnetIds: string[] = [];
+    vpcFromLookup.publicSubnets.forEach((subnet) => {
+      publicSubnetIds.push(subnet.subnetId);
+    });
+    const vpc = ec2.Vpc.fromVpcAttributes(scope, 'VpcFromAttributes', {
+      availabilityZones: vpcFromLookup.availabilityZones,
+      vpcId: vpcFromLookup.vpcId,
+      publicSubnetIds: publicSubnetIds,
+      privateSubnetIds: privateSubnetIds,
+    });
+    return vpc;
   }
   return new ec2.Vpc(scope, 'Vpc', { maxAzs: 3, natGateways: 1 });
+}
+
+function getTaskSubnets(scope: Construct, vpc: ec2.IVpc): ec2.ISubnet[] {
+  const subnetIds: string[] = scope.node.tryGetContext('subnet_ids');
+  let subnets: ec2.ISubnet[] = [];
+  if (subnetIds) {
+    subnetIds.forEach((subnetId, index) => {
+      subnets.push(ec2.Subnet.fromSubnetId(scope, 'subnet' + index, subnetId));
+    });
+    return subnets;
+  } else {
+    return vpc.privateSubnets;
+  }
+}
+
+function getEnablePublicALB(scope: Construct, defaultCount: boolean = true): boolean {
+  const publicLoadBalancer = scope.node.tryGetContext('enable_public_alb');
+  if (publicLoadBalancer === false) {
+    return publicLoadBalancer;
+  } else {
+    return defaultCount;
+  }
+}
+
+function getEnableCloudFront(scope: Construct, defaultCount: boolean = true): boolean {
+  const enableCloudFront = scope.node.tryGetContext('enable_cloudfront');
+  if (enableCloudFront === false) {
+    return enableCloudFront;
+  } else {
+    return defaultCount;
+  }
 }
 
 function getBuckets(scope: Construct, id: string): s3.IBucket[] {
