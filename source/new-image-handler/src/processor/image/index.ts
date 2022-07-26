@@ -72,7 +72,7 @@ export class ImageProcessor implements IProcessor {
       act.beforeNewContext.bind(act)(ctx, params, i);
     }
     const { buffer, headers } = await bufferStore.get(uri);
-    let image = sharp(buffer, { failOnError: false, animated: false });
+    let image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames] });
     let metadata = await image.metadata();
     if (ctx.features[Features.LimitAnimatedFrames] > 0) {
       let cutGifFramesNum = ctx.features[Features.LimitAnimatedFrames];
