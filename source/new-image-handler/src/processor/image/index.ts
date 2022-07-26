@@ -1,13 +1,12 @@
 import * as mime from 'mime-types';
 import * as sharp from 'sharp';
-import * as is from '../../is';
 import { Features, IAction, InvalidArgument, IProcessContext, IProcessor, IProcessResponse } from '../../processor';
 import { IBufferStore } from '../../store';
 import { ActionMask } from './_base';
 import { AutoOrientAction } from './auto-orient';
 import { BlurAction } from './blur';
 import { BrightAction } from './bright';
-import { CgitAction } from './cgif';
+import { CgifAction } from './cgif';
 import { CircleAction } from './circle';
 import { ContrastAction } from './contrast';
 import { CropAction } from './crop';
@@ -58,7 +57,6 @@ export class ImageProcessor implements IProcessor {
       },
       headers: {},
     };
-    let cgifFramesNum = 0;
     for (let i = 0; i < actions.length; i++) {
       const action = actions[i];
       if ((this.name === action) || (!action)) {
@@ -71,36 +69,22 @@ export class ImageProcessor implements IProcessor {
       if (!act) {
         throw new InvalidArgument(`Unkown action: "${name}"`);
       }
-      if (name === 'cgif') {
-        if (params.length !== 2) {
-          throw new InvalidArgument('Cut gif param error, e.g: cgif,s_1');
-        }
-        const [k, v] = params[1].split('_');
-        if (k === 's') {
-          cgifFramesNum = Number.parseInt(v, 10);
-          if (!is.inRange(cgifFramesNum, 1, 1000)) {
-            throw new InvalidArgument(`Unkown param: "${k}"`);
-          }
-        } else {
-          throw new InvalidArgument(`Unkown param: "${k}"`);
-        }
-      }
       act.beforeNewContext.bind(act)(ctx, params, i);
     }
     const { buffer, headers } = await bufferStore.get(uri);
-    let image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames] });
-    const metadata = await image.metadata();
-    if (cgifFramesNum > 0) {
+    let image = sharp(buffer, { failOnError: false, animated: false });
+    let metadata = await image.metadata();
+    if (ctx.features[Features.LimitAnimatedFrames] > 0) {
+      let cutGifFramesNum = ctx.features[Features.LimitAnimatedFrames];
       if (!('gif' === metadata.format)) {
         throw new InvalidArgument('Format must be Gif');
       }
       if (!(metadata.pages)) {
         throw new InvalidArgument('Can\'t read git\'s pages');
       }
-      if (!(cgifFramesNum < metadata.pages)) {
-        cgifFramesNum = metadata.pages;
-      }
-      image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames], pages: cgifFramesNum });
+      cutGifFramesNum = Math.min(cutGifFramesNum, metadata.pages);
+      image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames], pages: cutGifFramesNum });
+      metadata = await image.metadata();
     }
     if ('gif' === metadata.format) {
       image.gif({ effort: 1 }); // https://github.com/lovell/sharp/issues/3176
@@ -205,7 +189,7 @@ ImageProcessor.getInstance().register(
   new RoundedCornersAction(),
   new WatermarkAction(),
   new InfoAction(),
-  new CgitAction(),
+  new CgifAction(),
 );
 
 

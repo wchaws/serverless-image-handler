@@ -45,7 +45,7 @@ export interface IProcessContext {
   /**
    * Feature flags.
    */
-  readonly features: { [key: string]: boolean };
+  readonly features: { [key: string]: any };
 
   readonly headers: IHttpHeaders;
 }
@@ -172,4 +172,5 @@ export enum Features {
   AutoOrient = 'auto-orient',
   ReturnInfo = 'return-info',
   ReadAllAnimatedFrames = 'read-all-animated-frames',
+  LimitAnimatedFrames = 0,
 }

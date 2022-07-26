@@ -246,3 +246,10 @@ test('f.jpg?x-oss-process=image/resize,w_100/auto-orient,1', async () => {
   expect(metadata.width).toBe(100);
   expect(metadata.height).toBe(128);
 });
+
+test('example.gif?x-oss-process=image/cgif,s_2', async () => {
+  const ctx = await ImageProcessor.getInstance().newContext('example.gif', 'image/cgif,s_2'.split('/'), fixtureStore);
+  const { data } = await ImageProcessor.getInstance().process(ctx);
+  const metadata = await sharp(data).metadata();
+  expect(metadata.pages).toBe(2);
+});
