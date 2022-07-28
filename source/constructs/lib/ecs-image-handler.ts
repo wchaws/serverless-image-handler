@@ -56,7 +56,7 @@ export class ECSImageHandler extends Construct {
           VIPS_DISC_THRESHOLD: '600m', // https://github.com/lovell/sharp/issues/1851
           SRC_BUCKET: buckets[0].bucketName,
           STYLE_TABLE_NAME: table.tableName,
-          SECRET_NAME: secret.secretArn,
+          SECRET_NAME: secret?.secretArn,
         }, scope.node.tryGetContext('env')),
       },
     });
@@ -88,7 +88,7 @@ export class ECSImageHandler extends Construct {
       }));
     }
 
-    secret.grantRead(albFargateService.taskDefinition.taskRole);
+    secret?.grantRead(albFargateService.taskDefinition.taskRole);
 
     // TODO: Add restriction access to ALB
     // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/restrict-access-to-load-balancer.html
@@ -220,14 +220,15 @@ function getBuckets(scope: Construct, id: string): s3.IBucket[] {
   return buckets.map((bkt: string, index: number) => s3.Bucket.fromBucketName(scope, `${id}${index}`, bkt));
 }
 
-function getSecret(scope: Construct): secretsmanager.ISecret {
+function getSecret(scope: Construct): secretsmanager.ISecret | undefined {
   const secretArn = scope.node.tryGetContext('secret_arn');
   if (!!secretArn) {
     return secretsmanager.Secret.fromSecretAttributes(scope, 'ImportedSecret', {
       secretArn: secretArn,
     });
   } else {
-    throw new Error('You must specify one secret manager arn for POST security.');
+    console.warn('You may specify one secret manager arn for POST security.');
+    return undefined;
   }
 }
 
