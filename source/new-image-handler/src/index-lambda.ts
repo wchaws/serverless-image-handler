@@ -14,7 +14,8 @@ export const handler = WrapError(async (event: APIGatewayProxyEventV2): Promise<
   if (event.rawPath === '/' || event.rawPath === '/ping') {
     return resp(200, 'ok');
   } else if (event.rawPath === '/_debug') {
-    return resp(400, debug());
+    console.log(debug());
+    return resp(400, 'Please check your server logs for more details!');
   }
 
   const accept = event.headers.Accept ?? event.headers.accept ?? '';
@@ -31,11 +32,11 @@ export const handler = WrapError(async (event: APIGatewayProxyEventV2): Promise<
     context.features[Features.AutoWebp] = autoWebp;
     const { data, type } = await processor.process(context);
 
-    return resp(200, data, type);
+    return resp(200, data, type, context.headers);
   } else {
-    const { buffer, type } = await bs.get(uri, bypass);
+    const { buffer, type, headers } = await bs.get(uri, bypass);
 
-    return resp(200, buffer, type);
+    return resp(200, buffer, type, headers);
   }
 });
 
@@ -44,7 +45,7 @@ function bypass() {
   throw new HttpErrors[403]('Please visit s3 directly');
 }
 
-function resp(code: number, body: any, type?: string): APIGatewayProxyResultV2 {
+function resp(code: number, body: any, type?: string, headers?: { [key: string]: any }): APIGatewayProxyResultV2 {
   const isBase64Encoded = Buffer.isBuffer(body);
   let data: string = '';
   if (isBase64Encoded) {
@@ -60,7 +61,7 @@ function resp(code: number, body: any, type?: string): APIGatewayProxyResultV2 {
   return {
     isBase64Encoded,
     statusCode: code,
-    headers: { 'Content-Type': type ?? 'text/plain' },
+    headers: Object.assign({ 'Content-Type': type ?? 'text/plain' }, headers),
     body: data,
   };
 }

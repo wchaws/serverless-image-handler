@@ -44,7 +44,11 @@ export class LocalStore implements IBufferStore {
     return {
       buffer: await fs.promises.readFile(p),
       type: filetype(p),
-      headers: {},
+      headers: {
+        'Etag': 'fake-etag',
+        'Last-Modified': 'fake-last-modified',
+        'Cache-Control': 'no-cache',
+      },
     };
   }
 
@@ -71,7 +75,11 @@ export class S3Store implements IBufferStore {
       return {
         buffer: res.Body as Buffer,
         type: res.ContentType ?? '',
-        headers: { 'Etag': res.ETag, 'Last-Modified': res.LastModified },
+        headers: {
+          'Etag': res.ETag,
+          'Last-Modified': res.LastModified,
+          'Cache-Control': res.CacheControl,
+        },
       };
     };
     throw new Error('S3 response body is not a Buffer type');
