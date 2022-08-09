@@ -107,6 +107,18 @@ curl <DistUrl0>/example.jpg?x-oss-process=image/resize,w_200,h_100/quality,q_50
 1. 配置 DNS 解析。CloudFormation 堆栈部署完成后，您需要配置 CNAME 解析将域名指向 CloudFront，并且等待解析生效后方可使用该解决方案。您
 可以通过查看 CloudFormation 的输出来获取 CloudFront 的地址。
 
+### 配置参数说明（cdk.context.json）
+| 参数名称        | 描述                                                         |
+| --------------- | ------------------------------------------------------------ |
+| buckets    | S3 存储桶。|
+| secret_arn | Secrets 用于调用 Post API (可选）|
+| stack_tags| 资源标签，方便进行费用统计（可选） |
+| ecs_desired_count | 初始化 Fargate 所需任务实例数量 |
+| use_vpc_id   | 部署程序的 VPC（可选） |
+| enable_public_alb | 负载均衡器模式选择，面向互联网 true，内部 false，默认为面向互联网（可选）                 |
+| enable_cloudfront   | CloudFront 的开关，默认为开启 true，关闭 false （可选） |
+| subnet_ids    | 部署程序或者内部 ALB 的子网，同一 AZ 下仅可配置一个（可选）|
+
 ### 部署参数（中国区域）
 
 | 参数名称        | 描述                                                         |

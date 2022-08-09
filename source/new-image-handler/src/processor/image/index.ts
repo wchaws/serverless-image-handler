@@ -5,6 +5,7 @@ import { ActionMask } from './_base';
 import { AutoOrientAction } from './auto-orient';
 import { BlurAction } from './blur';
 import { BrightAction } from './bright';
+import { CgifAction } from './cgif';
 import { CircleAction } from './circle';
 import { ContrastAction } from './contrast';
 import { CropAction } from './crop';
@@ -70,9 +71,25 @@ export class ImageProcessor implements IProcessor {
       act.beforeNewContext.bind(act)(ctx, params, i);
     }
     const { buffer, headers } = await bufferStore.get(uri);
-    const image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames] });
-    const metadata = await image.metadata();
-
+    let image;
+    let metadata;
+    if (ctx.features[Features.LimitAnimatedFrames] > 0) {
+      image = sharp(buffer, { failOnError: false, animated: false });
+      metadata = await image.metadata();
+      let cutGifFramesNum = ctx.features[Features.LimitAnimatedFrames];
+      if (!('gif' === metadata.format)) {
+        throw new InvalidArgument('Format must be Gif');
+      }
+      if (!(metadata.pages)) {
+        throw new InvalidArgument('Can\'t read gif\'s pages');
+      }
+      cutGifFramesNum = Math.min(cutGifFramesNum, metadata.pages);
+      image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames], pages: cutGifFramesNum });
+      metadata = await image.metadata();
+    } else {
+      image = sharp(buffer, { failOnError: false, animated: ctx.features[Features.ReadAllAnimatedFrames] });
+      metadata = await image.metadata();
+    }
     if ('gif' === metadata.format) {
       image.gif({ effort: 1 }); // https://github.com/lovell/sharp/issues/3176
     }
@@ -176,6 +193,7 @@ ImageProcessor.getInstance().register(
   new RoundedCornersAction(),
   new WatermarkAction(),
   new InfoAction(),
+  new CgifAction(),
 );
 
 
