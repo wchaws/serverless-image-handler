@@ -235,6 +235,7 @@ test('f.jpg?x-oss-process=image/resize,w_100/auto-orient,0', async () => {
   expect(type).toBe('image/jpeg');
   expect(metadata.width).toBe(100);
   expect(metadata.height).toBe(78);
+  expect(ctx.headers['Last-Modified']).toBe('fake-last-modified');
 });
 
 test('f.jpg?x-oss-process=image/resize,w_100/auto-orient,1', async () => {
