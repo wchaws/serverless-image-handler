@@ -50,8 +50,9 @@ router.get(['/', '/ping'], async (ctx) => {
 });
 
 router.get(['/debug', '/_debug'], async (ctx) => {
+  console.log(debug());
   ctx.status = 400;
-  ctx.body = debug();
+  ctx.body = 'Please check your server logs for more details!';
 });
 
 router.get('/(.*)', async (ctx) => {
