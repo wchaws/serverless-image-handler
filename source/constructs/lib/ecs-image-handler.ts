@@ -42,6 +42,8 @@ export class ECSImageHandler extends Construct {
       memoryLimitMiB: 8 * GB,
       minHealthyPercent: 100,
       maxHealthyPercent: 200,
+      propagateTags: ecs.PropagatedTagSource.SERVICE,
+      enableECSManagedTags: true,
       publicLoadBalancer: getEnablePublicALB(this),
       taskSubnets: {
         subnets: taskSubnets,
