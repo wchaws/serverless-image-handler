@@ -294,7 +294,7 @@ Object {
           "MinimumHealthyPercent": 100,
         },
         "DesiredCount": 8,
-        "EnableECSManagedTags": false,
+        "EnableECSManagedTags": true,
         "HealthCheckGracePeriodSeconds": 60,
         "LaunchType": "FARGATE",
         "LoadBalancers": Array [
@@ -327,6 +327,7 @@ Object {
             ],
           },
         },
+        "PropagateTags": "SERVICE",
         "TaskDefinition": Object {
           "Ref": "testServiceTaskDefF3CA73E3",
         },
@@ -664,7 +665,7 @@ Object {
                   Object {
                     "Ref": "AWS::URLSuffix",
                   },
-                  "/aws-cdk/assets:54c82fc6cf0dc849bcfccf16e82ec871b67c0e6fa7d368a4eacb25921c51cc94",
+                  "/aws-cdk/assets:10c5a3ecf2ca755f9789e929e0b9e44c93dec881f00db6645a9bf7e7e6207164",
                 ],
               ],
             },
