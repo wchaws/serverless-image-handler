@@ -71,12 +71,12 @@ export class LambdaImageHandler extends Construct {
       code: lambda.Code.fromDockerBuild(path.join(__dirname, '../../new-image-handler'), {
         file: 'Dockerfile.lambda.deps',
       }),
-      compatibleRuntimes: [lambda.Runtime.NODEJS_12_X],
+      compatibleRuntimes: [lambda.Runtime.NODEJS_14_X],
       description: 'Sharp Deps Layer',
     });
 
     const lambdaHandler = new lambda.Function(this, 'LambdaHandler', {
-      runtime: lambda.Runtime.NODEJS_12_X,
+      runtime: lambda.Runtime.NODEJS_14_X,
       timeout: cdk.Duration.seconds(30),
       memorySize: 1024,
       code: lambda.Code.fromDockerBuild(path.join(__dirname, '../../new-image-handler'), {
