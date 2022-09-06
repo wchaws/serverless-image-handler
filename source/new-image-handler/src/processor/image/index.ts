@@ -19,6 +19,7 @@ import { ResizeAction } from './resize';
 import { RotateAction } from './rotate';
 import { RoundedCornersAction } from './rounded-corners';
 import { SharpenAction } from './sharpen';
+import { StripMetadataAction } from './strip-metadata';
 import { WatermarkAction } from './watermark';
 
 export interface IImageInfo {
@@ -194,6 +195,7 @@ ImageProcessor.getInstance().register(
   new WatermarkAction(),
   new InfoAction(),
   new CgifAction(),
+  new StripMetadataAction(),
 );
 
 

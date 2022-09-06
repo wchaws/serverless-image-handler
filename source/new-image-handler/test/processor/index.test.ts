@@ -238,6 +238,15 @@ test('f.jpg?x-oss-process=image/resize,w_100/auto-orient,0', async () => {
   expect(ctx.headers['Last-Modified']).toBe('fake-last-modified');
 });
 
+test('f.jpg?x-oss-process=image/strip-metadata', async () => {
+  const ctx = await ImageProcessor.getInstance().newContext('f.jpg', 'image/strip-metadata'.split('/'), fixtureStore);
+  const { data } = await ImageProcessor.getInstance().process(ctx);
+  const metadata = await sharp(data).metadata();
+
+  expect(ctx.metadata.exif).not.toBeUndefined();
+  expect(metadata.exif).toBeUndefined();
+});
+
 test('f.jpg?x-oss-process=image/resize,w_100/auto-orient,1', async () => {
   const ctx = await ImageProcessor.getInstance().newContext('f.jpg', 'image/resize,w_100/auto-orient,1'.split('/'), fixtureStore);
   const { data, type } = await ImageProcessor.getInstance().process(ctx);
