@@ -189,7 +189,7 @@ export class WatermarkAction extends BaseImageAction {
     const textOpt = this.calculateTextSize(opt.text, opt.size);
     const svg = this.textSvgStr(opt, textOpt, true, opt.shadow / 100);
     const svgBytes = Buffer.from(svg);
-    const metadata = await ctx.image.metadata();
+    const metadata = withNormalSize(ctx.metadata);
     if (0 < opt.rotate) {
       // hard to rotate the svg directly, so attach it on image, then rotate the image
       const overlapImg = this.textSvgImg(svgBytes, textOpt);
@@ -234,7 +234,7 @@ export class WatermarkAction extends BaseImageAction {
       watermarkImg = sharp(bt);
     }
     // auto scale warkmark size
-    const metadata = await ctx.image.metadata();
+    const metadata = withNormalSize(ctx.metadata);
     const markMetadata = await watermarkImg.metadata();
     if (opt.auto) {
       // check the warkmark image size, if bigger than backgroud image, need resize the overlay
@@ -276,7 +276,7 @@ export class WatermarkAction extends BaseImageAction {
     const gravityOpt = this.calculateMixedGravity(opt);
     const wbt = await watermarkImg.toBuffer();
 
-    const metadata = await ctx.image.metadata();
+    const metadata = withNormalSize(ctx.metadata);
 
     const expectedWidth = textOpt.width + imgW + opt.interval;
     const expectedHeight = Math.max(textOpt.height, imgH);
@@ -452,7 +452,7 @@ export class WatermarkAction extends BaseImageAction {
       let h = textOpt.height;
       let needResize = false;
       const overlapImgMeta = await source.metadata();
-      const metadata = await ctx.image.metadata();
+      const metadata = withNormalSize(ctx.metadata);
 
       if (overlapImgMeta.width && metadata.width && overlapImgMeta.width > metadata.width) {
         w = metadata.width - 10;
@@ -522,4 +522,13 @@ export class WatermarkAction extends BaseImageAction {
     }
     return overlay;
   }
+}
+
+function withNormalSize(metadata: sharp.Metadata): sharp.Metadata {
+  const o = Object.assign({}, metadata);
+  if ((metadata.orientation || 0) >= 5) {
+    o.width = o.height;
+    o.height = o.width;
+  }
+  return o;
 }
