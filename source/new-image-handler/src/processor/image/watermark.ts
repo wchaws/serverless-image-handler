@@ -527,8 +527,7 @@ export class WatermarkAction extends BaseImageAction {
 function withNormalSize(metadata: sharp.Metadata): sharp.Metadata {
   const o = Object.assign({}, metadata);
   if ((metadata.orientation || 0) >= 5) {
-    o.width = o.height;
-    o.height = o.width;
+    [o.width, o.height] = [o.height, o.width];
   }
   return o;
 }
