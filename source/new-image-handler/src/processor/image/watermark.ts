@@ -326,22 +326,35 @@ export class WatermarkAction extends BaseImageAction {
   }
 
   calculateTextSize(text: string, fontSize: number): WatermarkTextOpts {
+    // any better way?
     let cWidth = 0;
     for (let v of text) {
       const charCode = v.charCodeAt(0);
       if (charCode > 256) {
         cWidth += fontSize;
       } else if (charCode > 97) {
-        cWidth += fontSize * 0.55;
-      } else if (charCode === 87) {
-        // char W is bigger than others
-        cWidth += fontSize * 0.95;
-      } else if (charCode === 77) {
-        // char M is bigger than others
-        cWidth += fontSize * 0.85;
-
+        // i, j,l
+        if (charCode === 105 || charCode === 106 || charCode === 108) {
+          cWidth += fontSize * 0.22;
+        } else if (charCode === 102) {
+          // f
+          cWidth += fontSize * 0.28;
+        } else {
+          cWidth += fontSize * 0.55;
+        }
       } else if (charCode > 59 && charCode < 91) {
-        cWidth += fontSize * 0.75;
+        if (charCode === 87) {
+          // char W is bigger than others
+          cWidth += fontSize * 0.95;
+        } else if (charCode === 77) {
+          // char M is bigger than others
+          cWidth += fontSize * 0.85;
+        } else if (charCode === 73 || charCode === 74) {
+          // I,J
+          cWidth += fontSize * 0.6;
+        } else {
+          cWidth += fontSize * 0.75;
+        }
       } else if (charCode > 47 && charCode < 58) {
         // number
         cWidth += fontSize * 0.55;
