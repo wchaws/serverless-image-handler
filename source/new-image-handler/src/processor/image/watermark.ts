@@ -326,15 +326,41 @@ export class WatermarkAction extends BaseImageAction {
   }
 
   calculateTextSize(text: string, fontSize: number): WatermarkTextOpts {
+    // any better way?
     let cWidth = 0;
     for (let v of text) {
       const charCode = v.charCodeAt(0);
       if (charCode > 256) {
         cWidth += fontSize;
       } else if (charCode > 97) {
-        cWidth += fontSize / 2;
+        // i, j,l
+        if (charCode === 105 || charCode === 106 || charCode === 108) {
+          cWidth += fontSize * 0.22;
+        } else if (charCode === 102) {
+          // f
+          cWidth += fontSize * 0.28;
+        } else {
+          cWidth += fontSize * 0.55;
+        }
+      } else if (charCode > 59 && charCode < 91) {
+        if (charCode === 87) {
+          // char W is bigger than others
+          cWidth += fontSize * 0.95;
+        } else if (charCode === 77) {
+          // char M is bigger than others
+          cWidth += fontSize * 0.85;
+        } else if (charCode === 73 || charCode === 74) {
+          // I,J
+          cWidth += fontSize * 0.6;
+        } else {
+          cWidth += fontSize * 0.75;
+        }
+      } else if (charCode > 47 && charCode < 58) {
+        // number
+        cWidth += fontSize * 0.55;
       } else {
-        cWidth += fontSize * 0.8;
+        // comma and other punctuation is smaller
+        cWidth += fontSize * 0.25;
       }
     }
     return {
@@ -342,16 +368,17 @@ export class WatermarkAction extends BaseImageAction {
       height: Math.round(fontSize * 1.2),
     };
   }
+
+
   textSvgStr(opt: WatermarkOpts, textOpt: WatermarkTextOpts, applyOpacity: boolean = true, shadow: number = 0): string {
-    const xOffset = Math.round(textOpt.width / 2);
     const yOffset = Math.round(textOpt.height * 0.8);
     const color = `#${opt.color}`;
     const opacity = applyOpacity ? opt.t / 100 : 1;
     // https://gitlab.gnome.org/GNOME/librsvg/-/blob/main/FEATURES.md
     // https://gitlab.gnome.org/GNOME/librsvg/-/merge_requests/529
     // https://github.com/lovell/sharp/issues/1490#issuecomment-1162760143
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${textOpt.width} ${textOpt.height}" text-anchor="middle">
-    <text filter="drop-shadow(rgba(0,0,0,${shadow}) 2px 0px 2px)" font-size="${opt.size}" x="${xOffset}" y="${yOffset}" fill="${color}" opacity="${opacity}" font-family="${opt.type}">${opt.text}</text>
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 ${textOpt.width} ${textOpt.height}">
+    <text filter="drop-shadow(rgba(0,0,0,${shadow}) 2px 0px 2px)" font-size="${opt.size}" text-anchor="start" x="0" y="${yOffset}" fill="${color}" opacity="${opacity}" font-family="${opt.type}">${opt.text}</text>
     </svg>`;
     return svg;
   }
