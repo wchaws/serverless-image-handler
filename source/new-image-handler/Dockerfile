@@ -1,4 +1,4 @@
-# FROM node:12-alpine3.12 as node-with-vips
+# FROM node:14-alpine3.16 as node-with-vips
 
 # ARG VIPS_VERSION=8.11.3
 
@@ -24,7 +24,7 @@
 #     # && apk del --purge vips-dependencies \
 #     && rm -rf /var/cache/apk/*
 
-FROM node:12-alpine3.12 as builder
+FROM node:14-alpine3.16 as builder
 
 WORKDIR /app
 
@@ -40,7 +40,7 @@ COPY . .
 RUN yarn build
 
 
-FROM node:12-alpine3.12
+FROM node:14-alpine3.16
 
 WORKDIR /app
 
