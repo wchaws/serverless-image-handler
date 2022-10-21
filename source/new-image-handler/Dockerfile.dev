@@ -49,8 +49,9 @@ WORKDIR /app
 COPY package.json yarn.lock /app/
 COPY ./fonts/* /usr/share/fonts/
 
+# FIXME: try to remove font-noto when https://github.com/lovell/sharp/issues/3393 is fixed.
 RUN apt update -y && \
-    apt install -y fontconfig ffmpeg
+    apt install -y fontconfig font-noto ffmpeg
 
 # ENV NODE_ENV=production
 
