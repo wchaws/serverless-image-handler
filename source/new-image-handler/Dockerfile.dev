@@ -42,7 +42,7 @@
 # RUN yarn build
 
 
-FROM public.ecr.aws/docker/library/node:14-slim
+FROM public.ecr.aws/docker/library/node:14-alpine3.16
 
 WORKDIR /app
 
@@ -50,8 +50,8 @@ COPY package.json yarn.lock /app/
 COPY ./fonts/* /usr/share/fonts/
 
 # FIXME: try to remove font-noto when https://github.com/lovell/sharp/issues/3393 is fixed.
-RUN apt update -y && \
-    apt install -y fontconfig font-noto ffmpeg
+RUN apk update && \
+    apk add fontconfig font-noto ffmpeg
 
 # ENV NODE_ENV=production
 
