@@ -1,4 +1,4 @@
-# FROM public.ecr.aws/sam/build-nodejs12.x as ImageMagickBuilder
+# FROM public.ecr.aws/sam/build-nodejs14.x as ImageMagickBuilder
 
 # WORKDIR /ws
 
@@ -13,7 +13,7 @@
 # RUN make -f ImageMagick.Makefile all TARGET_DIR=/opt
 
 
-FROM public.ecr.aws/sam/build-nodejs12.x
+FROM public.ecr.aws/sam/build-nodejs14.x
 
 WORKDIR /app
 

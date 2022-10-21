@@ -224,7 +224,7 @@ test('f.jpg?x-oss-process=image/resize,w_100/', async () => {
 
   expect(type).toBe('image/jpeg');
   expect(metadata.width).toBe(100);
-  expect(metadata.height).toBe(128);
+  expect(metadata.height).toBe(127);
 });
 
 test('f.jpg?x-oss-process=image/resize,w_100/auto-orient,0', async () => {

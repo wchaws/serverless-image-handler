@@ -1,4 +1,4 @@
-# FROM node:12-alpine3.12 as node-with-vips
+# FROM public.ecr.aws/docker/library/node:14-alpine3.16 as node-with-vips
 
 # ARG VIPS_VERSION=8.11.3
 
@@ -24,14 +24,15 @@
 #     # && apk del --purge vips-dependencies \
 #     && rm -rf /var/cache/apk/*
 
-FROM node:12-alpine3.12 as builder
+FROM public.ecr.aws/docker/library/node:14-alpine3.16 as builder
 
 WORKDIR /app
 
 COPY package.json yarn.lock /app/
 
+# FIXME: try to remove font-noto when https://github.com/lovell/sharp/issues/3393 is fixed.
 RUN apk update && \
-    apk add fontconfig
+    apk add fontconfig font-noto
 
 RUN yarn
 
@@ -40,15 +41,16 @@ COPY . .
 RUN yarn build
 
 
-FROM node:12-alpine3.12
+FROM public.ecr.aws/docker/library/node:14-alpine3.16
 
 WORKDIR /app
 
 COPY package.json yarn.lock /app/
 COPY ./fonts/* /usr/share/fonts/
 
+# FIXME: try to remove font-noto when https://github.com/lovell/sharp/issues/3393 is fixed.
 RUN apk update && \
-    apk add fontconfig ffmpeg
+    apk add fontconfig font-noto ffmpeg
 
 ENV NODE_ENV=production
 

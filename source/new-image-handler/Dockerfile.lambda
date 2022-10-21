@@ -1,4 +1,4 @@
-FROM public.ecr.aws/sam/build-nodejs12.x
+FROM public.ecr.aws/sam/build-nodejs14.x
 
 WORKDIR /app
 

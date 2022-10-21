@@ -1,4 +1,4 @@
-# FROM node:12-alpine3.12 as node-with-vips
+# FROM public.ecr.aws/docker/library/node:14-slim as node-with-vips
 
 # ARG VIPS_VERSION=8.11.3
 
@@ -42,15 +42,16 @@
 # RUN yarn build
 
 
-FROM node:12-alpine3.12
+FROM public.ecr.aws/docker/library/node:14-slim
 
 WORKDIR /app
 
 COPY package.json yarn.lock /app/
 COPY ./fonts/* /usr/share/fonts/
 
-RUN apk update && \
-    apk add fontconfig ffmpeg
+# FIXME: try to remove font-noto when https://github.com/lovell/sharp/issues/3393 is fixed.
+RUN apt update -y && \
+    apt install -y fontconfig font-noto ffmpeg
 
 # ENV NODE_ENV=production
 
