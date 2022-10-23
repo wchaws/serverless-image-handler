@@ -1,4 +1,3 @@
-import { bool } from 'aws-sdk/clients/signer';
 import * as sharp from 'sharp';
 import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument, Features, IProcessContext } from '..';
@@ -23,6 +22,7 @@ export interface WatermarkOpts extends IActionOpts {
   align: number; // 图文混排中，图片和文字对其方式
   type: string; // 字体
   shadow: number;
+  halo: string; // shadow 颜色
 }
 
 interface WatermarkPosOpts extends IActionOpts {
@@ -62,6 +62,7 @@ export class WatermarkAction extends BaseImageAction {
       align: 0,
       type: 'FZHei-B01',
       shadow: 0,
+      halo: '000000',
     };
 
     for (const param of params) {
@@ -151,6 +152,8 @@ export class WatermarkAction extends BaseImageAction {
         } else {
           throw new InvalidArgument('Watermark param \'shadow\' must be between 0 and 100');
         }
+      } else if (k === 'halo') {
+        opt.halo = v;
       } else {
         throw new InvalidArgument(`Unkown param: "${k}"`);
       }
@@ -175,7 +178,7 @@ export class WatermarkAction extends BaseImageAction {
   }
 
   async textWaterMark(ctx: IImageContext, opt: WatermarkOpts): Promise<void> {
-    const overlapImg = this.textImg(opt);
+    const overlapImg = await this.textImg(opt);
 
     await this.compositeImg(ctx, overlapImg, opt);
 
@@ -190,7 +193,7 @@ export class WatermarkAction extends BaseImageAction {
     await this.compositeImg(ctx, watermarkImg, opt);
   }
 
-  async compositeImg(ctx: IImageContext, watermarkImg: sharp.Sharp, opt: WatermarkOpts, double_auto: bool = false): Promise<void> {
+  async compositeImg(ctx: IImageContext, watermarkImg: sharp.Sharp, opt: WatermarkOpts, double_auto: Boolean = false): Promise<void> {
 
     if (0 < opt.rotate) {
       if (double_auto) {
@@ -208,14 +211,14 @@ export class WatermarkAction extends BaseImageAction {
 
     const pos = this.calculateImgPos(opt, metadata, markMetadata);
 
-    const overlay = await this.extraImgOverlay(ctx, watermarkImg, markMetadata, opt, pos);
+    const overlay = await this.extraImgOverlay(watermarkImg, opt, pos);
     ctx.image.composite([overlay]);
   }
 
   async mixedWaterMark(ctx: IImageContext, opt: WatermarkOpts): Promise<void> {
     const bs = ctx.bufferStore;
 
-    const txtImg = this.textImg(opt).png();
+    const txtImg = (await this.textImg(opt)).png();
     const txtMeta = await txtImg.metadata();
 
     const txtW = txtMeta.width ? txtMeta.width : 0;
@@ -263,8 +266,8 @@ export class WatermarkAction extends BaseImageAction {
     }
   }
 
-  textImg(opt: WatermarkOpts): sharp.Sharp {
-    return sharp({
+  async textImg(opt: WatermarkOpts): Promise<sharp.Sharp> {
+    const o = sharp({
       text: {
         text: `<span size="${opt.size}pt" foreground="#${opt.color}">${opt.text}</span>`,
         align: 'center',
@@ -272,6 +275,52 @@ export class WatermarkAction extends BaseImageAction {
         dpi: 72,
       },
     });
+    if (opt.shadow === 0) {
+      return o;
+    }
+
+    const meta = await o.metadata();
+    let expectedWidth = opt.shadow;
+    let expectedHeight = opt.shadow;
+    if (meta.width && meta.height) {
+      expectedWidth += meta.width;
+      expectedHeight += meta.height;
+    }
+
+
+    const shadow = sharp({
+      text: {
+        text: `<span size="${opt.size}pt" foreground="#${opt.halo}">${opt.text}</span>`,
+        align: 'center',
+        rgba: true,
+        dpi: 72,
+      },
+    });
+
+    const oBuffer = await o.png().toBuffer();
+    const opacity = 0.6;
+    const copy = await shadow.convolve({
+      width: 3,
+      height: 3,
+      kernel: [
+        0, 0, 0,
+        0, opacity, 0,
+        0, 0, 0,
+      ],
+    }).png().toBuffer();
+
+    const u = await sharp({
+      create: {
+        width: expectedWidth,
+        height: expectedHeight,
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      },
+    }).composite([{ input: copy, left: opt.shadow, top: opt.shadow }]).png().toBuffer();
+
+    const bt = sharp(u).png().composite([{ input: oBuffer, gravity: 'northwest' }]);
+
+    return sharp(await bt.toBuffer()).png();
   }
 
   calculateImgPos(opt: WatermarkOpts, metadata: sharp.Metadata, markMetadata: sharp.Metadata): WatermarkPosOpts {
@@ -380,11 +429,18 @@ export class WatermarkAction extends BaseImageAction {
   }
 
 
-  async extraImgOverlay(ctx: IImageContext, markImg: sharp.Sharp, markMetadata: sharp.Metadata,
-    opt: WatermarkOpts, pos?: WatermarkPosOpts): Promise<sharp.OverlayOptions> {
-    if (opt.t < 100 && !markMetadata.hasAlpha) {
-      // jpeg or other no alpha image, we change the opacity by change the alpha channel
-      markImg = markImg.removeAlpha().ensureAlpha(opt.t / 100);
+  async extraImgOverlay(markImg: sharp.Sharp, opt: WatermarkOpts, pos?: WatermarkPosOpts): Promise<sharp.OverlayOptions> {
+
+    if (opt.t < 100) {
+      markImg = markImg.convolve({
+        width: 3,
+        height: 3,
+        kernel: [
+          0, 0, 0,
+          0, opt.t / 100, 0,
+          0, 0, 0,
+        ],
+      });
     }
     const bt = await markImg.png().toBuffer();
     const overlay: sharp.OverlayOptions = { input: bt, tile: opt.fill, gravity: opt.g };
@@ -394,13 +450,7 @@ export class WatermarkAction extends BaseImageAction {
       overlay.left = pos.x;
     }
 
-    if (opt.t < 100 && markMetadata.hasAlpha) {
-      // png or other image with alpha, we change the opacity by change the combined image
-      const overForPng = sharp(await ctx.image.toBuffer()).png();
-      const overBuffer = await overForPng.composite([overlay]).removeAlpha().ensureAlpha(opt.t / 100).toBuffer();
-      const overlay2: sharp.OverlayOptions = { input: overBuffer };
-      return overlay2;
-    }
+
     return overlay;
   }
 }
