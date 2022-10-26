@@ -280,8 +280,9 @@ export class WatermarkAction extends BaseImageAction {
     }
 
     const meta = await o.metadata();
-    let expectedWidth = opt.shadow;
-    let expectedHeight = opt.shadow;
+    const offset = 2;
+    let expectedWidth = offset;
+    let expectedHeight = offset;
     if (meta.width && meta.height) {
       expectedWidth += meta.width;
       expectedHeight += meta.height;
@@ -298,7 +299,7 @@ export class WatermarkAction extends BaseImageAction {
     });
 
     const oBuffer = await o.png().toBuffer();
-    const opacity = 0.6;
+    const opacity = opt.shadow / 100;
     const copy = await shadow.convolve({
       width: 3,
       height: 3,
@@ -316,7 +317,7 @@ export class WatermarkAction extends BaseImageAction {
         channels: 4,
         background: { r: 0, g: 0, b: 0, alpha: 0 },
       },
-    }).composite([{ input: copy, left: opt.shadow, top: opt.shadow }]).png().toBuffer();
+    }).composite([{ input: copy, left: offset, top: offset }]).png().toBuffer();
 
     const bt = sharp(u).png().composite([{ input: oBuffer, gravity: 'northwest' }]);
 
