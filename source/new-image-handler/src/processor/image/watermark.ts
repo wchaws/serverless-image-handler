@@ -53,10 +53,10 @@ export class WatermarkAction extends BaseImageAction {
       size: 40,
       color: '000000',
       image: '',
-      auto: true,
+      auto: false,
       order: 0,
-      x: undefined,
-      y: undefined,
+      x: 5,
+      y: 5,
       voffset: 0,
       interval: 0,
       align: 0,
@@ -401,20 +401,24 @@ export class WatermarkAction extends BaseImageAction {
   }
 
   async autoResize(ctx: IImageContext, mark: sharp.Sharp, opt: WatermarkOpts): Promise<sharp.Sharp> {
+    mark = sharp(await mark.png().toBuffer());
+    const mmeta = await mark.metadata();
+    const metadata = withNormalSize(ctx.metadata);
+    if (!mmeta.width || !metadata.width || !mmeta.height || !metadata.height) {
+      throw new Error('failed to get width or height in metadata!');
+    }
     if (opt.auto) {
       // renew a sharp object, otherwise the metadata is not right after rotate, resize etc.
-      mark = sharp(await mark.png().toBuffer());
-      const mmeta = await mark.metadata();
-      const metadata = withNormalSize(ctx.metadata);
+
       let wratio = 1;
       let hratio = 1;
       let needResize = false;
 
-      if (mmeta.width && metadata.width && mmeta.width > metadata.width) {
+      if (mmeta.width > metadata.width) {
         wratio = (metadata.width - 5) / mmeta.width;
         needResize = true;
       }
-      if (mmeta.height && metadata.height && mmeta.height > metadata.height) {
+      if (mmeta.height > metadata.height) {
         hratio = (metadata.height - 5) / mmeta.height;
         needResize = true;
       }
@@ -425,10 +429,50 @@ export class WatermarkAction extends BaseImageAction {
         const h = Math.floor(mmeta.height * change);
         mark = sharp(await mark.resize(w, h).png().toBuffer());
       }
+    } else {
+      let needCrop = false;
+      let left = 0;
+      let top = 0;
+
+      let width = mmeta.width;
+      let height = mmeta.height;
+      const px = opt.x ? opt.x : 0;
+      const py = opt.y ? opt.y : 0;
+
+      if (mmeta.width > metadata.width) {
+        if (opt.g.endsWith('west')) {
+          left = 0;
+          width = metadata.width - px;
+        } else if (opt.g.endsWith('east')) {
+          left = mmeta.width + px - metadata.width;
+          width = metadata.width - px;
+        } else {
+          left = Math.floor((mmeta.width - metadata.width) / 2);
+          width = metadata.width;
+        }
+        needCrop = true;
+      }
+      // 'north', 'south'
+      if (mmeta.height > metadata.height) {
+        if (opt.g.startsWith('north')) {
+          top = 0;
+          height = metadata.height - py;
+        } else if (opt.g.startsWith('south')) {
+          top = mmeta.height + py - metadata.height;
+          height = metadata.height - py;
+        } else {
+          top = Math.floor((mmeta.height - metadata.height) / 2);
+          height = metadata.height;
+        }
+        needCrop = true;
+      }
+      if (needCrop) {
+        mark = sharp(await mark.extract({ left: left, top: top, width: width, height: height }).png().toBuffer());
+      }
+
     }
     return mark;
   }
-
 
   async extraImgOverlay(markImg: sharp.Sharp, opt: WatermarkOpts, pos?: WatermarkPosOpts): Promise<sharp.OverlayOptions> {
 
