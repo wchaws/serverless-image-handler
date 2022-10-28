@@ -1,0 +1,4 @@
+# Each line must be a URL.
+# Comments for lines starting with #.
+# Example:
+# https://<HOST>/example.jpg?x-oss-process=image/format,gif/quality,q_80
