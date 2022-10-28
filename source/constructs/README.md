@@ -107,18 +107,6 @@ curl <DistUrl0>/example.jpg?x-oss-process=image/resize,w_200,h_100/quality,q_50
 1. 配置 DNS 解析。CloudFormation 堆栈部署完成后，您需要配置 CNAME 解析将域名指向 CloudFront，并且等待解析生效后方可使用该解决方案。您
 可以通过查看 CloudFormation 的输出来获取 CloudFront 的地址。
 
-### 配置参数说明（cdk.context.json）
-| 参数名称        | 描述                                                         |
-| --------------- | ------------------------------------------------------------ |
-| buckets    | S3 存储桶。|
-| secret_arn | Secrets 用于调用 Post API (可选）|
-| stack_tags| 资源标签，方便进行费用统计（可选） |
-| ecs_desired_count | 初始化 Fargate 所需任务实例数量 |
-| use_vpc_id   | 部署程序的 VPC（可选） |
-| enable_public_alb | 负载均衡器模式选择，面向互联网 true，内部 false，默认为面向互联网（可选）                 |
-| enable_cloudfront   | CloudFront 的开关，默认为开启 true，关闭 false （可选） |
-| subnet_ids    | 部署程序或者内部 ALB 的子网，同一 AZ 下仅可配置一个（可选）|
-
 ### 部署参数（中国区域）
 
 | 参数名称        | 描述                                                         |
@@ -208,6 +196,20 @@ This is an ECS Fargate based version of serverless image handler. The key featur
 4. [aws-cdk](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html)
 5. [cdk bootstrap](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#cli-bootstrap)
 
+
+### 配置参数说明（cdk.context.json）
+| 参数名称        | 描述                                                         |
+| --------------- | ------------------------------------------------------------ |
+| buckets    | S3 存储桶。|
+| secret_arn | Secrets 用于调用 Post API (可选）|
+| stack_tags| 资源标签，方便进行费用统计（可选） |
+| ecs_desired_count | 初始化 Fargate 所需任务实例数量 |
+| use_vpc_id   | 部署程序的 VPC（可选） |
+| enable_public_alb | 负载均衡器模式选择，面向互联网 true，内部 false，默认为面向互联网（可选）                 |
+| enable_cloudfront   | CloudFront 的开关，默认为开启 true，关闭 false （可选） |
+| subnet_ids    | 部署程序或者内部 ALB 的子网，同一 AZ 下仅可配置一个（可选）|
+
+
 ### How to use?
 
 ```bash
@@ -217,14 +219,10 @@ yarn
 # Run test
 yarn test
 
+# edit cdk.context.json
+
 # Deploy stack
 CDK_DEPLOY_REGION=us-west-2 yarn deploy serverless-ecs-image-handler-stack
-
-# Or deploy stack to an existing vpc
-CDK_DEPLOY_REGION=us-west-2 yarn deploy serverless-ecs-image-handler-stack -c use_vpc_id=vpc-123124124124
-
-# Or deploy stack with an existing s3 bucket (WARN: This may overide your existing bucket policy)
-CDK_DEPLOY_REGION=us-west-2 yarn deploy serverless-ecs-image-handler-stack -c use_vpc_id=vpc-123124124124 -c use_bucket=your-bucket
 
 # Destroy stack if you need
 yarn destroy serverless-ecs-image-handler-stack
@@ -233,30 +231,22 @@ yarn destroy serverless-ecs-image-handler-stack
 Once it is deployed you will get:
 
 ```
+...
  ✅  serverless-ecs-image-handler-stack
 
 Outputs:
-serverless-ecs-image-handler-stack.serverlessecrimagehandlerstackCFDistributionUrl1454FE90 = https://ABCDEFGH.cloudfront.net
-serverless-ecs-image-handler-stack.serverlessecrimagehandlerstackServiceLoadBalancerDNSDB026A6D = serve-serve-ABCDEF.us-west-2.elb.amazonaws.com
-serverless-ecs-image-handler-stack.serverlessecrimagehandlerstackServiceServiceURLE05B511A = http://serve-serve-ABCDEF.us-west-2.elb.amazonaws.com
-serverless-ecs-image-handler-stack.serverlessecrimagehandlerstackSrcBucketS3Url593801C5 = s3://serverless-ecr-image-han-serverlessecrimagehandle-ABCDE
+serverless-ecs-image-handler-stack.BucketPolicy0 = {"Action":"s3:GetObject","Effect":"Allow","Principal":{"CanonicalUser":"5edea5fed6735e7c8829"},"Resource":"arn:aws:s3:::bucket/*"}
+serverless-ecs-image-handler-stack.DistributionUrl0 = https://ABCDEFG.cloudfront.net
+serverless-ecs-image-handler-stack.StyleConfig = serverless-ecs-image-handler-stack-serverlessecsimagehandlerstackStyleTable258B7J
+serverless-ecs-image-handler-stack.serverlessecsimagehandlerstackServiceLoadBalancerDNSA7F19049 = serve-serve-ABC.us-west-2.elb.amazonaws.com
+serverless-ecs-image-handler-stack.serverlessecsimagehandlerstackServiceServiceURL3A810472 = http://serve-serve-ABC.us-west-2.elb.amazonaws.com
 
 Stack ARN:
-arn:aws:cloudformation:us-west-2:000000000:stack/serverless-ecs-image-handler-stack/0000000-0000-0000-0000-0000
-✨  Done in 593.00s.
+arn:aws:cloudformation:us-west-2:000:stack/serverless-ecs-image-handler-stack/3fbd2fd0-90bb-11ec-b883-023abefd402f
+Done in 559.32s.
 ```
 
-Upload some pictures into
-
-```
-serverlessecrimagehandlerstackSrcBucketS3Url593801C5 = s3://serverless-ecr-image-han-serverlessecrimagehandle-ABCDE
-```
-
-Then you could try to open
-
-```
-serverlessecrimagehandlerstackCFDistributionUrl1454FE90 = https://ABCDEFGH.cloudfront.net
-```
+Upload some pictures into your buckets:
 
 Like: https://ABCDEFG.cloudfront.net/example.jpg?x-oss-process=image/resize,w_500,h_500,limit_0/quality,q_50
 
@@ -286,6 +276,14 @@ $ npx loadtest -t 900 -c 20 --rps 300 "http://serve-serve-ABCDEF.us-west-2.elb.a
 [Fri Jul 23 2021 13:02:23 GMT+0000 (Coordinated Universal Time)] INFO   99%      132 ms
 [Fri Jul 23 2021 13:02:23 GMT+0000 (Coordinated Universal Time)] INFO  100%      2578 ms (longest request)
 ```
+
+### End to end test
+
+Check [this](../new-image-handler/test/e2e/README.md).
+
+### Benchmark test
+
+Check [this](../new-image-handler/test/bench/README.md).
 
 ### Troubleshooting
 
