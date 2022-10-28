@@ -168,6 +168,7 @@ function getOrCreateVpc(scope: Construct): ec2.IVpc {
     vpcFromLookup.publicSubnets.forEach((subnet) => {
       publicSubnetIds.push(subnet.subnetId);
     });
+    // TODO: Try to use vpcFromLookup instead
     const vpc = ec2.Vpc.fromVpcAttributes(scope, 'VpcFromAttributes', {
       availabilityZones: vpcFromLookup.availabilityZones,
       vpcId: vpcFromLookup.vpcId,
@@ -181,6 +182,7 @@ function getOrCreateVpc(scope: Construct): ec2.IVpc {
 
 function getTaskSubnets(scope: Construct, vpc: ec2.IVpc): ec2.ISubnet[] {
   const subnetIds: string[] = scope.node.tryGetContext('subnet_ids');
+  // TODO: use filter subnets from vpc
   let subnets: ec2.ISubnet[] = [];
   if (subnetIds) {
     subnetIds.forEach((subnetId, index) => {
