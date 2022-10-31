@@ -1,0 +1,1 @@
+GET http://<HOST>/example.jpg?x-oss-process=image/resize,s_300/quality,q_80/auto-orient,0/interlace,1/format,jpg
