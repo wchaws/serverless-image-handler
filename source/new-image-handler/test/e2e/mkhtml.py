@@ -23,6 +23,48 @@ TEMPLATE = r'''
 </html>
 '''
 PATHS = [
+    # resize
+    'example.jpg?x-oss-process=image/resize,w_100',
+    'example.jpg?x-oss-process=image/resize,h_50',
+    'example.jpg?x-oss-process=image/resize,w_100,m_lfit',
+    'example.jpg?x-oss-process=image/resize,w_100,m_mfit',
+    'example.jpg?x-oss-process=image/resize,w_100,h_67,m_fill',
+    'example.jpg?x-oss-process=image/resize,w_100,m_pad',
+    'example.jpg?x-oss-process=image/resize,h_100,w_100,m_fixed',
+    'example.jpg?x-oss-process=image/resize,h_100,m_lfit',
+    'example.jpg?x-oss-process=image/resize,l_100',
+    'example.jpg?x-oss-process=image/resize,m_fixed,h_100,w_100',
+    'example.jpg?x-oss-process=image/resize,m_fill,h_100,w_100',
+    'example.jpg?x-oss-process=image/resize,m_pad,h_100,w_100,color_FF0000',
+    'example.jpg?x-oss-process=image/resize,p_50',
+    # circle
+    'example.jpg?x-oss-process=image/circle,r_100',
+    # crop
+    'example.jpg?x-oss-process=image/crop,x_100,y_50',
+    'example.jpg?x-oss-process=image/crop,x_100,y_50,w_100,h_100',
+    'example.jpg?x-oss-process=image/crop,x_10,y_10,w_200,h_200,g_se',
+    # indexcrop
+    'example.jpg?x-oss-process=image/indexcrop,x_100,i_0',
+    # rounded-corners
+    'example.jpg?x-oss-process=image/rounded-corners,r_30',
+    'example.jpg?x-oss-process=image/crop,w_100,h_100/rounded-corners,r_10/format,png',
+    # rotate
+    'example.jpg?x-oss-process=image/rotate,70',
+    # blur
+    'example.jpg?x-oss-process=image/blur,r_3,s_2',
+    # bright
+    'example.jpg?x-oss-process=image/bright,50',
+    'example.jpg?x-oss-process=image/bright,-50',
+    # sharpen
+    'example.jpg?x-oss-process=image/sharpen,100',
+    # contrast
+    'example.jpg?x-oss-process=image/contrast,-50',
+    'example.jpg?x-oss-process=image/contrast,50',
+    # quality
+    'example.jpg?x-oss-process=image/resize,w_100/quality,q_30',
+    'example.jpg?x-oss-process=image/resize,w_100/quality,Q_30',
+    # interlace
+    'example.jpg?x-oss-process=image/resize,w_200/interlace,1',
     # watermark
     'example.jpg?x-oss-process=image/watermark,text_SGVsbG8gV29ybGQ',
     'example.jpg?x-oss-process=image/watermark,text_SGVsbG8gV29ybGQ,g_nw',
@@ -62,7 +104,9 @@ def row(i, a, b):
     ])
 
 
-s = TEMPLATE.format(body='\n'.join([row(i, EP_A + p, EP_B + p) for i, p in enumerate(PATHS)]))
+s = TEMPLATE.format(body='\n'.join([
+    row(i, os.path.join(EP_A, p), os.path.join(EP_B, p)) for i, p in enumerate(PATHS)
+]))
 fname = 'index.html'
 
 with open(fname, 'w') as fp:
