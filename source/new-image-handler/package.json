@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.1130.0",
+    "html-entities": "^2.3.3",
     "http-errors": "^1.8.1",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
