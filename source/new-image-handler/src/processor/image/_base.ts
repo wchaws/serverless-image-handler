@@ -70,3 +70,8 @@ export class ActionMask implements IActionMask {
     });
   }
 }
+
+export function split1(s: string, sep: string = ',') {
+  const split = s.split(sep, 1);
+  return [split[0], s.substring(split[0].length + sep.length)];
+}
