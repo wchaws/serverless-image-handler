@@ -1,4 +1,4 @@
-import { ActionMask } from '../../../src/processor/image/_base';
+import { ActionMask, split1 } from '../../../src/processor/image/_base';
 
 test(`${ActionMask.name} all enabled by default`, () => {
   const actions = '1 1 1 1 1 1'.split(' ');
@@ -56,6 +56,14 @@ test(`${ActionMask.name} index out of range`, () => {
   expect(() => {
     s.enable(-1);
   }).toThrowError(/Index out of range/);
+});
+
+test(`${split1.name} split`, () => {
+  const s = 'text_SG9ZT0xBQkBvZmZjaWFsK0DvvIEjQO-8gSPvvIEj77-l77yBQO-_pe-8gUAj77-l77yB77-l77yBZQ==';
+  expect(split1(s, '_')).toEqual([
+    'text',
+    'SG9ZT0xBQkBvZmZjaWFsK0DvvIEjQO-8gSPvvIEj77-l77yBQO-_pe-8gUAj77-l77yB77-l77yBZQ==',
+  ]);
 });
 
 

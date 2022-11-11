@@ -2,7 +2,7 @@ import * as sharp from 'sharp';
 import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument, Features, IProcessContext } from '..';
 import * as is from '../../is';
-import { BaseImageAction } from './_base';
+import { BaseImageAction, split1 } from './_base';
 
 export interface WatermarkOpts extends IActionOpts {
   text: string;
@@ -69,7 +69,7 @@ export class WatermarkAction extends BaseImageAction {
       if ((this.name === param) || (!param)) {
         continue;
       }
-      const [k, v] = param.split('_');
+      const [k, v] = split1(param, '_');
       if (k === 'text') {
         if (v) {
           const buff = Buffer.from(v, 'base64');
