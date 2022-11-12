@@ -1,8 +1,10 @@
+import { encode } from 'html-entities';
 import * as sharp from 'sharp';
 import { IImageContext } from '.';
 import { IActionOpts, ReadOnly, InvalidArgument, Features, IProcessContext } from '..';
 import * as is from '../../is';
 import { BaseImageAction, split1 } from './_base';
+
 
 export interface WatermarkOpts extends IActionOpts {
   text: string;
@@ -72,12 +74,12 @@ export class WatermarkAction extends BaseImageAction {
       const [k, v] = split1(param, '_');
       if (k === 'text') {
         if (v) {
-          const buff = Buffer.from(v, 'base64');
+          const buff = Buffer.from(v, 'base64url');
           opt.text = buff.toString('utf-8');
         }
       } else if (k === 'image') {
         if (v) {
-          const buff = Buffer.from(v, 'base64');
+          const buff = Buffer.from(v, 'base64url');
           opt.image = buff.toString('utf-8');
         }
       } else if (k === 't') {
@@ -142,7 +144,7 @@ export class WatermarkAction extends BaseImageAction {
         opt.color = v;
       } else if (k === 'type') {
         if (v) {
-          const buff = Buffer.from(v, 'base64');
+          const buff = Buffer.from(v, 'base64url');
           opt.type = buff.toString('utf-8');
         }
       } else if (k === 'shadow') {
@@ -267,9 +269,10 @@ export class WatermarkAction extends BaseImageAction {
   }
 
   async textImg(opt: WatermarkOpts): Promise<sharp.Sharp> {
+    const safetext = encode(opt.text);
     const o = sharp({
       text: {
-        text: `<span size="${opt.size}pt" foreground="#${opt.color}">${opt.text}</span>`,
+        text: `<span size="${opt.size}pt" foreground="#${opt.color}">${safetext}</span>`,
         align: 'center',
         rgba: true,
         dpi: 72,
@@ -291,7 +294,7 @@ export class WatermarkAction extends BaseImageAction {
 
     const shadow = sharp({
       text: {
-        text: `<span size="${opt.size}pt" foreground="#${opt.halo}">${opt.text}</span>`,
+        text: `<span size="${opt.size}pt" foreground="#${opt.halo}">${safetext}</span>`,
         align: 'center',
         rgba: true,
         dpi: 72,
@@ -300,15 +303,7 @@ export class WatermarkAction extends BaseImageAction {
 
     const oBuffer = await o.png().toBuffer();
     const opacity = opt.shadow / 100;
-    const copy = await shadow.convolve({
-      width: 3,
-      height: 3,
-      kernel: [
-        0, 0, 0,
-        0, opacity, 0,
-        0, 0, 0,
-      ],
-    }).png().toBuffer();
+    const copy = await shadow.png().ensureAlpha(opacity).toBuffer();
 
     const u = await sharp({
       create: {
