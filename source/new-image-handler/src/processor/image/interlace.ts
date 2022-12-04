@@ -24,10 +24,15 @@ export class InterlaceAction extends BaseImageAction {
     return opt;
   }
 
+  public beforeProcess(ctx: IImageContext, _2: string[], index: number): void {
+    if ('gif' === ctx.metadata.format) {
+      ctx.mask.disable(index);
+    }
+  }
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
     const opt = this.validate(params);
-    const metadata = await ctx.image.metadata();
+    const metadata = ctx.metadata;
     if (('jpg' === metadata.format || 'jpeg' === metadata.format) && opt.interlace) {
       ctx.image.jpeg({ progressive: true });
     }
