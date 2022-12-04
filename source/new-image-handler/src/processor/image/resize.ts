@@ -122,6 +122,14 @@ export class ResizeAction extends BaseImageAction {
       }
     }
 
+    if ('gif' === metadata.format) {
+      const isEnlargingWidth = (opt.width && opt.width > metadata.width);
+      const isEnlargingHeight = (opt.height && metadata.pageHeight && (opt.height > metadata.pageHeight));
+      if (isEnlargingWidth || isEnlargingHeight) {
+        return;
+      }
+    }
+
     ctx.image.resize(null, null, opt);
   }
 }
