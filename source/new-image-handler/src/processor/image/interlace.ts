@@ -24,6 +24,11 @@ export class InterlaceAction extends BaseImageAction {
     return opt;
   }
 
+  public beforeProcess(ctx: IImageContext, _2: string[], index: number): void {
+    if ('gif' === ctx.metadata.format) {
+      ctx.mask.disable(index);
+    }
+  }
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
     const opt = this.validate(params);

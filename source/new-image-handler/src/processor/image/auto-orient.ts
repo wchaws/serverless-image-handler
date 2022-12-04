@@ -13,6 +13,12 @@ export class AutoOrientAction extends BaseImageAction {
     ctx.features[Features.AutoOrient] = false;
   }
 
+  public beforeProcess(ctx: IImageContext, _2: string[], index: number): void {
+    if ('gif' === ctx.metadata.format) {
+      ctx.mask.disable(index);
+    }
+  }
+
   public validate(params: string[]): ReadOnly<AutoOrientOpts> {
     const opt: AutoOrientOpts = { auto: false };
 

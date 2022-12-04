@@ -77,59 +77,67 @@ export class ResizeAction extends BaseImageAction {
     }
     return opt;
   }
-  public async process(ctx: IImageContext, params: string[]): Promise<void> {
-    const o = this.validate(params);
-    const opt: sharp.ResizeOptions = {
-      width: o.w,
-      height: o.h,
-      withoutEnlargement: o.limit,
-      background: o.color,
-    };
-    // Mode
-    if (o.m === Mode.LFIT) {
-      opt.fit = sharp.fit.inside;
-    } else if (o.m === Mode.MFIT) {
-      opt.fit = sharp.fit.outside;
-    } else if (o.m === Mode.FILL) {
-      opt.fit = sharp.fit.cover;
-    } else if (o.m === Mode.PAD) {
-      opt.fit = sharp.fit.contain;
-    } else if (o.m === Mode.FIXED) {
-      opt.fit = sharp.fit.fill;
-    }
+
+  public beforeProcess(ctx: IImageContext, params: string[], index: number): void {
     const metadata = ctx.metadata;
-    if (!(metadata.width && metadata.height)) {
-      throw new InvalidArgument('Can\'t read image\'s width and height');
-    }
-
-    if (o.p && (!o.w) && (!o.h)) {
-      opt.withoutEnlargement = false;
-      opt.width = Math.round(metadata.width * o.p * 0.01);
-    } else {
-      if (o.l) {
-        if (metadata.width > metadata.height) {
-          opt.width = o.l;
-        } else {
-          opt.height = o.l;
-        }
-      }
-      if (o.s) {
-        if (metadata.height < metadata.width) {
-          opt.height = o.s;
-        } else {
-          opt.width = o.s;
-        }
-      }
-    }
-
     if ('gif' === metadata.format) {
-      const isEnlargingWidth = (opt.width && opt.width > metadata.width);
+      const opt = buildSharpOpt(ctx, this.validate(params));
+      const isEnlargingWidth = (opt.width && metadata.width && opt.width > metadata.width);
       const isEnlargingHeight = (opt.height && metadata.pageHeight && (opt.height > metadata.pageHeight));
       if (isEnlargingWidth || isEnlargingHeight) {
-        return;
+        ctx.mask.disable(index);
       }
     }
+  }
 
+  public async process(ctx: IImageContext, params: string[]): Promise<void> {
+    const opt = buildSharpOpt(ctx, this.validate(params));
     ctx.image.resize(null, null, opt);
   }
+}
+
+function buildSharpOpt(ctx: IImageContext, o: ResizeOpts): sharp.ResizeOptions {
+  const opt: sharp.ResizeOptions = {
+    width: o.w,
+    height: o.h,
+    withoutEnlargement: o.limit,
+    background: o.color,
+  };
+  // Mode
+  if (o.m === Mode.LFIT) {
+    opt.fit = sharp.fit.inside;
+  } else if (o.m === Mode.MFIT) {
+    opt.fit = sharp.fit.outside;
+  } else if (o.m === Mode.FILL) {
+    opt.fit = sharp.fit.cover;
+  } else if (o.m === Mode.PAD) {
+    opt.fit = sharp.fit.contain;
+  } else if (o.m === Mode.FIXED) {
+    opt.fit = sharp.fit.fill;
+  }
+  const metadata = ctx.metadata;
+  if (!(metadata.width && metadata.height)) {
+    throw new InvalidArgument('Can\'t read image\'s width and height');
+  }
+
+  if (o.p && (!o.w) && (!o.h)) {
+    opt.withoutEnlargement = false;
+    opt.width = Math.round(metadata.width * o.p * 0.01);
+  } else {
+    if (o.l) {
+      if (metadata.width > metadata.height) {
+        opt.width = o.l;
+      } else {
+        opt.height = o.l;
+      }
+    }
+    if (o.s) {
+      if (metadata.height < metadata.width) {
+        opt.height = o.s;
+      } else {
+        opt.width = o.s;
+      }
+    }
+  }
+  return opt;
 }
