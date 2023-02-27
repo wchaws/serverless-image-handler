@@ -7,6 +7,7 @@ import * as ecs from '@aws-cdk/aws-ecs';
 import * as ecsPatterns from '@aws-cdk/aws-ecs-patterns';
 import * as iam from '@aws-cdk/aws-iam';
 import * as s3 from '@aws-cdk/aws-s3';
+import * as ssm from '@aws-cdk/aws-ssm';
 import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
 import { Aws, CfnOutput, Construct, Duration, Stack } from '@aws-cdk/core';
 
@@ -34,6 +35,7 @@ export class ECSImageHandler extends Construct {
 
     this.cfnOutput('StyleConfig', table.tableName, 'The DynamoDB table for processing style');
 
+    const configJsonParameter = this.getConfigJsonParameter();
     const vpc = getOrCreateVpc(this);
     const taskSubnets = getTaskSubnets(this, vpc);
     const albFargateService = new ecsPatterns.ApplicationLoadBalancedFargateService(this, 'Service', {
@@ -59,12 +61,15 @@ export class ECSImageHandler extends Construct {
           SRC_BUCKET: buckets[0].bucketName,
           STYLE_TABLE_NAME: table.tableName,
           SECRET_NAME: secret?.secretArn,
+          CONFIG_JSON_PARAMETER_NAME: configJsonParameter.parameterName,
         }, scope.node.tryGetContext('env')),
       },
     });
     albFargateService.targetGroup.configureHealthCheck({
       path: '/',
       healthyThresholdCount: 3,
+      timeout: Duration.seconds(10),
+      interval: Duration.seconds(60),
     });
     albFargateService.service.autoScaleTaskCount({
       minCapacity: 8,
@@ -76,6 +81,8 @@ export class ECSImageHandler extends Construct {
 
     const taskRole = albFargateService.taskDefinition.taskRole;
     table.grantReadData(taskRole);
+    configJsonParameter.grantRead(taskRole);
+
     for (const bkt of buckets) {
 
       taskRole.addToPrincipalPolicy(new iam.PolicyStatement({
@@ -155,6 +162,15 @@ export class ECSImageHandler extends Construct {
     const o = new CfnOutput(this, id, { value, description });
     o.overrideLogicalId(id);
     return o;
+  }
+
+  private getConfigJsonParameter() {
+    const name = this.node.tryGetContext('config_json_parameter_name');
+    if (name) {
+      return ssm.StringParameter.fromStringParameterName(this, 'ConfigJsonParameter', name);
+    } else {
+      throw new Error('Missing "config_json_parameter_name" in cdk.context.json');
+    }
   }
 }
 

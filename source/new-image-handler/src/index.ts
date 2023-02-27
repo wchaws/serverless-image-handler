@@ -1,5 +1,6 @@
 import * as S3 from 'aws-sdk/clients/s3';
 import * as SecretsManager from 'aws-sdk/clients/secretsmanager';
+import * as SSM from 'aws-sdk/clients/ssm';
 import * as HttpErrors from 'http-errors';
 import * as Koa from 'koa'; // http://koajs.cn
 import * as bodyParser from 'koa-bodyparser';
@@ -8,8 +9,12 @@ import * as Router from 'koa-router';
 import * as sharp from 'sharp';
 import config from './config';
 import debug from './debug';
-import { bufferStore, getProcessor, parseRequest } from './default';
+import { bufferStore, getProcessor, parseRequest, setMaxGifSizeMB, setMaxGifPages } from './default';
+import * as is from './is';
 import { IHttpHeaders, InvalidArgument } from './processor';
+
+const ssm = new SSM({ region: config.region });
+const smclient = new SecretsManager({ region: config.region });
 
 const DefaultBufferStore = bufferStore();
 const app = new Koa();
@@ -47,6 +52,12 @@ router.post('/images', async (ctx) => {
 
 router.get(['/', '/ping'], async (ctx) => {
   ctx.body = 'ok';
+
+  try {
+    await setMaxGifLimit();
+  } catch (err: any) {
+    console.error(err);
+  }
 });
 
 router.get(['/debug', '/_debug'], async (ctx) => {
@@ -162,11 +173,6 @@ function bypass() {
   throw new HttpErrors[403]('Please visit s3 directly');
 }
 
-// Create a Secrets Manager client
-const smclient = new SecretsManager({
-  region: config.region,
-});
-
 async function getSecretFromSecretsManager() {
   // Load the AWS SDK
   const secretName = config.secretName;
@@ -178,4 +184,21 @@ async function getHeaderFromSecretsManager() {
   const secretString = secret.SecretString!;
   const keypair = JSON.parse(secretString);
   return keypair['X-Client-Authorization'];
+}
+
+async function setMaxGifLimit() {
+  if (config.configJsonParameterName) {
+    const data = await ssm.getParameter({ Name: config.configJsonParameterName }).promise();
+    if (data.Parameter) {
+      const configJson = JSON.parse(data.Parameter.Value ?? '{}');
+      const maxGifSizeMB = configJson.max_gif_size_mb;
+      if (is.number(maxGifSizeMB)) {
+        setMaxGifSizeMB(maxGifSizeMB);
+      }
+      const maxGifPages = configJson.max_gif_pages;
+      if (is.number(maxGifPages)) {
+        setMaxGifPages(maxGifPages);
+      }
+    }
+  }
 }

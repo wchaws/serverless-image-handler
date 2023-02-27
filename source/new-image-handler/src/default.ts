@@ -14,6 +14,14 @@ const PROCESSOR_MAP: { [key: string]: IProcessor } = {
   [VideoProcessor.getInstance().name]: VideoProcessor.getInstance(),
 };
 
+export function setMaxGifSizeMB(value: number) {
+  ImageProcessor.getInstance().setMaxGifSizeMB(value);
+}
+
+export function setMaxGifPages(value: number) {
+  ImageProcessor.getInstance().setMaxGifPages(value);
+}
+
 export function getProcessor(name: string): IProcessor {
   const processor = PROCESSOR_MAP[name];
   if (!processor) {
