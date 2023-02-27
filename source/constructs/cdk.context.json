@@ -12,6 +12,7 @@
   "//enable_cloudfront": true,
   "secret_arn": "arn:aws:secretsmanager:<region>:<account-id-number>:secret:<secret-name>-<random-6-characters>",
   "stack_tags":{"key1":"value1", "key2":"value2"},
+  "config_json_parameter_name": "<parameter-name>",
   "ecs_desired_count": 10,
   "env": {
     "SHARP_QUEUE_LIMIT": "1"

@@ -42,10 +42,28 @@ export class ImageProcessor implements IProcessor {
   }
   private static _instance: ImageProcessor;
   private readonly _actions: { [name: string]: IAction } = {};
+  private _maxGifSizeMB: number = 5;
+  private _maxGifPages: number = 100;
 
   public readonly name: string = 'image';
 
   private constructor() { }
+
+  public setMaxGifSizeMB(value: number) {
+    if (value > 0) {
+      this._maxGifSizeMB = value;
+    } else {
+      console.warn(`Max gif size must > 0, but the value is ${value}`);
+    }
+  }
+
+  public setMaxGifPages(value: number) {
+    if (value > 0) {
+      this._maxGifPages = value;
+    } else {
+      console.warn(`Max gif pages must > 0, but the value is ${value}`);
+    }
+  }
 
   public async newContext(uri: string, actions: string[], bufferStore: IBufferStore): Promise<IImageContext> {
     const ctx: IProcessContext = {
@@ -94,6 +112,14 @@ export class ImageProcessor implements IProcessor {
     }
     if ('gif' === metadata.format) {
       image.gif({ effort: 1 }); // https://github.com/lovell/sharp/issues/3176
+
+      if (metadata.size && metadata.size > (this._maxGifSizeMB * MB)) {
+        console.log(`Gif processing skipped. The image size exceeds ${this._maxGifSizeMB} MB`);
+        ctx.mask.disableAll();
+      } else if (metadata.pages && metadata.pages > this._maxGifPages) {
+        console.log(`Gif processing skipped. The image pages exceeds ${this._maxGifPages}`);
+        ctx.mask.disableAll();
+      }
     }
     if ('png' === metadata.format && metadata.size && metadata.size > (5 * MB)) {
       image.png({ adaptiveFiltering: true });
@@ -135,7 +161,7 @@ export class ImageProcessor implements IProcessor {
       act.beforeProcess.bind(act)(ctx, params, index);
     });
     const enabledActions = ctx.mask.filterEnabledActions();
-    const nothing2do = (enabledActions.length === 1) && (this.name === enabledActions[0]);
+    const nothing2do = (enabledActions.length === 0) || ((enabledActions.length === 1) && (this.name === enabledActions[0]));
 
     if (nothing2do && (!ctx.features[Features.AutoWebp])) {
       const { buffer } = await ctx.bufferStore.get(ctx.uri);

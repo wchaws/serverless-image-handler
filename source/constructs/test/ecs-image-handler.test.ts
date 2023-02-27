@@ -7,6 +7,7 @@ test('Snapshot', () => {
     context: {
       buckets: ['bucket-0'],
       secret_arn: 'arn:aws:secretsmanager:us-east-9:123456789012:secret:test-aaabbb',
+      config_json_parameter_name: 'config_json_parameter_name',
     },
   });
   const stack = new ECSImageHandlerStack(app, 'test');
