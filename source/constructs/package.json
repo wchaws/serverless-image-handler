@@ -18,10 +18,10 @@
     "test:update": "export BUCKET_NAME=TEST SOLUTION_NAME=serverless-image-handler VERSION=TEST_VERSION && jest --updateSnapshot",
     "upgrade-dependencies": "export CI=0 && npm-check-updates --upgrade --target=minor --reject='projen' && yarn install --check-files && yarn upgrade",
     "eslint": "eslint --ext .ts,.tsx --no-error-on-unmatched-pattern bin lib test",
-    "synth": "cdk synth",
-    "deploy": "cdk deploy",
-    "destroy": "cdk destroy",
-    "diff": "cdk diff",
+    "synth": "npx cdk synth",
+    "deploy": "npx cdk deploy",
+    "destroy": "npx cdk destroy",
+    "diff": "npx cdk diff",
     "postinstall": "cd ../new-image-handler && yarn"
   },
   "devDependencies": {
