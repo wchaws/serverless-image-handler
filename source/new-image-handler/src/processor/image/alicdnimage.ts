@@ -21,7 +21,7 @@ export class AliCDNResizeAction extends BaseImageAction {
     const opt: AliCDNResizeOpts = {};
     console.log(`options are ${params}`);
     for (const param of params) {
-      if ('alicdnresize' === param || !param) {
+      if (this.name === param || !param) {
         continue;
       }
       const [k, v] = param.split('_');
