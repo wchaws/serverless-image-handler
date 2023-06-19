@@ -74,6 +74,26 @@ test('image/resize,w_50/crop,w_100,h_100/rounded-corners,r_100/format,png', asyn
   expect(info.channels).toBe(4);
 });
 
+test('example.jpg?x-oss-process=image/resize,w_50/threshold,10', async () => {
+  const ctx = await ImageProcessor.getInstance().newContext('example.jpg', 'image/resize,w_50/threshold,10'.split('/'), fixtureStore);
+  await ImageProcessor.getInstance().process(ctx);
+  const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
+
+  expect(info.width).toBe(50);
+  expect(info.height).toBe(33);
+  expect(info.channels).toBe(3);
+});
+
+test('example.jpg?x-oss-process=image/resize,w_50/threshold,23000', async () => {
+  const ctx = await ImageProcessor.getInstance().newContext('example.jpg', 'image/resize,w_50/threshold,23000'.split('/'), fixtureStore);
+  await ImageProcessor.getInstance().process(ctx);
+  const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
+
+  expect(info.width).toBe(400);
+  expect(info.height).toBe(267);
+  expect(info.channels).toBe(3);
+});
+
 test('image/resize,w_20/indexcrop,x_50,i_0/', async () => {
   const ctx = await ImageProcessor.getInstance().newContext('example.jpg', 'image/resize,w_20/indexcrop,x_50,i_0/'.split('/'), fixtureStore);
   await ImageProcessor.getInstance().process(ctx);

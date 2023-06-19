@@ -20,6 +20,7 @@ import { RotateAction } from './rotate';
 import { RoundedCornersAction } from './rounded-corners';
 import { SharpenAction } from './sharpen';
 import { StripMetadataAction } from './strip-metadata';
+import { ThresholdAction } from './threshold';
 import { WatermarkAction } from './watermark';
 
 export interface IImageInfo {
@@ -226,6 +227,7 @@ ImageProcessor.getInstance().register(
   new InfoAction(),
   new CgifAction(),
   new StripMetadataAction(),
+  new ThresholdAction(),
 );
 
 
