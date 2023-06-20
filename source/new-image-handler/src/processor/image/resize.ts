@@ -97,11 +97,12 @@ export class ResizeAction extends BaseImageAction {
     index: number,
   ): void {
     const metadata = ctx.metadata;
+    let resizeopt = this.validate(params);
+    if ((resizeopt.fw && !resizeopt.fh) || (!resizeopt.fw && resizeopt.fh)) {
+      ctx.mask.disable(index);
+    }
     if ('gif' === metadata.format) {
-      let resizeopt = this.validate(params);
-      if ((resizeopt.fw && !resizeopt.fh) || (!resizeopt.fw && resizeopt.fh)) {
-        ctx.mask.disable(index);
-      }
+      resizeopt = this.validate(params);
       const opt = buildSharpOpt(ctx, resizeopt);
       const isEnlargingWidth =
         opt.width && metadata.width && opt.width > metadata.width;
@@ -114,9 +115,9 @@ export class ResizeAction extends BaseImageAction {
   }
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
-    let aliopt = this.validate(params);
-    if (aliopt.fw && aliopt.fh) {
-      ctx.image.resize(aliopt.fw, aliopt.fh);
+    let cdnopt = this.validate(params);
+    if (cdnopt.fw && cdnopt.fh) {
+      ctx.image.resize(cdnopt.fw, cdnopt.fh);
     } else {
       const opt = buildSharpOpt(ctx, this.validate(params));
       ctx.image.resize(null, null, opt);

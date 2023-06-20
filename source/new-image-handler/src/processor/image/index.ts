@@ -197,7 +197,7 @@ export class ImageProcessor implements IProcessor {
     }
 
     ctx.mask.forEachAction((action, _, index) => {
-      console.log(`the handle action is ${action} and ${ctx.needHandle}`);
+      console.log(`the handle action is ${action}`);
       if (this.name === action || !action) {
         return;
       }
@@ -213,7 +213,6 @@ export class ImageProcessor implements IProcessor {
     const enabledActions = ctx.mask.filterEnabledActions();
     const nothing2do =
       enabledActions.length === 0 ||
-      !ctx.needHandle ||
       (enabledActions.length === 1 && this.name === enabledActions[0]);
 
     if (nothing2do && !ctx.features[Features.AutoWebp]) {
