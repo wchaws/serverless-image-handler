@@ -21,6 +21,8 @@ export interface ResizeOpts extends IActionOpts {
   limit?: boolean;
   color?: string;
   p?: number;
+  fw?: number;
+  fh?: number;
 }
 
 export class ResizeAction extends BaseImageAction {
@@ -45,6 +47,10 @@ export class ResizeAction extends BaseImageAction {
         opt.l = Number.parseInt(v, 10);
       } else if (k === 's') {
         opt.s = Number.parseInt(v, 10);
+      } else if (k === 'fw') {
+        opt.fw = Number.parseInt(v, 10);
+      } else if (k === 'fh') {
+        opt.fh = Number.parseInt(v, 10);
       } else if (k === 'm') {
         if (
           v &&
@@ -92,7 +98,11 @@ export class ResizeAction extends BaseImageAction {
   ): void {
     const metadata = ctx.metadata;
     if ('gif' === metadata.format) {
-      const opt = buildSharpOpt(ctx, this.validate(params));
+      let resizeopt = this.validate(params);
+      if ((resizeopt.fw && !resizeopt.fh) || (!resizeopt.fw && resizeopt.fh)) {
+        ctx.mask.disable(index);
+      }
+      const opt = buildSharpOpt(ctx, resizeopt);
       const isEnlargingWidth =
         opt.width && metadata.width && opt.width > metadata.width;
       const isEnlargingHeight =
@@ -104,8 +114,13 @@ export class ResizeAction extends BaseImageAction {
   }
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
-    const opt = buildSharpOpt(ctx, this.validate(params));
-    ctx.image.resize(null, null, opt);
+    let aliopt = this.validate(params);
+    if (aliopt.fw && aliopt.fh) {
+      ctx.image.resize(aliopt.fw, aliopt.fh);
+    } else {
+      const opt = buildSharpOpt(ctx, this.validate(params));
+      ctx.image.resize(null, null, opt);
+    }
   }
 }
 

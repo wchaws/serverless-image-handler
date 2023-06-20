@@ -75,8 +75,7 @@ export function parseRequest(
       // eslint-disable-next-line dot-notation
       const image_process = (query['image_process'] as string) ?? '';
       let actionparam = image_process.split('/').filter((x) => x);
-      actionparam.unshift('alicdnimage');
-      actionparam[1] = actionparam[1].replace(/resize/g, 'alicdnresize');
+      actionparam.unshift('image');
       return {
         uri: uri,
         actions: actionparam,

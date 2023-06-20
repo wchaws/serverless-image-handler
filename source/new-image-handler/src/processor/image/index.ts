@@ -9,7 +9,6 @@ import {
 } from '../../processor';
 import { IBufferStore } from '../../store';
 import { ActionMask } from './_base';
-import { AliCDNResizeAction } from './alicdnimage';
 import { AutoOrientAction } from './auto-orient';
 import { BlurAction } from './blur';
 import { BrightAction } from './bright';
@@ -29,6 +28,7 @@ import { SharpenAction } from './sharpen';
 import { StripMetadataAction } from './strip-metadata';
 import { ThresholdAction } from './threshold';
 import { WatermarkAction } from './watermark';
+import { QualityAction } from './quality';
 
 export interface IImageInfo {
   [key: string]: { value: string };
@@ -97,7 +97,7 @@ export class ImageProcessor implements IProcessor {
     //   : (isAliCdnImage = false);
     for (let i = 0; i < actions.length; i++) {
       const action = actions[i];
-      if (this.name === action || !action || action === 'alicdnimage') {
+      if (this.name === action || !action) {
         continue;
       }
       // "<action-name>,<param-1>,<param-2>,..."
@@ -109,17 +109,8 @@ export class ImageProcessor implements IProcessor {
       //  : (actionname = params[0]);
       actionname = params[0];
       const act = this.action(actionname);
-      if (actionname !== 'threshold' && !act) {
+      if (!act) {
         throw new InvalidArgument(`Unkown action: "${actionname}"`);
-      }
-      if (actionname === 'threshold') {
-        thval = parseInt(params[1], 10);
-        if (isNaN(thval)) {
-          throw new InvalidArgument('Threshold must be a number');
-        }
-      }
-      if (actionname === 'threshold') {
-        continue;
       } else {
         act.beforeNewContext.bind(act)(ctx, params, i);
       }
@@ -207,15 +198,12 @@ export class ImageProcessor implements IProcessor {
 
     ctx.mask.forEachAction((action, _, index) => {
       console.log(`the handle action is ${action} and ${ctx.needHandle}`);
-      if (this.name === action || !action || action === 'alicdnimage') {
+      if (this.name === action || !action) {
         return;
       }
       // "<action-name>,<param-1>,<param-2>,..."
       const params = action.split(',');
       const name = params[0];
-      if (name === 'threshold') {
-        return;
-      }
       const act = this.action(name);
       if (!act) {
         throw new InvalidArgument(`Unkown action: "${name}"`);
@@ -234,16 +222,13 @@ export class ImageProcessor implements IProcessor {
     }
 
     for (const action of enabledActions) {
-      if (this.name === action || !action || action === 'alicdnimage') {
+      if (this.name === action || !action) {
         continue;
       }
       // "<action-name>,<param-1>,<param-2>,..."
       const params = action.split(',');
       console.log(`params is ${params}`);
       const name = params[0];
-      if (name === 'threshold') {
-        continue;
-      }
       const act = this.action(name);
       if (!act) {
         throw new InvalidArgument(`Unkown action: "${name}"`);
@@ -283,7 +268,6 @@ export class ImageProcessor implements IProcessor {
 // Register actions
 ImageProcessor.getInstance().register(
   new ResizeAction(),
-  new AliCDNResizeAction(),
   new BrightAction(),
   new FormatAction(),
   new BlurAction(),
@@ -301,5 +285,6 @@ ImageProcessor.getInstance().register(
   new InfoAction(),
   new CgifAction(),
   new StripMetadataAction(),
+  new QualityAction(),
   new ThresholdAction(),
 );

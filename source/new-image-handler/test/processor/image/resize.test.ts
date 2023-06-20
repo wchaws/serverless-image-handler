@@ -3,7 +3,6 @@ import { ResizeAction } from '../../../src/processor/image/resize';
 import { SharpBufferStore } from '../../../src/store';
 import { mkctx } from './utils';
 
-
 test('resize,l_100', async () => {
   const ctx = await mkctx('example.jpg');
 
@@ -99,14 +98,16 @@ test('resize action validate', () => {
 });
 
 test('resize action simple', async () => {
-  const bs = new SharpBufferStore(sharp({
-    create: {
-      width: 50,
-      height: 50,
-      channels: 3,
-      background: 'red',
-    },
-  }).png());
+  const bs = new SharpBufferStore(
+    sharp({
+      create: {
+        width: 50,
+        height: 50,
+        channels: 3,
+        background: 'red',
+      },
+    }).png(),
+  );
   const ctx = await mkctx('', undefined, bs);
   const action = new ResizeAction();
   await action.process(ctx, 'resize,w_10,h_10'.split(','));
@@ -117,14 +118,16 @@ test('resize action simple', async () => {
 });
 
 test('resize action m_lfit', async () => {
-  const bs = new SharpBufferStore(sharp({
-    create: {
-      width: 200,
-      height: 100,
-      channels: 3,
-      background: 'gray',
-    },
-  }).png());
+  const bs = new SharpBufferStore(
+    sharp({
+      create: {
+        width: 200,
+        height: 100,
+        channels: 3,
+        background: 'gray',
+      },
+    }).png(),
+  );
   const ctx = await mkctx('', undefined, bs);
   const action = new ResizeAction();
   await action.process(ctx, 'resize,w_150,h_80,m_lfit'.split(','));
@@ -135,14 +138,16 @@ test('resize action m_lfit', async () => {
 });
 
 test('resize action m_mfit', async () => {
-  const bs = new SharpBufferStore(sharp({
-    create: {
-      width: 200,
-      height: 100,
-      channels: 3,
-      background: 'gray',
-    },
-  }).png());
+  const bs = new SharpBufferStore(
+    sharp({
+      create: {
+        width: 200,
+        height: 100,
+        channels: 3,
+        background: 'gray',
+      },
+    }).png(),
+  );
   const ctx = await mkctx('', undefined, bs);
   const action = new ResizeAction();
   await action.process(ctx, 'resize,w_150,h_80,m_mfit'.split(','));
@@ -153,14 +158,16 @@ test('resize action m_mfit', async () => {
 });
 
 test('resize action m_fill', async () => {
-  const bs = new SharpBufferStore(sharp({
-    create: {
-      width: 200,
-      height: 100,
-      channels: 3,
-      background: 'gray',
-    },
-  }).png());
+  const bs = new SharpBufferStore(
+    sharp({
+      create: {
+        width: 200,
+        height: 100,
+        channels: 3,
+        background: 'gray',
+      },
+    }).png(),
+  );
   const ctx = await mkctx('', undefined, bs);
   const action = new ResizeAction();
   await action.process(ctx, 'resize,w_150,h_80,m_fill'.split(','));
@@ -171,14 +178,16 @@ test('resize action m_fill', async () => {
 });
 
 test('resize action m_pad', async () => {
-  const bs = new SharpBufferStore(sharp({
-    create: {
-      width: 200,
-      height: 100,
-      channels: 3,
-      background: 'gray',
-    },
-  }).png());
+  const bs = new SharpBufferStore(
+    sharp({
+      create: {
+        width: 200,
+        height: 100,
+        channels: 3,
+        background: 'gray',
+      },
+    }).png(),
+  );
   const ctx = await mkctx('', undefined, bs);
   const action = new ResizeAction();
   await action.process(ctx, 'resize,w_150,h_80,m_pad'.split(','));
@@ -189,14 +198,16 @@ test('resize action m_pad', async () => {
 });
 
 test('resize action p_100', async () => {
-  const bs = new SharpBufferStore(sharp({
-    create: {
-      width: 100,
-      height: 100,
-      channels: 3,
-      background: 'gray',
-    },
-  }).png());
+  const bs = new SharpBufferStore(
+    sharp({
+      create: {
+        width: 100,
+        height: 100,
+        channels: 3,
+        background: 'gray',
+      },
+    }).png(),
+  );
   const ctx = await mkctx('', undefined, bs);
   const action = new ResizeAction();
   await action.process(ctx, 'resize,p_100'.split(','));
@@ -207,14 +218,16 @@ test('resize action p_100', async () => {
 });
 
 test('resize action p_50', async () => {
-  const bs = new SharpBufferStore(sharp({
-    create: {
-      width: 100,
-      height: 100,
-      channels: 3,
-      background: 'gray',
-    },
-  }).png());
+  const bs = new SharpBufferStore(
+    sharp({
+      create: {
+        width: 100,
+        height: 100,
+        channels: 3,
+        background: 'gray',
+      },
+    }).png(),
+  );
   const ctx = await mkctx('', undefined, bs);
   const action = new ResizeAction();
   await action.process(ctx, 'resize,p_50'.split(','));
@@ -225,14 +238,16 @@ test('resize action p_50', async () => {
 });
 
 test('resize action p_1000', async () => {
-  const bs = new SharpBufferStore(sharp({
-    create: {
-      width: 100,
-      height: 100,
-      channels: 3,
-      background: 'gray',
-    },
-  }).png());
+  const bs = new SharpBufferStore(
+    sharp({
+      create: {
+        width: 100,
+        height: 100,
+        channels: 3,
+        background: 'gray',
+      },
+    }).png(),
+  );
   const ctx = await mkctx('', undefined, bs);
   const action = new ResizeAction();
   await action.process(ctx, 'resize,p_1000'.split(','));
@@ -243,14 +258,16 @@ test('resize action p_1000', async () => {
 });
 
 test('resize action disable limit', async () => {
-  const bs = new SharpBufferStore(sharp({
-    create: {
-      width: 20,
-      height: 20,
-      channels: 3,
-      background: 'gray',
-    },
-  }).png());
+  const bs = new SharpBufferStore(
+    sharp({
+      create: {
+        width: 20,
+        height: 20,
+        channels: 3,
+        background: 'gray',
+      },
+    }).png(),
+  );
   const ctx = await mkctx('', undefined, bs);
   const action = new ResizeAction();
   await action.process(ctx, 'resize,w_100,h_100,limit_0'.split(','));
@@ -261,14 +278,16 @@ test('resize action disable limit', async () => {
 });
 
 test('resize action enable limit', async () => {
-  const bs = new SharpBufferStore(sharp({
-    create: {
-      width: 20,
-      height: 20,
-      channels: 3,
-      background: 'gray',
-    },
-  }).png());
+  const bs = new SharpBufferStore(
+    sharp({
+      create: {
+        width: 20,
+        height: 20,
+        channels: 3,
+        background: 'gray',
+      },
+    }).png(),
+  );
   const ctx = await mkctx('', undefined, bs);
   const action = new ResizeAction();
   await action.process(ctx, 'resize,w_100,h_100,limit_1'.split(','));
@@ -279,31 +298,58 @@ test('resize action enable limit', async () => {
 });
 
 test('resize action bad limit', async () => {
-  const bs = new SharpBufferStore(sharp({
-    create: {
-      width: 20,
-      height: 20,
-      channels: 3,
-      background: 'gray',
-    },
-  }).png());
+  const bs = new SharpBufferStore(
+    sharp({
+      create: {
+        width: 20,
+        height: 20,
+        channels: 3,
+        background: 'gray',
+      },
+    }).png(),
+  );
   const ctx = await mkctx('', undefined, bs);
   const action = new ResizeAction();
 
-  void expect(action.process(ctx, 'resize,w_100,h_100,limit_3'.split(','))).rejects.toThrowError(/Unkown limit/);
+  void expect(
+    action.process(ctx, 'resize,w_100,h_100,limit_3'.split(',')),
+  ).rejects.toThrowError(/Unkown limit/);
 });
 
 // NOTE: Seems that Sharp.js will use origin image's aspect ratio instead of
 // intermediate image's aspect ratio
 test.skip('resize action m_fixed m_lfit', async () => {
-  const bs = new SharpBufferStore(sharp({
-    create: {
-      width: 400,
-      height: 300,
-      channels: 3,
-      background: 'gray',
-    },
-  }).png());
+  const bs = new SharpBufferStore(
+    sharp({
+      create: {
+        width: 400,
+        height: 300,
+        channels: 3,
+        background: 'gray',
+      },
+    }).png(),
+  );
+  const ctx = await mkctx('', undefined, bs);
+  const action = new ResizeAction();
+  await action.process(ctx, 'resize,w_200,h_100,m_fixed'.split(','));
+  await action.process(ctx, 'resize,w_150,h_100,m_lfit'.split(','));
+  const { info } = await ctx.image.toBuffer({ resolveWithObject: true });
+
+  expect(info.width).toBe(150);
+  expect(info.height).toBe(75);
+});
+
+test.skip('resize action fw fh', async () => {
+  const bs = new SharpBufferStore(
+    sharp({
+      create: {
+        width: 400,
+        height: 300,
+        channels: 3,
+        background: 'gray',
+      },
+    }).png(),
+  );
   const ctx = await mkctx('', undefined, bs);
   const action = new ResizeAction();
   await action.process(ctx, 'resize,w_200,h_100,m_fixed'.split(','));
