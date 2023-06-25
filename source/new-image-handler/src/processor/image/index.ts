@@ -21,6 +21,7 @@ import { GreyAction } from './grey';
 import { IndexCropAction } from './indexcrop';
 import { InfoAction } from './info';
 import { InterlaceAction } from './interlace';
+import { QualityAction } from './quality';
 import { ResizeAction } from './resize';
 import { RotateAction } from './rotate';
 import { RoundedCornersAction } from './rounded-corners';
@@ -28,7 +29,6 @@ import { SharpenAction } from './sharpen';
 import { StripMetadataAction } from './strip-metadata';
 import { ThresholdAction } from './threshold';
 import { WatermarkAction } from './watermark';
-import { QualityAction } from './quality';
 
 export interface IImageInfo {
   [key: string]: { value: string };
@@ -90,11 +90,7 @@ export class ImageProcessor implements IProcessor {
       },
       headers: {},
     };
-    // let isAliCdnImage: boolean = false;
-    let thval: number = 0;
-    // actions.includes('alicdnimage')
-    //   ? (isAliCdnImage = true)
-    //   : (isAliCdnImage = false);
+
     for (let i = 0; i < actions.length; i++) {
       const action = actions[i];
       if (this.name === action || !action) {
@@ -102,11 +98,7 @@ export class ImageProcessor implements IProcessor {
       }
       // "<action-name>,<param-1>,<param-2>,..."
       const params = action.split(',');
-      console.log(`initial params is ${params}`);
       let actionname: string = '';
-      // isAliCdnImage && params[0] === 'resize'
-      //  ? (actionname = 'alicdnresize')
-      //  : (actionname = params[0]);
       actionname = params[0];
       const act = this.action(actionname);
       if (!act) {
@@ -162,14 +154,6 @@ export class ImageProcessor implements IProcessor {
     if ('png' === metadata.format && metadata.size && metadata.size > 5 * MB) {
       image.png({ adaptiveFiltering: true });
     }
-    let isHandle: boolean = true;
-    if (thval > 0 && metadata.size && metadata.size < thval) {
-      console.log(
-        `Image processing skipped. The image size less than the thredshold ${thval}`,
-      );
-      isHandle = false;
-      ctx.mask.disableAll();
-    }
 
     return {
       uri: ctx.uri,
@@ -180,7 +164,6 @@ export class ImageProcessor implements IProcessor {
       headers: Object.assign(ctx.headers, headers),
       metadata,
       image,
-      needHandle: isHandle,
     };
   }
 

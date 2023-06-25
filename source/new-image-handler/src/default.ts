@@ -17,7 +17,6 @@ import * as style from './style.json';
 
 const PROCESSOR_MAP: { [key: string]: IProcessor } = {
   [ImageProcessor.getInstance().name]: ImageProcessor.getInstance(),
-  ['alicdnimage']: ImageProcessor.getInstance(),
   [StyleProcessor.getInstance().name]: StyleProcessor.getInstance(kvstore()),
   [VideoProcessor.getInstance().name]: VideoProcessor.getInstance(),
 };
