@@ -9,7 +9,7 @@ export const enum Mode {
   MFIT = 'mfit',
   FILL = 'fill',
   PAD = 'pad',
-  FIXED = 'fixed'
+  FIXED = 'fixed',
 }
 
 export interface ResizeOpts extends IActionOpts {
@@ -21,6 +21,8 @@ export interface ResizeOpts extends IActionOpts {
   limit?: boolean;
   color?: string;
   p?: number;
+  fw?: number;
+  fh?: number;
 }
 
 export class ResizeAction extends BaseImageAction {
@@ -33,7 +35,7 @@ export class ResizeAction extends BaseImageAction {
       color: '#FFFFFF',
     };
     for (const param of params) {
-      if ((this.name === param) || (!param)) {
+      if (this.name === param || !param) {
         continue;
       }
       const [k, v] = param.split('_');
@@ -45,15 +47,26 @@ export class ResizeAction extends BaseImageAction {
         opt.l = Number.parseInt(v, 10);
       } else if (k === 's') {
         opt.s = Number.parseInt(v, 10);
+      } else if (k === 'fw') {
+        opt.fw = Number.parseInt(v, 10);
+      } else if (k === 'fh') {
+        opt.fh = Number.parseInt(v, 10);
       } else if (k === 'm') {
-        if (v && ((v === Mode.LFIT) || (v === Mode.MFIT) || (v === Mode.FILL) || (v === Mode.PAD) || (v === Mode.FIXED))) {
+        if (
+          v &&
+          (v === Mode.LFIT ||
+            v === Mode.MFIT ||
+            v === Mode.FILL ||
+            v === Mode.PAD ||
+            v === Mode.FIXED)
+        ) {
           opt.m = v;
         } else {
           throw new InvalidArgument(`Unkown m: "${v}"`);
         }
       } else if (k === 'limit') {
         if (v && (v === '0' || v === '1')) {
-          opt.limit = (v === '1');
+          opt.limit = v === '1';
         } else {
           throw new InvalidArgument(`Unkown limit: "${v}"`);
         }
@@ -78,12 +91,23 @@ export class ResizeAction extends BaseImageAction {
     return opt;
   }
 
-  public beforeProcess(ctx: IImageContext, params: string[], index: number): void {
+  public beforeProcess(
+    ctx: IImageContext,
+    params: string[],
+    index: number,
+  ): void {
     const metadata = ctx.metadata;
+    let resizeopt = this.validate(params);
+    if ((resizeopt.fw && !resizeopt.fh) || (!resizeopt.fw && resizeopt.fh)) {
+      ctx.mask.disable(index);
+    }
     if ('gif' === metadata.format) {
-      const opt = buildSharpOpt(ctx, this.validate(params));
-      const isEnlargingWidth = (opt.width && metadata.width && opt.width > metadata.width);
-      const isEnlargingHeight = (opt.height && metadata.pageHeight && (opt.height > metadata.pageHeight));
+      resizeopt = this.validate(params);
+      const opt = buildSharpOpt(ctx, resizeopt);
+      const isEnlargingWidth =
+        opt.width && metadata.width && opt.width > metadata.width;
+      const isEnlargingHeight =
+        opt.height && metadata.pageHeight && opt.height > metadata.pageHeight;
       if (isEnlargingWidth || isEnlargingHeight) {
         ctx.mask.disable(index);
       }
@@ -91,8 +115,13 @@ export class ResizeAction extends BaseImageAction {
   }
 
   public async process(ctx: IImageContext, params: string[]): Promise<void> {
-    const opt = buildSharpOpt(ctx, this.validate(params));
-    ctx.image.resize(null, null, opt);
+    let cdnopt = this.validate(params);
+    if (cdnopt.fw && cdnopt.fh) {
+      ctx.image.resize(cdnopt.fw, cdnopt.fh);
+    } else {
+      const opt = buildSharpOpt(ctx, this.validate(params));
+      ctx.image.resize(null, null, opt);
+    }
   }
 }
 
@@ -117,10 +146,10 @@ function buildSharpOpt(ctx: IImageContext, o: ResizeOpts): sharp.ResizeOptions {
   }
   const metadata = ctx.metadata;
   if (!(metadata.width && metadata.height)) {
-    throw new InvalidArgument('Can\'t read image\'s width and height');
+    throw new InvalidArgument("Can't read image's width and height");
   }
 
-  if (o.p && (!o.w) && (!o.h)) {
+  if (o.p && !o.w && !o.h) {
     opt.withoutEnlargement = false;
     opt.width = Math.round(metadata.width * o.p * 0.01);
   } else {
