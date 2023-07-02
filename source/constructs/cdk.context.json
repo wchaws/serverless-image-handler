@@ -15,6 +15,9 @@
   "config_json_parameter_name": "<parameter-name>",
   "ecs_desired_count": 10,
   "env": {
-    "SHARP_QUEUE_LIMIT": "1"
+    "SHARP_QUEUE_LIMIT": "1",
+    "CACHE_TTL_SEC": "300",
+    "CACHE_MAX_ITEMS": "10000",
+    "CACHE_MAX_SIZE_MB": "1024"
   }
 }

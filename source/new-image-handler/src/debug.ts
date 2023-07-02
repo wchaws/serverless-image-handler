@@ -1,4 +1,5 @@
 import * as os from 'os';
+import { LRUCache } from 'lru-cache';
 import * as sharp from 'sharp';
 
 export interface ISharpInfo {
@@ -44,12 +45,17 @@ export interface IDebugInfo {
   };
   memoryStats: string;
   memoryUsage: NodeJS.MemoryUsage;
+  cache?: {
+    keys: number;
+    sizeMB: number;
+    ttlSec: number;
+  };
   resourceUsage: NodeJS.ResourceUsage;
   sharp: ISharpInfo;
 }
 
-export default function debug(): IDebugInfo {
-  return {
+export default function debug(cache?: LRUCache<string, CacheObject>): IDebugInfo {
+  const ret: IDebugInfo = {
     os: {
       arch: os.arch(),
       cpus: os.cpus().length,
@@ -66,9 +72,17 @@ export default function debug(): IDebugInfo {
       versions: sharp.versions,
     },
   };
+  if (cache) {
+    ret.cache = {
+      keys: cache.size,
+      sizeMB: Math.round(cache.calculatedSize / 1048576 * 100) / 100,
+      ttlSec: Math.round(cache.ttl / 1000),
+    };
+  }
+  return ret;
 }
 
-function fmtmb (v: number) {
-  return `${Math.round(v / 1024 / 1024 * 100) / 100} MB`;
+function fmtmb(v: number) {
+  return `${Math.round(v / 1048576 * 100) / 100} MB`;
 }
 
