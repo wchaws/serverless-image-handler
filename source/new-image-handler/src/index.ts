@@ -15,7 +15,7 @@ import { bufferStore, getProcessor, parseRequest, setMaxGifSizeMB, setMaxGifPage
 import * as is from './is';
 import { IHttpHeaders, InvalidArgument } from './processor';
 
-const MB = 1024 * 1024;
+const MB = 1048576;
 
 const ssm = new SSM({ region: config.region });
 const smclient = new SecretsManager({ region: config.region });

@@ -7,8 +7,8 @@ import * as ecs from '@aws-cdk/aws-ecs';
 import * as ecsPatterns from '@aws-cdk/aws-ecs-patterns';
 import * as iam from '@aws-cdk/aws-iam';
 import * as s3 from '@aws-cdk/aws-s3';
-import * as ssm from '@aws-cdk/aws-ssm';
 import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
+import * as ssm from '@aws-cdk/aws-ssm';
 import { Aws, CfnOutput, Construct, Duration, Stack } from '@aws-cdk/core';
 
 const GB = 1024;
@@ -184,14 +184,9 @@ function getOrCreateVpc(scope: Construct): ec2.IVpc {
 }
 
 function getTaskSubnets(scope: Construct, vpc: ec2.IVpc): ec2.ISubnet[] {
-  const subnetIds: string[] = scope.node.tryGetContext('subnet_ids');
-  // TODO: use filter subnets from vpc
-  let subnets: ec2.ISubnet[] = [];
-  if (subnetIds) {
-    subnetIds.forEach((subnetId, index) => {
-      subnets.push(ec2.Subnet.fromSubnetId(scope, 'subnet' + index, subnetId));
-    });
-    return subnets;
+  const subnetIds: string[] = scope.node.tryGetContext('subnet_ids') || [];
+  if (subnetIds.length) {
+    return subnetIds.map((subnetId, index) => ec2.Subnet.fromSubnetId(scope, 'subnet' + index, subnetId));
   } else {
     return vpc.privateSubnets;
   }
