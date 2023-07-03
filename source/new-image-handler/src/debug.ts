@@ -1,4 +1,5 @@
 import * as os from 'os';
+import { LRUCache } from 'lru-cache';
 import * as sharp from 'sharp';
 
 export interface ISharpInfo {
@@ -42,22 +43,39 @@ export interface IDebugInfo {
     cpus: number;
     loadavg: number[];
   };
-  memoryStats: string;
-  memoryUsage: NodeJS.MemoryUsage;
-  resourceUsage: NodeJS.ResourceUsage;
+  memory: {
+    stats: string;
+    free: number;
+    total: number;
+    usage: NodeJS.MemoryUsage;
+  };
+  resource: {
+    usage: NodeJS.ResourceUsage;
+  };
+  lruCache?: {
+    keys: number;
+    sizeMB: number;
+    ttlSec: number;
+  };
   sharp: ISharpInfo;
 }
 
-export default function debug(): IDebugInfo {
-  return {
+export default function debug(lruCache?: LRUCache<string, CacheObject>): IDebugInfo {
+  const ret: IDebugInfo = {
     os: {
       arch: os.arch(),
       cpus: os.cpus().length,
       loadavg: os.loadavg(),
     },
-    memoryStats: `free: ${fmtmb(os.freemem())}, total: ${fmtmb(os.totalmem())}, usage ${Math.round(100 * (os.totalmem() - os.freemem()) / os.totalmem()) / 100} %`,
-    memoryUsage: process.memoryUsage(),
-    resourceUsage: process.resourceUsage(),
+    memory: {
+      stats: `free: ${formatBytes(os.freemem())}, total: ${formatBytes(os.totalmem())}, usage ${((os.totalmem() - os.freemem()) / os.totalmem() * 100).toFixed(2)} %`,
+      free: os.freemem(),
+      total: os.totalmem(),
+      usage: process.memoryUsage(),
+    },
+    resource: {
+      usage: process.resourceUsage(),
+    },
     sharp: {
       cache: sharp.cache(),
       simd: sharp.simd(),
@@ -66,9 +84,25 @@ export default function debug(): IDebugInfo {
       versions: sharp.versions,
     },
   };
+  if (lruCache) {
+    ret.lruCache = {
+      keys: lruCache.size,
+      sizeMB: Math.round(b2mb(lruCache.calculatedSize) * 100) / 100,
+      ttlSec: Math.round(lruCache.ttl / 1000),
+    };
+  }
+  return ret;
 }
 
-function fmtmb (v: number) {
-  return `${Math.round(v / 1024 / 1024 * 100) / 100} MB`;
+function b2mb(v: number) {
+  return v / 1048576;
 }
 
+function formatBytes(bytes: number) {
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0;
+  for (; bytes >= 1024 && i < units.length - 1; i++) {
+    bytes /= 1024;
+  }
+  return `${bytes.toFixed(2)} ${units[i]}`;
+};

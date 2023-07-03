@@ -4,8 +4,10 @@ import * as SSM from 'aws-sdk/clients/ssm';
 import * as HttpErrors from 'http-errors';
 import * as Koa from 'koa'; // http://koajs.cn
 import * as bodyParser from 'koa-bodyparser';
+import * as koaCash from 'koa-cash';
 import * as logger from 'koa-logger';
 import * as Router from 'koa-router';
+import { LRUCache } from 'lru-cache';
 import * as sharp from 'sharp';
 import config from './config';
 import debug from './debug';
@@ -13,24 +15,43 @@ import { bufferStore, getProcessor, parseRequest, setMaxGifSizeMB, setMaxGifPage
 import * as is from './is';
 import { IHttpHeaders, InvalidArgument } from './processor';
 
+const MB = 1048576;
+
 const ssm = new SSM({ region: config.region });
 const smclient = new SecretsManager({ region: config.region });
 
 const DefaultBufferStore = bufferStore();
 const app = new Koa();
 const router = new Router();
+const lruCache = new LRUCache<string, CacheObject>({
+  max: config.CACHE_MAX_ITEMS,
+  maxSize: config.CACHE_MAX_SIZE_MB * MB,
+  ttl: config.CACHE_TTL_SEC * 1000,
+  sizeCalculation: (value) => {
+    return value.body.length;
+  },
+});
 
 sharp.cache({ items: 1000, files: 200, memory: 2000 });
 
 app.use(logger());
 app.use(errorHandler());
 app.use(bodyParser());
+app.use(koaCash({
+  setCachedHeader: true,
+  get: (key) => {
+    return Promise.resolve(lruCache.get(key));
+  },
+  set: (key, value) => {
+    lruCache.set(key, value as CacheObject);
+    return Promise.resolve();
+  },
+}));
 
 router.post('/images', async (ctx) => {
   console.log('post request body=', ctx.request.body);
 
   const opt = await validatePostRequest(ctx);
-  console.log(opt);
   ctx.path = opt.sourceObject;
   ctx.query['x-oss-process'] = opt.params;
   ctx.headers['x-bucket'] = opt.sourceBucket;
@@ -61,12 +82,14 @@ router.get(['/', '/ping'], async (ctx) => {
 });
 
 router.get(['/debug', '/_debug'], async (ctx) => {
-  console.log(debug());
+  console.log(JSON.stringify(debug(lruCache)));
   ctx.status = 400;
   ctx.body = 'Please check your server logs for more details!';
 });
 
 router.get('/(.*)', async (ctx) => {
+  if (await ctx.cashed()) return;
+
   const queue = sharp.counters().queue;
   if (queue > config.sharpQueueLimit) {
     ctx.body = { message: 'Too many requests, please try again later.' };
@@ -89,7 +112,7 @@ app.on('error', (err: Error) => {
 
 app.listen(config.port, () => {
   console.log(`Server running on port ${config.port}`);
-  console.log('Config:', config);
+  console.log('Config:', JSON.stringify(config));
 });
 
 function errorHandler(): Koa.Middleware<Koa.DefaultState, Koa.DefaultContext, any> {

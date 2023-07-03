@@ -7,8 +7,8 @@ import * as ecs from '@aws-cdk/aws-ecs';
 import * as ecsPatterns from '@aws-cdk/aws-ecs-patterns';
 import * as iam from '@aws-cdk/aws-iam';
 import * as s3 from '@aws-cdk/aws-s3';
-import * as ssm from '@aws-cdk/aws-ssm';
 import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
+import * as ssm from '@aws-cdk/aws-ssm';
 import { Aws, CfnOutput, Construct, Duration, Stack } from '@aws-cdk/core';
 
 const GB = 1024;
@@ -178,33 +178,15 @@ function getOrCreateVpc(scope: Construct): ec2.IVpc {
   if (scope.node.tryGetContext('use_default_vpc') === '1' || process.env.CDK_USE_DEFAULT_VPC === '1') {
     return ec2.Vpc.fromLookup(scope, 'Vpc', { isDefault: true });
   } else if (scope.node.tryGetContext('use_vpc_id')) {
-    const vpcFromLookup = ec2.Vpc.fromLookup(scope, 'Vpc', { vpcId: scope.node.tryGetContext('use_vpc_id') });
-    const privateSubnetIds: string[] = scope.node.tryGetContext('subnet_ids');
-    let publicSubnetIds: string[] = [];
-    vpcFromLookup.publicSubnets.forEach((subnet) => {
-      publicSubnetIds.push(subnet.subnetId);
-    });
-    // TODO: Try to use vpcFromLookup instead
-    const vpc = ec2.Vpc.fromVpcAttributes(scope, 'VpcFromAttributes', {
-      availabilityZones: vpcFromLookup.availabilityZones,
-      vpcId: vpcFromLookup.vpcId,
-      publicSubnetIds: publicSubnetIds,
-      privateSubnetIds: privateSubnetIds,
-    });
-    return vpc;
+    return ec2.Vpc.fromLookup(scope, 'Vpc', { vpcId: scope.node.tryGetContext('use_vpc_id') });
   }
   return new ec2.Vpc(scope, 'Vpc', { maxAzs: 3, natGateways: 1 });
 }
 
 function getTaskSubnets(scope: Construct, vpc: ec2.IVpc): ec2.ISubnet[] {
-  const subnetIds: string[] = scope.node.tryGetContext('subnet_ids');
-  // TODO: use filter subnets from vpc
-  let subnets: ec2.ISubnet[] = [];
-  if (subnetIds) {
-    subnetIds.forEach((subnetId, index) => {
-      subnets.push(ec2.Subnet.fromSubnetId(scope, 'subnet' + index, subnetId));
-    });
-    return subnets;
+  const subnetIds: string[] = scope.node.tryGetContext('subnet_ids') || [];
+  if (subnetIds.length) {
+    return subnetIds.map((subnetId, index) => ec2.Subnet.fromSubnetId(scope, 'subnet' + index, subnetId));
   } else {
     return vpc.privateSubnets;
   }

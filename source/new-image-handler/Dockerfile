@@ -54,9 +54,7 @@ RUN apk update && \
 
 ENV NODE_ENV=production
 
-# https://pm2.keymetrics.io/docs/usage/docker-pm2-nodejs/
 RUN yarn --production && \
-    yarn add --dev pm2 && \
     yarn cache clean --all
 
 COPY --from=builder /app/lib /app/lib
@@ -64,4 +62,4 @@ COPY --from=builder /app/lib /app/lib
 
 EXPOSE 8080
 
-CMD ["node_modules/.bin/pm2-runtime", "/app/lib/src/index.js"]
+CMD ["node", "/app/lib/src/index.js"]
