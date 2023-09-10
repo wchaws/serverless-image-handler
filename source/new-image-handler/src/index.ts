@@ -39,6 +39,9 @@ app.use(errorHandler());
 app.use(bodyParser());
 app.use(koaCash({
   setCachedHeader: true,
+  hash(ctx) {
+    return ctx.headers['x-bucket'] + ctx.request.url;
+  },
   get: (key) => {
     return Promise.resolve(lruCache.get(key));
   },
