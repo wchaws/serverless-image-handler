@@ -255,7 +255,7 @@ test('f.jpg?x-oss-process=image/resize,w_100/auto-orient,0', async () => {
   expect(type).toBe('image/jpeg');
   expect(metadata.width).toBe(100);
   expect(metadata.height).toBe(78);
-  expect(ctx.headers['Last-Modified']).toBe('fake-last-modified');
+  expect(ctx.headers['Last-Modified']).toBe('Wed, 21 Oct 2014 07:28:00 GMT');
 });
 
 test('f.jpg?x-oss-process=image/strip-metadata', async () => {

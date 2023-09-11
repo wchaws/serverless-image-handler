@@ -46,8 +46,8 @@ export class LocalStore implements IBufferStore {
       type: filetype(p),
       headers: {
         'Etag': 'fake-etag',
-        'Last-Modified': 'fake-last-modified',
-        'Cache-Control': 'no-cache',
+        'Last-Modified': 'Wed, 21 Oct 2014 07:28:00 GMT',
+        'Cache-Control': 'max-age',
       },
     };
   }
@@ -72,14 +72,14 @@ export class S3Store implements IBufferStore {
     }).promise();
 
     if (Buffer.isBuffer(res.Body)) {
+      const headers: IHttpHeaders = {};
+      if (res.ETag) { headers.Etag = res.ETag; }
+      if (res.LastModified) { headers['Last-Modified'] = res.LastModified; }
+      if (res.CacheControl) { headers['Cache-Control'] = res.CacheControl; }
       return {
         buffer: res.Body as Buffer,
         type: res.ContentType ?? '',
-        headers: {
-          'Etag': res.ETag,
-          'Last-Modified': res.LastModified,
-          'Cache-Control': res.CacheControl,
-        },
+        headers,
       };
     };
     throw new Error('S3 response body is not a Buffer type');

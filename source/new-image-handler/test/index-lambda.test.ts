@@ -73,8 +73,8 @@ test('index-lambda.ts example.jpg?x-oss-process=image/resize,w_100/quality,q_50'
   expect(res.isBase64Encoded).toBeTruthy();
   expect(res.statusCode).toBe(200);
   expect(res.headers['Content-Type']).toBe('image/jpeg');
-  expect(res.headers['Last-Modified']).toBe('fake-last-modified');
-  expect(res.headers['Cache-Control']).toBe('no-cache');
+  expect(res.headers['Last-Modified']).toBe('Wed, 21 Oct 2014 07:28:00 GMT');
+  expect(res.headers['Cache-Control']).toBe('max-age');
 
   const metadata = await sharp(Buffer.from(res.body, 'base64')).metadata();
 
