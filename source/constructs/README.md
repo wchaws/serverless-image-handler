@@ -197,17 +197,17 @@ This is an ECS Fargate based version of serverless image handler. The key featur
 5. [cdk bootstrap](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#cli-bootstrap)
 
 
-### 配置参数说明（cdk.context.json）
-| 参数名称        | 描述                                                         |
+### Configuration parameter description (cdk.context.json)
+| Parameter Name | Description |
 | --------------- | ------------------------------------------------------------ |
-| buckets    | S3 存储桶。|
-| secret_arn | Secrets 用于调用 Post API (可选）|
-| stack_tags| 资源标签，方便进行费用统计（可选） |
-| ecs_desired_count | 初始化 Fargate 所需任务实例数量 |
-| use_vpc_id   | 部署程序的 VPC（可选） |
-| enable_public_alb | 负载均衡器模式选择，面向互联网 true，内部 false，默认为面向互联网（可选）                 |
-| enable_cloudfront   | CloudFront 的开关，默认为开启 true，关闭 false （可选） |
-| subnet_ids    | 部署程序或者内部 ALB 的子网，同一 AZ 下仅可配置一个（可选）|
+| buckets | S3 buckets. |
+| secret_arn | The SSM Secrets for calling the Post API (optional)|
+| stack_tags | Resource tags to facilitate cost statistics (optional) |
+| ecs_desired_count | Number of task instances required to initialize Fargate |
+| use_vpc_id | VPC for deployed programs (optional) |
+| enable_public_alb | Load Balancer Mode Selection, Internet Facing true, Internal false, defaults to Internet Facing (optional) |
+| enable_cloudfront | Switch for CloudFront, on true, off false by default (optional) |
+| subnet_ids | subnets for deployed programs or internal ALBs, only one can be configured under the same AZ (optional)|
 
 
 ### How to use?
